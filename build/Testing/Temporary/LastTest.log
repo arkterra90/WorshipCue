@@ -1,0 +1,359 @@
+Start testing: Nov 10 08:32 CST
+----------------------------------------------------------
+1/9 Testing: presentation_controller
+1/9 Test: presentation_controller
+Command: "/Users/jeremykuehn/Downloads/WorshipCue/build/WorshipCueCoreTests"
+Directory: /Users/jeremykuehn/Downloads/WorshipCue/build
+"presentation_controller" start time: Nov 10 08:32 CST
+Output:
+----------------------------------------------------------
+********* Start testing of PresentationControllerTest *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 17.0.0 (clang-1700.6.4.2)), macos 15.7.4
+PASS   : PresentationControllerTest::initTestCase()
+PASS   : PresentationControllerTest::upcomingPreviewFollowsTimedLoopAndManualNextCanLeave()
+PASS   : PresentationControllerTest::autoAdvanceStopsAtPresentationBoundary()
+PASS   : PresentationControllerTest::autoAdvanceLoopsOnlyTheCurrentPresentation()
+PASS   : PresentationControllerTest::pausingPreservesTheRemainingCountdown()
+PASS   : PresentationControllerTest::hidingAudienceSuspendsTimingWithoutLosingManualPause()
+PASS   : PresentationControllerTest::manualNavigationRestartsTheIntervalAndExplicitTakeResumes()
+PASS   : PresentationControllerTest::timingAndTransitionsUseTheLiveSnapshotAndValidateSettings()
+PASS   : PresentationControllerTest::mediaFollowsLiveSnapshotAndUpcomingNavigation()
+PASS   : PresentationControllerTest::cueRevisionChangesOnlyForPresentationCommands()
+PASS   : PresentationControllerTest::navigationBoundaries()
+PASS   : PresentationControllerTest::blackoutAndClearAreExclusive()
+PASS   : PresentationControllerTest::goingLiveEmitsChange()
+PASS   : PresentationControllerTest::serviceNavigationSkipsEmptyEntriesAndStopsAtEnds()
+PASS   : PresentationControllerTest::repeatedSongsRemainDistinctEntries()
+PASS   : PresentationControllerTest::liveServiceIsIsolatedFromLaterEdits()
+PASS   : PresentationControllerTest::invalidTakeDoesNotReplaceLiveOutput()
+PASS   : PresentationControllerTest::restoreAndCrossItemNavigationRestoreAudience()
+PASS   : PresentationControllerTest::standaloneTakeClearsServiceSnapshot()
+PASS   : PresentationControllerTest::cleanupTestCase()
+Totals: 20 passed, 0 failed, 0 skipped, 0 blacklisted, 2983ms
+********* Finished testing of PresentationControllerTest *********
+<end of output>
+Test time =   3.37 sec
+----------------------------------------------------------
+Test Passed.
+"presentation_controller" end time: Nov 10 08:32 CST
+"presentation_controller" time elapsed: 00:00:03
+----------------------------------------------------------
+
+2/9 Testing: library_repository
+2/9 Test: library_repository
+Command: "/Users/jeremykuehn/Downloads/WorshipCue/build/WorshipCueRepositoryTests"
+Directory: /Users/jeremykuehn/Downloads/WorshipCue/build
+"library_repository" start time: Nov 10 08:32 CST
+Output:
+----------------------------------------------------------
+********* Start testing of LibraryRepositoryTest *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 17.0.0 (clang-1700.6.4.2)), macos 15.7.4
+PASS   : LibraryRepositoryTest::initTestCase()
+PASS   : LibraryRepositoryTest::savedServicesPersistAndKeepIndependentArrangements()
+PASS   : LibraryRepositoryTest::migratesLegacyLibraryWithoutChangingIdsOrOrder()
+QWARN  : LibraryRepositoryTest::failedMigrationRollsBackAndFutureSchemaIsRejected() WorshipCue database: no such column: position Unable to execute statement
+QWARN  : LibraryRepositoryTest::failedMigrationRollsBackAndFutureSchemaIsRejected() WorshipCue database: This library was saved by a newer WorshipCue version. Update WorshipCue to open it.
+PASS   : LibraryRepositoryTest::failedMigrationRollsBackAndFutureSchemaIsRejected()
+QWARN  : LibraryRepositoryTest::validatesReorderAndRollsBackPartialWrites() WorshipCue database: A reordered service must contain each existing item exactly once.
+QWARN  : LibraryRepositoryTest::validatesReorderAndRollsBackPartialWrites() WorshipCue database: A reordered service must contain each existing item exactly once.
+QWARN  : LibraryRepositoryTest::validatesReorderAndRollsBackPartialWrites() WorshipCue database: A reordered service must contain each existing item exactly once.
+QWARN  : LibraryRepositoryTest::validatesReorderAndRollsBackPartialWrites() WorshipCue database: The service item move is outside the service order.
+QWARN  : LibraryRepositoryTest::validatesReorderAndRollsBackPartialWrites() WorshipCue database: The requested services item no longer exists.
+QWARN  : LibraryRepositoryTest::validatesReorderAndRollsBackPartialWrites() WorshipCue database: test write failure Unable to fetch row
+QWARN  : LibraryRepositoryTest::validatesReorderAndRollsBackPartialWrites() WorshipCue database: test copy failure Unable to fetch row
+QWARN  : LibraryRepositoryTest::validatesReorderAndRollsBackPartialWrites() WorshipCue database: test copy failure Unable to fetch row
+PASS   : LibraryRepositoryTest::validatesReorderAndRollsBackPartialWrites()
+QWARN  : LibraryRepositoryTest::lyricSearchUsesLiteralWildcardsAndSongDeletionCascades() WorshipCue database: This song no longer exists.
+PASS   : LibraryRepositoryTest::lyricSearchUsesLiteralWildcardsAndSongDeletionCascades()
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: The arrangement contains an invalid source slide.
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: The arrangement contains an invalid source slide.
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: This service item no longer exists or has no slides.
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: test slide failure Unable to fetch row
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: A song must have a title and at least one slide.
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: This song no longer exists.
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: A service must have a name.
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: This service no longer exists.
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: The requested services item no longer exists.
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: FOREIGN KEY constraint failed Unable to fetch row
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: FOREIGN KEY constraint failed Unable to fetch row
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: This service item no longer exists.
+QWARN  : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic() WorshipCue database: This service item no longer exists.
+PASS   : LibraryRepositoryTest::arrangementValidationAndSongEditsAreAtomic()
+PASS   : LibraryRepositoryTest::emptyLibraryStaysEmptyAndConnectionsAreIndependent()
+QWARN  : LibraryRepositoryTest::mediaPresentationsPersistAndArrangementsFollowSourceMedia() WorshipCue database: Use media presentation controls to edit this item; the song text editor cannot replace media slides.
+PASS   : LibraryRepositoryTest::mediaPresentationsPersistAndArrangementsFollowSourceMedia()
+QWARN  : LibraryRepositoryTest::mediaNamesRenameAtomicallyAndPathsStayStable() WorshipCue database: A presentation must have a title.
+QWARN  : LibraryRepositoryTest::mediaNamesRenameAtomicallyAndPathsStayStable() WorshipCue database: This presentation no longer exists.
+QWARN  : LibraryRepositoryTest::mediaNamesRenameAtomicallyAndPathsStayStable() WorshipCue database: The new media names must be unique within the presentation.
+QWARN  : LibraryRepositoryTest::mediaNamesRenameAtomicallyAndPathsStayStable() WorshipCue database: A rename must provide one name for each slide in the presentation.
+QWARN  : LibraryRepositoryTest::mediaNamesRenameAtomicallyAndPathsStayStable() WorshipCue database: Each media slide needs a filename without path separators.
+QWARN  : LibraryRepositoryTest::mediaNamesRenameAtomicallyAndPathsStayStable() WorshipCue database: test rename failure Unable to fetch row
+QWARN  : LibraryRepositoryTest::mediaNamesRenameAtomicallyAndPathsStayStable() WorshipCue database: A rename must provide one name for each slide in the presentation.
+PASS   : LibraryRepositoryTest::mediaNamesRenameAtomicallyAndPathsStayStable()
+QWARN  : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport() WorshipCue database: A presentation needs a title and matching slide and media lists.
+QWARN  : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport() WorshipCue database: Use the song editor to create presentations containing only text.
+QWARN  : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport() WorshipCue database: A presentation needs a title and matching slide and media lists.
+QWARN  : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport() WorshipCue database: Media slides need a managed relative path and a valid filename; only videos can loop.
+QWARN  : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport() WorshipCue database: Media slides need a managed relative path and a valid filename; only videos can loop.
+QWARN  : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport() WorshipCue database: Media slides need a managed relative path and a valid filename; only videos can loop.
+QWARN  : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport() WorshipCue database: Media slides need a managed relative path and a valid filename; only videos can loop.
+QWARN  : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport() WorshipCue database: Each media slide in a presentation must have a unique name.
+QWARN  : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport() WorshipCue database: test media failure Unable to fetch row
+PASS   : LibraryRepositoryTest::rejectsInvalidMediaAndRollsBackFailedImport()
+QWARN  : LibraryRepositoryTest::migratesVersionOneAndRollsBackPartialMediaMigration() WorshipCue database: duplicate column name: media_path Unable to execute statement
+PASS   : LibraryRepositoryTest::migratesVersionOneAndRollsBackPartialMediaMigration()
+PASS   : LibraryRepositoryTest::presentationSettingsPersistAndSurviveContentEdits()
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: Use an auto-advance interval of 0.1–3600 seconds (or turn it off), a supported transition, and a transition duration of 0–10 seconds.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: Use an auto-advance interval of 0.1–3600 seconds (or turn it off), a supported transition, and a transition duration of 0–10 seconds.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: Use an auto-advance interval of 0.1–3600 seconds (or turn it off), a supported transition, and a transition duration of 0–10 seconds.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: Use an auto-advance interval of 0.1–3600 seconds (or turn it off), a supported transition, and a transition duration of 0–10 seconds.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: Use an auto-advance interval of 0.1–3600 seconds (or turn it off), a supported transition, and a transition duration of 0–10 seconds.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: Use an auto-advance interval of 0.1–3600 seconds (or turn it off), a supported transition, and a transition duration of 0–10 seconds.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: Use an auto-advance interval of 0.1–3600 seconds (or turn it off), a supported transition, and a transition duration of 0–10 seconds.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: The presentation timing or transition settings are invalid.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: This presentation no longer exists.
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: test settings failure Unable to fetch row
+QWARN  : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic() WorshipCue database: A presentation contains invalid timing or transition settings.
+PASS   : LibraryRepositoryTest::validatesSettingsAndKeepsUpdatesAtomic()
+QWARN  : LibraryRepositoryTest::migratesVersionTwoSettingsAndRollsBackPartialMigration() WorshipCue database: duplicate column name: transition_type Unable to execute statement
+PASS   : LibraryRepositoryTest::migratesVersionTwoSettingsAndRollsBackPartialMigration()
+QWARN  : LibraryRepositoryTest::readErrorsAreAvailableToOperator() WorshipCue database: no such table: slides Unable to fetch row
+PASS   : LibraryRepositoryTest::readErrorsAreAvailableToOperator()
+PASS   : LibraryRepositoryTest::cleanupTestCase()
+Totals: 17 passed, 0 failed, 0 skipped, 0 blacklisted, 83ms
+********* Finished testing of LibraryRepositoryTest *********
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"library_repository" end time: Nov 10 08:32 CST
+"library_repository" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/9 Testing: slide_renderer
+3/9 Test: slide_renderer
+Command: "/Users/jeremykuehn/Downloads/WorshipCue/build/WorshipCueRendererTests"
+Directory: /Users/jeremykuehn/Downloads/WorshipCue/build
+"slide_renderer" start time: Nov 10 08:32 CST
+Output:
+----------------------------------------------------------
+********* Start testing of SlideRendererTest *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 17.0.0 (clang-1700.6.4.2)), macos 15.7.4
+PASS   : SlideRendererTest::initTestCase()
+PASS   : SlideRendererTest::transitionEndpointsAndFadeMixture()
+PASS   : SlideRendererTest::slideDirectionsAndLetterboxes()
+QWARN  : SlideRendererTest::zeroDurationCutsImmediately() qt.qpa.fonts: Populating font family aliases took 54 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+PASS   : SlideRendererTest::zeroDurationCutsImmediately()
+PASS   : SlideRendererTest::rapidCueKeepsCurrentCompositeAndOutputControlsAreImmediate()
+PASS   : SlideRendererTest::mediaFadeWaitsForDecodedFrameAndSharesHiddenOutput()
+PASS   : SlideRendererTest::picturesRetainFullBrightnessAndFitWithoutCropping()
+PASS   : SlideRendererTest::missingMediaFrameProjectsBlackWithoutFileInformation()
+PASS   : SlideRendererTest::blackoutOverridesTextAndBackground()
+PASS   : SlideRendererTest::clearPreservesOnlyBackground()
+PASS   : SlideRendererTest::audienceUsesSixteenByNineCanvas()
+PASS   : SlideRendererTest::thumbnailMatchesAudience()
+PASS   : SlideRendererTest::stageKeepsLyricsDuringAudienceClearAndBlackout()
+PASS   : SlideRendererTest::escapeRequestsOperatorWithoutChangingOutput()
+PASS   : SlideRendererTest::cleanupTestCase()
+Totals: 15 passed, 0 failed, 0 skipped, 0 blacklisted, 2878ms
+********* Finished testing of SlideRendererTest *********
+<end of output>
+Test time =   3.09 sec
+----------------------------------------------------------
+Test Passed.
+"slide_renderer" end time: Nov 10 08:32 CST
+"slide_renderer" time elapsed: 00:00:03
+----------------------------------------------------------
+
+4/9 Testing: output_manager
+4/9 Test: output_manager
+Command: "/Users/jeremykuehn/Downloads/WorshipCue/build/WorshipCueOutputTests"
+Directory: /Users/jeremykuehn/Downloads/WorshipCue/build
+"output_manager" start time: Nov 10 08:32 CST
+Output:
+----------------------------------------------------------
+********* Start testing of OutputManagerTest *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 17.0.0 (clang-1700.6.4.2)), macos 15.7.4
+PASS   : OutputManagerTest::initTestCase()
+QWARN  : OutputManagerTest::previewsAreIndependentAndClosingPersistsOff() This plugin does not support raise()
+QWARN  : OutputManagerTest::previewsAreIndependentAndClosingPersistsOff() This plugin does not support raise()
+QWARN  : OutputManagerTest::previewsAreIndependentAndClosingPersistsOff() This plugin does not support raise()
+PASS   : OutputManagerTest::previewsAreIndependentAndClosingPersistsOff()
+PASS   : OutputManagerTest::disconnectedDesiredTargetRemainsAvailable()
+PASS   : OutputManagerTest::sameFullscreenDisplayIsRejected()
+QWARN  : OutputManagerTest::invalidTargetsDoNotChangeRouting() This plugin does not support raise()
+PASS   : OutputManagerTest::invalidTargetsDoNotChangeRouting()
+QWARN  : OutputManagerTest::nativeVisibilityChangesReportActualStatusWithoutRestoringOutput() This plugin does not support raise()
+PASS   : OutputManagerTest::nativeVisibilityChangesReportActualStatusWithoutRestoringOutput()
+QWARN  : OutputManagerTest::escapeFocusesOperatorAndKeepsOutput() This plugin does not support raise()
+PASS   : OutputManagerTest::escapeFocusesOperatorAndKeepsOutput()
+PASS   : OutputManagerTest::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 26ms
+********* Finished testing of OutputManagerTest *********
+<end of output>
+Test time =   0.23 sec
+----------------------------------------------------------
+Test Passed.
+"output_manager" end time: Nov 10 08:32 CST
+"output_manager" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/9 Testing: operator_workflow
+5/9 Test: operator_workflow
+Command: "/Users/jeremykuehn/Downloads/WorshipCue/build/WorshipCueOperatorTests"
+Directory: /Users/jeremykuehn/Downloads/WorshipCue/build
+"operator_workflow" start time: Nov 10 08:32 CST
+Output:
+----------------------------------------------------------
+********* Start testing of OperatorWorkflowTest *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 17.0.0 (clang-1700.6.4.2)), macos 15.7.4
+PASS   : OperatorWorkflowTest::initTestCase()
+PASS   : OperatorWorkflowTest::presentationSettingsSaveCancelAndKeepLiveSnapshot()
+PASS   : OperatorWorkflowTest::automaticPlaybackUpdatesMonitorAndHoldsPresentationEnd()
+PASS   : OperatorWorkflowTest::buildSaveReopenService()
+PASS   : OperatorWorkflowTest::importRenameAndReopenPicturePresentation()
+PASS   : OperatorWorkflowTest::importVideoAndUseOperatorPlaybackControls()
+PASS   : OperatorWorkflowTest::liveNavigationIsIndependentOfBrowsingAndTyping()
+PASS   : OperatorWorkflowTest::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 3567ms
+********* Finished testing of OperatorWorkflowTest *********
+<end of output>
+Test time =   3.91 sec
+----------------------------------------------------------
+Test Passed.
+"operator_workflow" end time: Nov 10 08:32 CST
+"operator_workflow" time elapsed: 00:00:03
+----------------------------------------------------------
+
+6/9 Testing: reorder_list
+6/9 Test: reorder_list
+Command: "/Users/jeremykuehn/Downloads/WorshipCue/build/WorshipCueReorderTests"
+Directory: /Users/jeremykuehn/Downloads/WorshipCue/build
+"reorder_list" start time: Nov 10 08:32 CST
+Output:
+----------------------------------------------------------
+********* Start testing of ReorderListTest *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 17.0.0 (clang-1700.6.4.2)), macos 15.7.4
+PASS   : ReorderListTest::initTestCase()
+QWARN  : ReorderListTest::modelOrderChangesInBothViewModes(service-list) qt.qpa.fonts: Populating font family aliases took 53 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+PASS   : ReorderListTest::modelOrderChangesInBothViewModes(service-list)
+PASS   : ReorderListTest::modelOrderChangesInBothViewModes(slide-grid)
+PASS   : ReorderListTest::invalidMovesDoNotMutateOrEmit()
+PASS   : ReorderListTest::externalDropsCannotReorderOrInsert()
+PASS   : ReorderListTest::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 180ms
+********* Finished testing of ReorderListTest *********
+<end of output>
+Test time =   0.21 sec
+----------------------------------------------------------
+Test Passed.
+"reorder_list" end time: Nov 10 08:32 CST
+"reorder_list" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/9 Testing: batch_renamer
+7/9 Test: batch_renamer
+Command: "/Users/jeremykuehn/Downloads/WorshipCue/build/WorshipCueBatchRenameTests"
+Directory: /Users/jeremykuehn/Downloads/WorshipCue/build
+"batch_renamer" start time: Nov 10 08:32 CST
+Output:
+----------------------------------------------------------
+********* Start testing of BatchRenamerTest *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 17.0.0 (clang-1700.6.4.2)), macos 15.7.4
+PASS   : BatchRenamerTest::initTestCase()
+PASS   : BatchRenamerTest::nameAndNumberPreservesExtensionsAndOrder()
+PASS   : BatchRenamerTest::finderStyleReplaceAndAddAreLiteral()
+PASS   : BatchRenamerTest::unsafeAndDuplicateNamesAreRejected(path)
+PASS   : BatchRenamerTest::unsafeAndDuplicateNamesAreRejected(backslash)
+PASS   : BatchRenamerTest::unsafeAndDuplicateNamesAreRejected(reserved)
+PASS   : BatchRenamerTest::unsafeAndDuplicateNamesAreRejected(reserved-extension)
+PASS   : BatchRenamerTest::unsafeAndDuplicateNamesAreRejected(trailing-space)
+PASS   : BatchRenamerTest::unsafeAndDuplicateNamesAreRejected(trailing-dot)
+PASS   : BatchRenamerTest::unsafeAndDuplicateNamesAreRejected(colon)
+PASS   : BatchRenamerTest::unsafeAndDuplicateNamesAreRejected(case-collision)
+PASS   : BatchRenamerTest::unsafeAndDuplicateNamesAreRejected(unicode-collision)
+PASS   : BatchRenamerTest::invalidRuleDoesNotProducePartialPlan()
+QWARN  : BatchRenamerTest::dialogPreviewsNamesAndBlocksCollisionBeforeCommit() qt.qpa.fonts: Populating font family aliases took 52 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+PASS   : BatchRenamerTest::dialogPreviewsNamesAndBlocksCollisionBeforeCommit()
+PASS   : BatchRenamerTest::cleanupTestCase()
+Totals: 15 passed, 0 failed, 0 skipped, 0 blacklisted, 148ms
+********* Finished testing of BatchRenamerTest *********
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"batch_renamer" end time: Nov 10 08:32 CST
+"batch_renamer" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/9 Testing: media_import
+8/9 Test: media_import
+Command: "/Users/jeremykuehn/Downloads/WorshipCue/build/WorshipCueMediaImportTests"
+Directory: /Users/jeremykuehn/Downloads/WorshipCue/build
+"media_import" start time: Nov 10 08:32 CST
+Output:
+----------------------------------------------------------
+********* Start testing of MediaImportTest *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 17.0.0 (clang-1700.6.4.2)), macos 15.7.4
+PASS   : MediaImportTest::initTestCase()
+PASS   : MediaImportTest::copiesReadableNamesWithoutChangingSources()
+PASS   : MediaImportTest::failureRollsBackEntireBatch()
+PASS   : MediaImportTest::videoImportPreservesManagedReferenceAndLoopChoice()
+PASS   : MediaImportTest::cancellationLeavesNoBatchFiles()
+PASS   : MediaImportTest::invalidNamesOrImagesDoNotCreateManagedFiles()
+PASS   : MediaImportTest::thumbnailsAreAsynchronousBoundedAndPathsStayInsideLibrary()
+PASS   : MediaImportTest::closingManagerCleansUndeliveredCompletedImport()
+PASS   : MediaImportTest::cleanupTestCase()
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 552ms
+********* Finished testing of MediaImportTest *********
+<end of output>
+Test time =   0.58 sec
+----------------------------------------------------------
+Test Passed.
+"media_import" end time: Nov 10 08:32 CST
+"media_import" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/9 Testing: media_playback
+9/9 Test: media_playback
+Command: "/Users/jeremykuehn/Downloads/WorshipCue/build/WorshipCueMediaPlaybackTests"
+Directory: /Users/jeremykuehn/Downloads/WorshipCue/build
+"media_playback" start time: Nov 10 08:32 CST
+Output:
+----------------------------------------------------------
+********* Start testing of MediaPlaybackTest *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 17.0.0 (clang-1700.6.4.2)), macos 15.7.4
+PASS   : MediaPlaybackTest::initTestCase()
+PASS   : MediaPlaybackTest::stillsDecodeAsynchronouslyAndRespectSnapshotChanges()
+QWARN  : MediaPlaybackTest::missingAndInvalidMediaStopPreviousContent() WorshipCue media: Media is missing or unreadable: Missing clip
+QWARN  : MediaPlaybackTest::missingAndInvalidMediaStopPreviousContent() WorshipCue media: Invalid clip could not be decoded. Try a different video format.
+QWARN  : MediaPlaybackTest::missingAndInvalidMediaStopPreviousContent() WorshipCue media: Could not play Invalid clip: Failed to load media
+PASS   : MediaPlaybackTest::missingAndInvalidMediaStopPreviousContent()
+PASS   : MediaPlaybackTest::videoDecodesAndControlsShareOnePlayhead()
+PASS   : MediaPlaybackTest::loopingMovieKeepsPlayingAcrossItsEnd()
+PASS   : MediaPlaybackTest::sharedAudienceRenderMatchesThePlaybackFrame()
+PASS   : MediaPlaybackTest::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 7550ms
+********* Finished testing of MediaPlaybackTest *********
+<end of output>
+Test time =   7.84 sec
+----------------------------------------------------------
+Test Passed.
+"media_playback" end time: Nov 10 08:32 CST
+"media_playback" time elapsed: 00:00:07
+----------------------------------------------------------
+
+End testing: Nov 10 08:32 CST

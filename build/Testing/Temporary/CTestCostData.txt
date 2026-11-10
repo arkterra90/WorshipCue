@@ -1,0 +1,10 @@
+presentation_controller 11 0.305971
+library_repository 11 0.0108679
+slide_renderer 10 0.308514
+output_manager 11 0.0210663
+operator_workflow 9 0.43394
+reorder_list 9 0.0236749
+batch_renamer 6 0.0286041
+media_import 6 0.0965359
+media_playback 4 1.96004
+---

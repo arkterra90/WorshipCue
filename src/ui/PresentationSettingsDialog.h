@@ -1,0 +1,23 @@
+#pragma once
+
+#include "../core/PresentationSettings.h"
+#include <QDialog>
+
+class QCheckBox;
+class QComboBox;
+class QDoubleSpinBox;
+
+class PresentationSettingsDialog : public QDialog {
+    Q_OBJECT
+public:
+    PresentationSettingsDialog(const QString &title, const PresentationSettings &settings,
+                               QWidget *parent = nullptr);
+    PresentationSettings settings() const;
+
+private:
+    QCheckBox *autoAdvance_;
+    QDoubleSpinBox *interval_;
+    QCheckBox *loop_;
+    QComboBox *transition_;
+    QDoubleSpinBox *duration_;
+};
