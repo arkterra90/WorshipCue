@@ -4,6 +4,8 @@
 #include "../src/ui/PresentationSettingsDialog.h"
 #include "../src/ui/SlideEditorDialog.h"
 #include "../src/ui/BackgroundLibraryDialog.h"
+#include "../src/ui/DisplayWindow.h"
+#include "../src/core/BuiltInBackgrounds.h"
 #include <QAction>
 #include <QFileInfo>
 #include <QImage>
@@ -66,6 +68,176 @@ private slots:
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings_.path());
     }
     void init() { QSettings().clear(); }
+
+    void libraryClickLoadsCompletePresentationAndTargetsWorkspaceTools() {
+        QTemporaryDir temp;
+        const QString path = temp.filePath(QStringLiteral("library.sqlite3"));
+        QString error;
+        LibraryRepository observer;
+        QVERIFY2(observer.open(&error, path), qPrintable(error));
+        QImage picture(32, 18, QImage::Format_RGB32);
+        picture.fill(Qt::blue);
+        QVERIFY(picture.save(temp.filePath(QStringLiteral("library-picture.png"))));
+        const QString background = BuiltInBackgrounds::catalog().first().path;
+        const QStringList text{QStringLiteral("Library picture overlay"), QStringLiteral("Library second slide")};
+        const QStringList rich{QStringLiteral("<p><b>Library picture overlay</b></p>"),
+                               QStringLiteral("<p><i>Library second slide</i></p>")};
+        const QVector<SlideMedia> media{{MediaKind::Image, QStringLiteral("library-picture.png"),
+                                         QStringLiteral("Library picture"), false}, {}};
+        const int libraryId = observer.createPresentation(QStringLiteral("AAA Library only"), text, media,
+                                                           &error, {}, background, rich);
+        QVERIFY2(libraryId > 0, qPrintable(error));
+        const int serviceId = observer.services().first().id;
+        const auto serviceBefore = observer.service(serviceId);
+        const Song serviceSong = observer.song(serviceBefore.first().songId);
+
+        MainWindow window;
+        QVERIFY2(window.initialize(&error, path), qPrintable(error));
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto *library = control<QListWidget>(window, "songLibrary");
+        auto *slides = control<ReorderListWidget>(window, "slideWorkspace");
+        auto *controller = control<PresentationController>(window, "presentationController");
+        QCOMPARE(library->currentItem()->data(Qt::UserRole).toInt(), libraryId);
+        QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
+        const auto live = controller->state();
+        QVERIFY(live.serviceId > 0);
+        // The library row is already selected while the service is displayed.
+        // Clicking it must still switch the workspace to that library item.
+        control<QTabWidget>(window, "sidebarTabs")->setCurrentIndex(0);
+        QTest::mouseClick(library->viewport(), Qt::LeftButton, Qt::NoModifier,
+                         library->visualItemRect(library->currentItem()).center());
+        QCOMPARE(slides->count(), 2);
+        for (int i = 0; i < slides->count(); ++i) {
+            QCOMPARE(slides->item(i)->data(Qt::UserRole).toInt(), i);
+            QCOMPARE(slides->item(i)->data(Qt::UserRole + 1).toString(), text.at(i));
+            QCOMPARE(slides->item(i)->data(Qt::UserRole + 3).value<SlideMedia>(), media.at(i));
+            QCOMPARE(slides->item(i)->data(Qt::UserRole + 4).toString(), rich.at(i));
+        }
+        QVERIFY(control<QLabel>(window, "selectedInfo")->text().contains(QStringLiteral("AAA Library only")));
+        QVERIFY(control<QLabel>(window, "selectedTimingInfo")->text().contains(BuiltInBackgrounds::title(background)));
+        QCOMPARE(controller->state().cueRevision, live.cueRevision);
+        QCOMPARE(controller->state().slides, live.slides);
+
+        slides->setCurrentRow(1);
+        bool editedLibrarySlide = false;
+        QTimer::singleShot(0, [&] {
+            auto *dialog = qobject_cast<SlideEditorDialog *>(QApplication::activeModalWidget());
+            Q_ASSERT(dialog);
+            editedLibrarySlide = dialog->title() == QStringLiteral("AAA Library only")
+                && dialog->selectedSlideIndex() == 1;
+            editorTextItem(dialog)->setHtml(QStringLiteral("<p><b>Edited library second slide</b></p>"));
+            dialog->accept();
+        });
+        QTest::mouseClick(control<QPushButton>(window, "editSlideText"), Qt::LeftButton);
+        QVERIFY(editedLibrarySlide);
+        QCOMPARE(observer.song(libraryId).slides.at(1), QStringLiteral("Edited library second slide"));
+        QCOMPARE(observer.song(serviceSong.id).slides, serviceSong.slides);
+        QCOMPARE(slides->currentRow(), 1);
+        QCOMPARE(slides->item(1)->data(Qt::UserRole + 1).toString(), observer.song(libraryId).slides.at(1));
+
+        QTimer::singleShot(0, [] {
+            auto *dialog = qobject_cast<PresentationSettingsDialog *>(QApplication::activeModalWidget());
+            Q_ASSERT(dialog);
+            dialog->findChild<QCheckBox *>(QStringLiteral("overrideProgramTransition"))->setChecked(true);
+            dialog->findChild<QComboBox *>(QStringLiteral("slideTransitionType"))->setCurrentIndex(1);
+            dialog->findChild<QDoubleSpinBox *>(QStringLiteral("slideTransitionDuration"))->setValue(.35);
+            dialog->accept();
+        });
+        QTest::mouseClick(control<QPushButton>(window, "presentationSettings"), Qt::LeftButton);
+        QCOMPARE(observer.song(libraryId).settings, (PresentationSettings{0, false, SlideTransitionType::Fade, 350, true}));
+        QCOMPARE(observer.song(serviceSong.id).settings, serviceSong.settings);
+
+        Song updated = observer.song(libraryId);
+        updated.slides[1] = QStringLiteral("External library edit");
+        updated.richText[1] = QStringLiteral("<p><i>External library edit</i></p>");
+        QVERIFY(observer.updatePresentationText(libraryId, updated.title, updated.slides, updated.richText, &error));
+        QVERIFY(QMetaObject::invokeMethod(control<QTimer>(window, "externalLibraryRefresh"), "timeout", Qt::DirectConnection));
+        QCOMPARE(library->currentItem()->data(Qt::UserRole).toInt(), libraryId);
+        QCOMPARE(slides->currentRow(), 1);
+        QCOMPARE(slides->item(1)->data(Qt::UserRole + 1).toString(), updated.slides.at(1));
+        QCOMPARE(slides->item(1)->data(Qt::UserRole + 4).toString(), updated.richText.at(1));
+        QCOMPARE(controller->state().cueRevision, live.cueRevision);
+        QCOMPARE(controller->state().slides, live.slides);
+
+        QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
+        QCOMPARE(controller->state().serviceId, 0);
+        QCOMPARE(controller->state().entryId, 0);
+        QCOMPARE(controller->state().title, updated.title);
+        QCOMPARE(controller->state().slides, updated.slides);
+        QCOMPARE(controller->state().currentText(), updated.slides.at(1));
+        QCOMPARE(controller->state().currentRichText(), updated.richText.at(1));
+        QCOMPARE(controller->state().media.first().path, temp.filePath(QStringLiteral("library-picture.png")));
+        QCOMPARE(controller->state().backgroundPath, BuiltInBackgrounds::resourcePath(background));
+        QVERIFY(!controller->next());
+        QCOMPARE(observer.service(serviceId).size(), serviceBefore.size());
+        for (int i = 0; i < serviceBefore.size(); ++i)
+            QCOMPARE(observer.service(serviceId).at(i).id, serviceBefore.at(i).id);
+    }
+
+    void libraryBrowsingKeepsNaturalOrderAndServiceArrangementSeparate() {
+        QTemporaryDir temp;
+        const QString path = temp.filePath(QStringLiteral("library.sqlite3"));
+        QString error;
+        LibraryRepository observer;
+        QVERIFY2(observer.open(&error, path), qPrintable(error));
+        const QStringList text{QStringLiteral("First"), QStringLiteral("Second"), QStringLiteral("Third")};
+        const int songId = observer.createTextPresentation(QStringLiteral("AAA Arranged song"), text, &error);
+        QVERIFY(songId > 0);
+        const int serviceId = observer.createService(QStringLiteral("Arranged service"), &error);
+        QVERIFY(observer.appendToService(serviceId, songId, &error));
+        const int entryId = observer.service(serviceId).first().id;
+        const QVector<int> arrangement{2, 0, 2};
+        QVERIFY(observer.setEntrySlideOrder(entryId, arrangement, &error));
+
+        MainWindow window;
+        QVERIFY2(window.initialize(&error, path), qPrintable(error));
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        auto *plans = control<QComboBox>(window, "savedServices");
+        plans->setCurrentIndex(plans->findData(serviceId));
+        auto *library = control<QListWidget>(window, "songLibrary");
+        auto *entries = control<QListWidget>(window, "serviceOrder");
+        auto *slides = control<ReorderListWidget>(window, "slideWorkspace");
+        auto *tabs = control<QTabWidget>(window, "sidebarTabs");
+        auto *controller = control<PresentationController>(window, "presentationController");
+        QCOMPARE(slides->item(0)->data(Qt::UserRole).toInt(), 2);
+        QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
+        const auto live = controller->state();
+        tabs->setCurrentIndex(0);
+        QTest::mouseClick(library->viewport(), Qt::LeftButton, Qt::NoModifier,
+                         library->visualItemRect(library->currentItem()).center());
+        QCOMPARE(library->currentItem()->data(Qt::UserRole).toInt(), songId);
+        for (int i = 0; i < slides->count(); ++i) {
+            QCOMPARE(slides->item(i)->data(Qt::UserRole).toInt(), i);
+            QCOMPARE(slides->item(i)->data(Qt::UserRole + 1).toString(), text.at(i));
+        }
+        control<QComboBox>(window, "operatorMode")->setCurrentIndex(1);
+        QCOMPARE(slides->dragDropMode(), QAbstractItemView::NoDragDrop);
+        QVERIFY(slides->moveItem(0, 2));
+        for (int i = 0; i < slides->count(); ++i)
+            QCOMPARE(slides->item(i)->data(Qt::UserRole).toInt(), i);
+        QCOMPARE(observer.service(serviceId).first().slideOrder, arrangement);
+        QCOMPARE(controller->state().cueRevision, live.cueRevision);
+
+        // Returning to the already-selected service row must restore its order.
+        tabs->setCurrentIndex(1);
+        QTest::mouseClick(entries->viewport(), Qt::LeftButton, Qt::NoModifier,
+                         entries->visualItemRect(entries->currentItem()).center());
+        QCOMPARE(slides->dragDropMode(), QAbstractItemView::InternalMove);
+        for (int i = 0; i < slides->count(); ++i)
+            QCOMPARE(slides->item(i)->data(Qt::UserRole).toInt(), arrangement.at(i));
+        QCOMPARE(controller->state().cueRevision, live.cueRevision);
+        tabs->setCurrentIndex(0);
+        QTest::mouseClick(library->viewport(), Qt::LeftButton, Qt::NoModifier,
+                         library->visualItemRect(library->currentItem()).center());
+        QTest::mouseClick(control<QPushButton>(window, "revealLiveCue"), Qt::LeftButton);
+        QCOMPARE(tabs->currentIndex(), 1);
+        QCOMPARE(entries->currentItem()->data(Qt::UserRole).toInt(), entryId);
+        for (int i = 0; i < slides->count(); ++i)
+            QCOMPARE(slides->item(i)->data(Qt::UserRole).toInt(), arrangement.at(i));
+        QCOMPARE(controller->state().cueRevision, live.cueRevision);
+    }
 
     void externalServiceOrderRefreshPreservesSelectionAndLiveOutput() {
         QTemporaryDir temp;
@@ -791,6 +963,64 @@ private slots:
         QVERIFY2(reopened.initialize(&error, path), qPrintable(error));
         QTest::mouseClick(control<QPushButton>(reopened, "takeLive"), Qt::LeftButton);
         QCOMPARE(control<PresentationController>(reopened, "presentationController")->state().backgroundPath, temp.filePath(assigned));
+    }
+
+    void builtInBackgroundAssignmentPersistsAndReachesAudience() {
+        QTemporaryDir temp;
+        const QString path = temp.filePath(QStringLiteral("library.sqlite3"));
+        const QString assigned = BuiltInBackgrounds::catalog().last().path;
+        const QString resource = BuiltInBackgrounds::resourcePath(assigned);
+        QString error;
+        LibraryRepository observer;
+        QVERIFY2(observer.open(&error, path), qPrintable(error));
+        const int songId = observer.service(observer.services().first().id).first().songId;
+        const auto audienceImage = [](DisplayWindow &audience) {
+            QImage image(320, 180, QImage::Format_ARGB32_Premultiplied);
+            image.fill(Qt::black);
+            QPainter painter(&image);
+            audience.paintAudience(painter, image.rect());
+            return image;
+        };
+        {
+            MainWindow window;
+            QVERIFY2(window.initialize(&error, path), qPrintable(error));
+            window.show();
+            auto *library = control<QListWidget>(window, "songLibrary");
+            for (int i = 0; i < library->count(); ++i)
+                if (library->item(i)->data(Qt::UserRole).toInt() == songId) library->setCurrentRow(i);
+            auto *controller = control<PresentationController>(window, "presentationController");
+            DisplayWindow audience(DisplayWindow::Kind::Audience, controller);
+            QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
+            const QImage before = audienceImage(audience);
+            auto *slides = control<QListWidget>(window, "slideWorkspace");
+            const QImage thumbnailBefore = slides->item(0)->data(Qt::UserRole + 2).value<QPixmap>().toImage();
+            QTimer::singleShot(0, [&] {
+                auto *dialog = qobject_cast<BackgroundLibraryDialog *>(QApplication::activeModalWidget());
+                Q_ASSERT(dialog);
+                auto *items = dialog->findChild<QListWidget *>(QStringLiteral("backgroundLibraryItems"));
+                for (int i = 0; i < items->count(); ++i)
+                    if (items->item(i)->data(Qt::UserRole).toString() == assigned) items->setCurrentRow(i);
+                dialog->accept();
+            });
+            control<QAction>(window, "assignBackgroundAction")->trigger();
+            QCOMPARE(observer.song(songId).backgroundPath, assigned);
+            QVERIFY(controller->state().backgroundPath.isEmpty());
+            QCOMPARE(audienceImage(audience), before);
+            const QImage thumbnailAfter = slides->item(0)->data(Qt::UserRole + 2).value<QPixmap>().toImage();
+            QVERIFY(!thumbnailAfter.isNull());
+            QVERIFY(thumbnailAfter != thumbnailBefore);
+            QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
+            QCOMPARE(controller->state().backgroundPath, resource);
+            QVERIFY(audienceImage(audience) != before);
+            QVERIFY(!QFileInfo::exists(temp.filePath(QStringLiteral("backgrounds"))));
+            window.close();
+        }
+        MainWindow reopened;
+        QVERIFY2(reopened.initialize(&error, path), qPrintable(error));
+        QTest::mouseClick(control<QPushButton>(reopened, "takeLive"), Qt::LeftButton);
+        QCOMPARE(control<PresentationController>(reopened, "presentationController")->state().backgroundPath, resource);
+        BackgroundLibraryDialog backgroundLibrary(temp.path(), observer.song(songId).backgroundPath);
+        QCOMPARE(backgroundLibrary.selectedPath(), assigned);
     }
 
     void buildSaveReopenService() {

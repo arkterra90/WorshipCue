@@ -5,6 +5,63 @@
 class PresentationControllerTest : public QObject {
     Q_OBJECT
 private slots:
+    void standalonePresentationKeepsMediaFormattingAndBackgroundSnapshot() {
+        PresentationController controller;
+        controller.takeServiceLive(4, {{11, "Service item", {"Service text"}},
+                                       {12, "Upcoming service item", {"Upcoming text"}}}, 11);
+        controller.toggleBlackout();
+        const auto previousRevision = controller.state().cueRevision;
+        PresentationSettings defaults;
+        defaults.transition = SlideTransitionType::Fade;
+        defaults.transitionDurationMs = 700;
+        controller.setGlobalTransitionDefaults(defaults);
+
+        PresentationItem item{99, QStringLiteral("Library presentation"),
+                              {QStringLiteral("Welcome"), QStringLiteral("Video overlay")}};
+        item.media = {{MediaKind::Image, QStringLiteral("/welcome.jpg"), QStringLiteral("Welcome picture"), false},
+                      {MediaKind::Video, QStringLiteral("/video.mov"), QStringLiteral("Welcome video"), true}};
+        item.richText = {QStringLiteral("<p><b>Welcome</b></p>"), QStringLiteral("<p><i>Video overlay</i></p>")};
+        item.backgroundPath = QStringLiteral("/background.jpg");
+        item.settings.autoAdvanceMs = 1000;
+        controller.takeLive(item);
+        controller.setAutoAdvancePaused(true);
+
+        QCOMPARE(controller.state().serviceId, 0);
+        QCOMPARE(controller.state().entryId, 0);
+        QCOMPARE(controller.state().title, item.title);
+        QCOMPARE(controller.state().currentText(), item.slides.first());
+        QCOMPARE(controller.state().currentMedia(), item.media.first());
+        QCOMPARE(controller.state().currentRichText(), item.richText.first());
+        QCOMPARE(controller.state().nextMedia(), item.media.last());
+        QCOMPARE(controller.state().nextRichText(), item.richText.last());
+        QCOMPARE(controller.state().backgroundPath, item.backgroundPath);
+        QCOMPARE(controller.state().nextBackgroundPath(), item.backgroundPath);
+        QCOMPARE(controller.state().settings.transition, defaults.transition);
+        QCOMPARE(controller.state().settings.transitionDurationMs, defaults.transitionDurationMs);
+        QVERIFY(controller.state().cueRevision > previousRevision);
+        QVERIFY(!controller.state().blackout);
+        QVERIFY(controller.autoAdvanceActive());
+        QVERIFY(controller.state().upcomingTitle.isEmpty());
+        QVERIFY(controller.state().upcomingText.isEmpty());
+
+        const auto expected = controller.state();
+        item.slides[1] = QStringLiteral("Edited after going live");
+        item.media[1].path = QStringLiteral("/changed.mov");
+        item.richText[1].clear();
+        item.backgroundPath.clear();
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().currentText(), expected.slides.last());
+        QCOMPARE(controller.state().currentMedia(), expected.media.last());
+        QCOMPARE(controller.state().currentRichText(), expected.richText.last());
+        QCOMPARE(controller.state().backgroundPath, expected.backgroundPath);
+        QVERIFY(controller.state().nextText().isEmpty());
+        QVERIFY(controller.state().nextTitle().isEmpty());
+        QVERIFY(!controller.next());
+        QCOMPARE(controller.state().index, 1);
+        QVERIFY(controller.previous());
+        QVERIFY(!controller.previous());
+    }
+
     void richTextFollowsSnapshotsUpcomingItemsAndLoops() {
         PresentationController controller;
         PresentationItem first{11, QStringLiteral("First"), {QStringLiteral("One"), QStringLiteral("Two")}};

@@ -987,6 +987,7 @@ CMakeFiles/WorshipCue.dir/src/ui/BackgroundLibraryDialog.cpp.o: \
   /opt/homebrew/opt/qt/include/QtGui/QPixmap \
   /opt/homebrew/opt/qt/include/QtCore/QRect \
   /opt/homebrew/opt/qt/include/QtCore/QSize \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/BuiltInBackgrounds.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QDialogButtonBox \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qdialogbuttonbox.h \
   /opt/homebrew/opt/qt/include/QtCore/QDir \

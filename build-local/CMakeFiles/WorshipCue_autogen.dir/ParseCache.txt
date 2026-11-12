@@ -985,6 +985,7 @@
  mdp:/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtWidgets.framework/Versions/A/Headers/qwidget.h
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.cpp
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.h
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationSettings.h
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.h
@@ -6802,6 +6803,7 @@
  mdp:/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsexports.h
  mdp:/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsglobal.h
  mdp:/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtWidgets.framework/Versions/A/Headers/qwidget.h
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/BuiltInBackgrounds.h
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.h
  mmc:Q_OBJECT
  mdp:/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
@@ -8788,6 +8790,7 @@
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.cpp
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.h
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MainWindow.h
  mmc:Q_OBJECT
  mdp:/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
@@ -9806,7 +9809,6 @@
  mdp:/opt/homebrew/Cellar/qtmultimedia/6.12.0_1/lib/QtMultimedia.framework/Versions/A/Headers/qtmultimediaexports.h
  mdp:/opt/homebrew/Cellar/qtmultimedia/6.12.0_1/lib/QtMultimedia.framework/Versions/A/Headers/qtmultimediaglobal.h
  mdp:/opt/homebrew/Cellar/qtmultimedia/6.12.0_1/lib/QtMultimedia.framework/Versions/A/Headers/qvideosink.h
-/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongEditorDialog.h
  mmc:Q_OBJECT
  mdp:/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
@@ -11763,6 +11765,7 @@
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationSettingsDialog.cpp
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MainWindow.cpp
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/MediaManager.cpp
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.cpp
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/MediaPlayback.cpp
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.cpp
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/DisplayWindow.cpp

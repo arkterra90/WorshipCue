@@ -1108,6 +1108,8 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: WorshipCue_
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgetsglobal.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qwidget.h
 
+CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.o: .qt/rcc/qrc_WorshipCue_backgrounds.cpp
+
 CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_app_icons.cpp.o: .qt/rcc/qrc_app_icons.cpp
 
 CMakeFiles/WorshipCue.dir/src/core/LyricsImporter.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp \
@@ -8973,6 +8975,7 @@ CMakeFiles/WorshipCue.dir/src/ui/BackgroundLibraryDialog.cpp.o: /Users/jeremykue
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdbool.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdint.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/BuiltInBackgrounds.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationSettings.h \
@@ -11132,6 +11135,7 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: /Users/jeremykuehn/Documents/
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdbool.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdint.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/BuiltInBackgrounds.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationSettings.h \
@@ -21216,6 +21220,8 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: /Users/jeremykuehn/Docu
 
 /opt/homebrew/opt/qt/include/QtCore/QSize:
 
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/BuiltInBackgrounds.h:
+
 /opt/homebrew/opt/qt/lib/QtMultimedia.framework/Headers/qvideoframeformat.h:
 
 /opt/homebrew/opt/qt/lib/QtMultimedia.framework/Headers/qvideoframe.h:
@@ -21309,6 +21315,8 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: /Users/jeremykuehn/Docu
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp:
+
+.qt/rcc/qrc_WorshipCue_backgrounds.cpp:
 
 /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgetsexports.h:
 

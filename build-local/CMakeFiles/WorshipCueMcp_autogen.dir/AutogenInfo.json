@@ -479,6 +479,7 @@
 		"/opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6QDarwinMediaPluginAdditionalTargetInfo.cmake",
 		"/opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaVersionlessAliasTargets.cmake",
 		"/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in",
+		"/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in",
 		"/opt/homebrew/share/cmake/Modules/GNUInstallDirs.cmake",
 		"/opt/homebrew/lib/cmake/Qt6/macos/Info.plist.app.in"
 	],
@@ -562,6 +563,7 @@
 	"MOC_RELAXED_MODE" : false,
 	"MOC_SKIP" : 
 	[
+		"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp",
 		"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/.qt/rcc/qrc_app_icons.cpp"
 	],
 	"MULTI_CONFIG" : false,

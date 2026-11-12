@@ -1,0 +1,25 @@
+<RCC>
+  <qresource prefix="/backgrounds/builtin">
+    <file alias="aurora-veil.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/aurora-veil.jpg</file>
+    <file alias="midnight-tide.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/midnight-tide.jpg</file>
+    <file alias="indigo-flow.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/indigo-flow.jpg</file>
+    <file alias="ember-glow.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/ember-glow.jpg</file>
+    <file alias="jade-mist.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/jade-mist.jpg</file>
+    <file alias="violet-halo.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/violet-halo.jpg</file>
+    <file alias="blue-hour.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/blue-hour.jpg</file>
+    <file alias="rose-dusk.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/rose-dusk.jpg</file>
+    <file alias="golden-hour.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/golden-hour.jpg</file>
+    <file alias="arctic-light.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/arctic-light.jpg</file>
+    <file alias="graphite-silk.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/graphite-silk.jpg</file>
+    <file alias="ocean-depths.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/ocean-depths.jpg</file>
+    <file alias="plum-arc.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/plum-arc.jpg</file>
+    <file alias="copper-lines.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/copper-lines.jpg</file>
+    <file alias="forest-light.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/forest-light.jpg</file>
+    <file alias="cobalt-ribbon.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/cobalt-ribbon.jpg</file>
+    <file alias="desert-dusk.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/desert-dusk.jpg</file>
+    <file alias="lilac-drift.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/lilac-drift.jpg</file>
+    <file alias="teal-contours.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/teal-contours.jpg</file>
+    <file alias="midnight-prism.jpg">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/backgrounds/midnight-prism.jpg</file>
+  </qresource>
+</RCC>
+

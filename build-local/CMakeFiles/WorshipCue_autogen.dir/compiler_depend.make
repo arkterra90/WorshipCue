@@ -827,6 +827,7 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   CMakeFiles/4.4.5/CMakeCXXCompiler.cmake \
   CMakeFiles/4.4.5/CMakeSystem.cmake \
   WorshipCue_autogen/moc_predefs.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/BuiltInBackgrounds.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h \
@@ -2279,6 +2280,8 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginConfig.cmake:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/BuiltInBackgrounds.h:
 
 WorshipCue_autogen/moc_predefs.h:
 

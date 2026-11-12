@@ -20,16 +20,21 @@ PresentationSettings PresentationController::effectiveSettings(const Presentatio
 
 void PresentationController::takeLive(const QString &title, const QStringList &slides, int slideIndex,
                                       const PresentationSettings &settings) {
-    const QString titleCopy = title;
-    const QStringList slidesCopy = slides;
-    const PresentationSettings settingsCopy = settings.isValid() ? settings : PresentationSettings{};
+    takeLive(PresentationItem{0, title, slides, {}, settings}, slideIndex);
+}
+
+void PresentationController::takeLive(const PresentationItem &item, int slideIndex) {
+    const PresentationItem snapshot = item;
     serviceSnapshot_.clear();
     itemIndex_ = -1;
     state_ = {};
-    state_.title = titleCopy;
-    state_.slides = slidesCopy;
-    state_.settings = effectiveSettings(settingsCopy);
-    state_.index = slidesCopy.isEmpty() ? -1 : qBound(0, slideIndex, int(slidesCopy.size()) - 1);
+    state_.title = snapshot.title;
+    state_.slides = snapshot.slides;
+    state_.media = snapshot.media;
+    state_.backgroundPath = snapshot.backgroundPath;
+    state_.richText = snapshot.richText;
+    state_.settings = effectiveSettings(snapshot.settings);
+    state_.index = snapshot.slides.isEmpty() ? -1 : qBound(0, slideIndex, int(snapshot.slides.size()) - 1);
     state_.blackout = false;
     state_.clear = false;
     state_.cueRevision = ++cueSerial_;

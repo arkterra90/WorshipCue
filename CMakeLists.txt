@@ -8,11 +8,42 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Sql Multimedia Concurrent Network)
 
 set(WORSHIPCUE_CORE_SOURCES
+    src/core/BuiltInBackgrounds.h
     src/core/MediaSlide.h
     src/core/PresentationSettings.h
     src/core/PresentationController.h
     src/core/PresentationController.cpp
 )
+
+# Embed the collection in each consumer so installed apps and isolated tests do
+# not depend on the source tree or a writable user-library directory.
+function(worshipcue_add_backgrounds target)
+    qt_add_resources(${target} ${target}_backgrounds
+        PREFIX "/backgrounds/builtin"
+        BASE "${CMAKE_CURRENT_SOURCE_DIR}/assets/backgrounds"
+        FILES
+            assets/backgrounds/aurora-veil.jpg
+            assets/backgrounds/midnight-tide.jpg
+            assets/backgrounds/indigo-flow.jpg
+            assets/backgrounds/ember-glow.jpg
+            assets/backgrounds/jade-mist.jpg
+            assets/backgrounds/violet-halo.jpg
+            assets/backgrounds/blue-hour.jpg
+            assets/backgrounds/rose-dusk.jpg
+            assets/backgrounds/golden-hour.jpg
+            assets/backgrounds/arctic-light.jpg
+            assets/backgrounds/graphite-silk.jpg
+            assets/backgrounds/ocean-depths.jpg
+            assets/backgrounds/plum-arc.jpg
+            assets/backgrounds/copper-lines.jpg
+            assets/backgrounds/forest-light.jpg
+            assets/backgrounds/cobalt-ribbon.jpg
+            assets/backgrounds/desert-dusk.jpg
+            assets/backgrounds/lilac-drift.jpg
+            assets/backgrounds/teal-contours.jpg
+            assets/backgrounds/midnight-prism.jpg
+    )
+endfunction()
 set(WORSHIPCUE_DATA_SOURCES
     src/data/LibraryRepository.h
     src/data/LibraryRepository.cpp
@@ -56,6 +87,8 @@ set(WORSHIPCUE_OPERATOR_SOURCES
     src/ui/ReorderListWidget.cpp
     src/ui/SlideTextDelegate.h
     src/ui/SlideTextDelegate.cpp
+    src/ui/SlideGridDelegate.h
+    src/ui/SlideGridDelegate.cpp
     src/ui/SongEditorDialog.h
     src/ui/SongEditorDialog.cpp
     src/core/LyricsImporter.h
@@ -71,6 +104,7 @@ qt_add_executable(WorshipCue src/main.cpp
     ${WORSHIPCUE_CORE_SOURCES} ${WORSHIPCUE_DATA_SOURCES}
     ${WORSHIPCUE_OUTPUT_SOURCES} ${WORSHIPCUE_OPERATOR_SOURCES}
 )
+worshipcue_add_backgrounds(WorshipCue)
 add_dependencies(WorshipCue WorshipCueMcp)
 if(APPLE)
     # Run on every app build, including when only the companion has changed.
@@ -143,6 +177,7 @@ if(WORSHIPCUE_BUILD_TESTS)
         ${WORSHIPCUE_CORE_SOURCES} src/ui/SlideRenderer.cpp src/ui/SlideRenderer.h
         src/ui/BackgroundLibraryDialog.cpp src/ui/BackgroundLibraryDialog.h
         src/ui/DisplayWindow.cpp src/ui/DisplayWindow.h src/media/MediaPlayback.h src/media/MediaPlayback.cpp)
+    worshipcue_add_backgrounds(WorshipCueRendererTests)
     target_link_libraries(WorshipCueRendererTests PRIVATE Qt6::Widgets Qt6::Test Qt6::Multimedia Qt6::Concurrent)
     add_test(NAME slide_renderer COMMAND WorshipCueRendererTests)
 
@@ -161,11 +196,13 @@ if(WORSHIPCUE_BUILD_TESTS)
     qt_add_executable(WorshipCueOperatorTests tests/operator_workflow_test.cpp
         ${WORSHIPCUE_CORE_SOURCES} ${WORSHIPCUE_DATA_SOURCES}
         ${WORSHIPCUE_OUTPUT_SOURCES} ${WORSHIPCUE_OPERATOR_SOURCES})
+    worshipcue_add_backgrounds(WorshipCueOperatorTests)
     target_link_libraries(WorshipCueOperatorTests PRIVATE Qt6::Widgets Qt6::Sql Qt6::Test Qt6::Multimedia Qt6::Concurrent)
     add_test(NAME operator_workflow COMMAND WorshipCueOperatorTests)
 
     qt_add_executable(WorshipCueReorderTests tests/reorder_list_test.cpp
-        src/ui/ReorderListWidget.h src/ui/ReorderListWidget.cpp)
+        src/ui/ReorderListWidget.h src/ui/ReorderListWidget.cpp
+        src/ui/SlideGridDelegate.h src/ui/SlideGridDelegate.cpp)
     target_link_libraries(WorshipCueReorderTests PRIVATE Qt6::Widgets Qt6::Test)
     add_test(NAME reorder_list COMMAND WorshipCueReorderTests)
 

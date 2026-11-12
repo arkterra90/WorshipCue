@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/mocs_compilation.cpp" "CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp" "CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/.qt/rcc/qrc_app_icons.cpp" "CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_app_icons.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_app_icons.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp" "CMakeFiles/WorshipCue.dir/src/core/LyricsImporter.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/core/LyricsImporter.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.cpp" "CMakeFiles/WorshipCue.dir/src/core/PresentationController.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/core/PresentationController.cpp.o.d"
@@ -26,6 +27,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/ReorderListWidget.cpp" "CMakeFiles/WorshipCue.dir/src/ui/ReorderListWidget.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/ReorderListWidget.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.cpp" "CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.cpp" "CMakeFiles/WorshipCue.dir/src/ui/SlideEditorDialog.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/SlideEditorDialog.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.cpp" "CMakeFiles/WorshipCue.dir/src/ui/SlideGridDelegate.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/SlideGridDelegate.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.cpp" "CMakeFiles/WorshipCue.dir/src/ui/SlideRenderer.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/SlideRenderer.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideTextDelegate.cpp" "CMakeFiles/WorshipCue.dir/src/ui/SlideTextDelegate.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/SlideTextDelegate.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongEditorDialog.cpp" "CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o.d"

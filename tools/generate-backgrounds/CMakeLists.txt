@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.21)
+project(WorshipCueBackgroundArtwork LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Gui)
+add_executable(generate-backgrounds main.cpp)
+target_link_libraries(generate-backgrounds PRIVATE Qt6::Gui)

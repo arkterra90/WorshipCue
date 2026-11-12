@@ -1,5 +1,6 @@
 #include "BackgroundLibraryDialog.h"
 #include "SlideRenderer.h"
+#include "../core/BuiltInBackgrounds.h"
 
 #include <QDialogButtonBox>
 #include <QDir>
@@ -22,17 +23,25 @@ QPixmap imagePreview(const QString &path) {
     if (size.isValid()) reader.setScaledSize(size.scaled(QSize(384, 216), Qt::KeepAspectRatio));
     return QPixmap::fromImage(reader.read());
 }
+
+QString libraryHint(bool assignmentEnabled) {
+    const QString choices = QStringLiteral("%1 ready-to-use backgrounds are included. ")
+        .arg(BuiltInBackgrounds::catalog().size());
+    return choices + (assignmentEnabled ? QStringLiteral(
+        "Choose one for this presentation, or import your own images. Lyrics and pictures appear above this layer. "
+        "Imported images are copied into your library for reuse.") : QStringLiteral(
+        "Browse the collection or import your own images. Select a presentation, then open this library "
+        "again to assign its background. Imported images are copied and your originals are preserved."));
+}
 }
 
 BackgroundLibraryDialog::BackgroundLibraryDialog(const QString &databaseDirectory,
     const QString &currentPath, QWidget *parent) : QDialog(parent), directory_(databaseDirectory) {
     setObjectName(QStringLiteral("backgroundLibraryDialog"));
     setWindowTitle(QStringLiteral("Background Library"));
-    resize(720, 540);
+    resize(760, 620);
     auto *layout = new QVBoxLayout(this);
-    hint_ = new QLabel(QStringLiteral(
-        "Choose a background for this presentation. Lyrics and pictures appear above this layer. "
-        "Imported images are copied into your library and can be reused in other presentations."), this);
+    hint_ = new QLabel(libraryHint(true), this);
     hint_->setWordWrap(true);
     layout->addWidget(hint_);
     auto *import = new QPushButton(QStringLiteral("Import Backgrounds…"), this);
@@ -65,12 +74,7 @@ BackgroundLibraryDialog::BackgroundLibraryDialog(const QString &databaseDirector
 void BackgroundLibraryDialog::setAssignmentEnabled(bool enabled) {
     assignmentEnabled_ = enabled;
     assign_->setEnabled(enabled);
-    hint_->setText(enabled ? QStringLiteral(
-        "Choose a background for this presentation. Lyrics and pictures appear above this layer. "
-        "Imported images are copied into your library and can be reused in other presentations.")
-        : QStringLiteral(
-        "Import reusable backgrounds into your library. Select a presentation, then open this library "
-        "again to assign its background. Imported images are copied and your originals are preserved."));
+    hint_->setText(libraryHint(enabled));
 }
 
 QString BackgroundLibraryDialog::selectedPath() const {
@@ -86,6 +90,15 @@ void BackgroundLibraryDialog::reload(const QString &selectPath) {
     builtIn->setData(Qt::UserRole, QStringLiteral(""));
     builtIn->setToolTip(QStringLiteral("Use the built-in background for this presentation."));
     backgrounds_->setCurrentItem(builtIn);
+    for (const auto &background : BuiltInBackgrounds::catalog()) {
+        const QPixmap preview = imagePreview(BuiltInBackgrounds::resourcePath(background.path));
+        auto *item = new QListWidgetItem(
+            QIcon(SlideRenderer::thumbnail(QString(), QSize(192, 108), preview)), background.title, backgrounds_);
+        item->setData(Qt::UserRole, background.path);
+        item->setToolTip(QStringLiteral("%1 — included with WorshipCue. Available offline in every library.")
+            .arg(background.title));
+        if (background.path == selectPath) backgrounds_->setCurrentItem(item);
+    }
     const QDir backgrounds(QDir(directory_).filePath(QStringLiteral("backgrounds")));
     const auto files = backgrounds.entryInfoList(QDir::Files | QDir::NoSymLinks, QDir::Name | QDir::IgnoreCase);
     for (const auto &file : files) {
@@ -97,7 +110,7 @@ void BackgroundLibraryDialog::reload(const QString &selectPath) {
         auto *item = new QListWidgetItem(QIcon(SlideRenderer::thumbnail(QString(), QSize(192, 108), preview)),
                                          file.completeBaseName(), backgrounds_);
         item->setData(Qt::UserRole, relative);
-        item->setToolTip(file.fileName());
+        item->setToolTip(QStringLiteral("Imported background: %1").arg(file.fileName()));
         if (relative == selectPath) backgrounds_->setCurrentItem(item);
     }
     if (!selectPath.isEmpty() && selectedPath() != selectPath) {
@@ -106,6 +119,7 @@ void BackgroundLibraryDialog::reload(const QString &selectPath) {
         missing->setToolTip(QStringLiteral("The assigned file is missing. Choose another background to replace it."));
         backgrounds_->setCurrentItem(missing);
     }
+    backgrounds_->scrollToItem(backgrounds_->currentItem());
 }
 
 bool BackgroundLibraryDialog::importFiles(const QStringList &paths, QString *error) {

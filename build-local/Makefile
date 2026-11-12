@@ -300,6 +300,30 @@ WorshipCue_autogen/mocs_compilation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.s
 .PHONY : WorshipCue_autogen/mocs_compilation.cpp.s
 
+build-local/.qt/rcc/qrc_WorshipCue_backgrounds.o: build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.o
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_backgrounds.o
+
+# target to build an object file
+build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.o
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.o
+
+build-local/.qt/rcc/qrc_WorshipCue_backgrounds.i: build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.i
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_backgrounds.i
+
+# target to preprocess a source file
+build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.i
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.i
+
+build-local/.qt/rcc/qrc_WorshipCue_backgrounds.s: build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.s
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_backgrounds.s
+
+# target to generate assembly for a file
+build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.s
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.s
+
 build-local/.qt/rcc/qrc_app_icons.o: build-local/.qt/rcc/qrc_app_icons.cpp.o
 .PHONY : build-local/.qt/rcc/qrc_app_icons.o
 
@@ -810,6 +834,30 @@ src/ui/SlideEditorDialog.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/SlideEditorDialog.cpp.s
 .PHONY : src/ui/SlideEditorDialog.cpp.s
 
+src/ui/SlideGridDelegate.o: src/ui/SlideGridDelegate.cpp.o
+.PHONY : src/ui/SlideGridDelegate.o
+
+# target to build an object file
+src/ui/SlideGridDelegate.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/SlideGridDelegate.cpp.o
+.PHONY : src/ui/SlideGridDelegate.cpp.o
+
+src/ui/SlideGridDelegate.i: src/ui/SlideGridDelegate.cpp.i
+.PHONY : src/ui/SlideGridDelegate.i
+
+# target to preprocess a source file
+src/ui/SlideGridDelegate.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/SlideGridDelegate.cpp.i
+.PHONY : src/ui/SlideGridDelegate.cpp.i
+
+src/ui/SlideGridDelegate.s: src/ui/SlideGridDelegate.cpp.s
+.PHONY : src/ui/SlideGridDelegate.s
+
+# target to generate assembly for a file
+src/ui/SlideGridDelegate.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/SlideGridDelegate.cpp.s
+.PHONY : src/ui/SlideGridDelegate.cpp.s
+
 src/ui/SlideRenderer.o: src/ui/SlideRenderer.cpp.o
 .PHONY : src/ui/SlideRenderer.o
 
@@ -907,6 +955,9 @@ help:
 	@echo "... WorshipCue_autogen/mocs_compilation.o"
 	@echo "... WorshipCue_autogen/mocs_compilation.i"
 	@echo "... WorshipCue_autogen/mocs_compilation.s"
+	@echo "... build-local/.qt/rcc/qrc_WorshipCue_backgrounds.o"
+	@echo "... build-local/.qt/rcc/qrc_WorshipCue_backgrounds.i"
+	@echo "... build-local/.qt/rcc/qrc_WorshipCue_backgrounds.s"
 	@echo "... build-local/.qt/rcc/qrc_app_icons.o"
 	@echo "... build-local/.qt/rcc/qrc_app_icons.i"
 	@echo "... build-local/.qt/rcc/qrc_app_icons.s"
@@ -970,6 +1021,9 @@ help:
 	@echo "... src/ui/SlideEditorDialog.o"
 	@echo "... src/ui/SlideEditorDialog.i"
 	@echo "... src/ui/SlideEditorDialog.s"
+	@echo "... src/ui/SlideGridDelegate.o"
+	@echo "... src/ui/SlideGridDelegate.i"
+	@echo "... src/ui/SlideGridDelegate.s"
 	@echo "... src/ui/SlideRenderer.o"
 	@echo "... src/ui/SlideRenderer.i"
 	@echo "... src/ui/SlideRenderer.s"

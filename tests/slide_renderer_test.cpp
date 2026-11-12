@@ -3,14 +3,18 @@
 #include "../src/ui/RichTextSupport.h"
 #include "../src/ui/BackgroundLibraryDialog.h"
 #include "../src/media/MediaPlayback.h"
+#include "../src/core/BuiltInBackgrounds.h"
 
+#include <QCryptographicHash>
 #include <QImage>
+#include <QImageReader>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QListWidget>
 #include <QPainter>
 #include <QPushButton>
+#include <QSet>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTextBlock>
@@ -348,6 +352,50 @@ private slots:
         QCOMPARE(audienceImage(audience).pixelColor(160, 90), red);
     }
 
+    void builtInBackgroundsAreReadyWithoutImport() {
+        QTemporaryDir directory;
+        const QString databaseDirectory = directory.filePath(QStringLiteral("library"));
+        BackgroundLibraryDialog dialog(databaseDirectory, {});
+        auto *items = dialog.findChild<QListWidget *>(QStringLiteral("backgroundLibraryItems"));
+        QVERIFY(items);
+        QCOMPARE(BuiltInBackgrounds::catalog().size(), 20);
+        QCOMPARE(items->count(), 21);
+        QVERIFY(dialog.selectedPath().isEmpty());
+        QSet<QString> titles;
+        QSet<QString> paths;
+        QSet<QByteArray> images;
+        for (int i = 0; i < BuiltInBackgrounds::catalog().size(); ++i) {
+            const auto &background = BuiltInBackgrounds::catalog().at(i);
+            auto *item = items->item(i + 1);
+            QCOMPARE(item->text(), background.title);
+            QCOMPARE(item->data(Qt::UserRole).toString(), background.path);
+            QVERIFY(!item->icon().isNull());
+            QVERIFY(!titles.contains(background.title));
+            QVERIFY(!paths.contains(background.path));
+            titles.insert(background.title);
+            paths.insert(background.path);
+            const QString resource = BuiltInBackgrounds::resourcePath(background.path);
+            QVERIFY(resource.startsWith(QStringLiteral(":/backgrounds/builtin/")));
+            QImageReader reader(resource);
+            QCOMPARE(reader.size(), QSize(3840, 2160));
+            reader.setScaledSize(QSize(320, 180));
+            QVERIFY2(!reader.read().isNull(), qPrintable(reader.errorString()));
+            QFile file(resource);
+            QVERIFY(file.open(QIODevice::ReadOnly));
+            const QByteArray digest = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Sha256);
+            QVERIFY(!images.contains(digest));
+            images.insert(digest);
+        }
+        const QString selected = BuiltInBackgrounds::catalog().last().path;
+        items->setCurrentRow(20);
+        QCOMPARE(dialog.selectedPath(), selected);
+        BackgroundLibraryDialog reopened(databaseDirectory, selected);
+        QCOMPARE(reopened.selectedPath(), selected);
+        QCOMPARE(reopened.findChild<QListWidget *>(QStringLiteral("backgroundLibraryItems"))->count(), 21);
+        // Included artwork remains available without creating a managed-image folder.
+        QVERIFY(!QFileInfo::exists(databaseDirectory));
+    }
+
     void importedBackgroundsAreManagedReusableAndLeaveOriginalsIntact() {
         QTemporaryDir directory;
         const QString source = directory.filePath(QStringLiteral("Source.jpg"));
@@ -366,17 +414,17 @@ private slots:
         QCOMPARE(reopened.selectedPath(), first);
         auto *items = reopened.findChild<QListWidget *>(QStringLiteral("backgroundLibraryItems"));
         QVERIFY(items);
-        QCOMPARE(items->count(), 2);
+        QCOMPARE(items->count(), 22);
         QVERIFY2(reopened.importFiles({source}, &error), qPrintable(error));
         QVERIFY(reopened.selectedPath() != first);
-        QCOMPARE(items->count(), 3);
+        QCOMPARE(items->count(), 23);
         QFile bad(directory.filePath(QStringLiteral("broken.png")));
         QVERIFY(bad.open(QIODevice::WriteOnly));
         bad.write("not an image");
         bad.close();
         QVERIFY(!reopened.importFiles({bad.fileName()}, &error));
         QVERIFY(!error.isEmpty());
-        QCOMPARE(items->count(), 3);
+        QCOMPARE(items->count(), 23);
         reopened.setAssignmentEnabled(false);
         QVERIFY(!reopened.findChild<QPushButton *>(QStringLiteral("assignBackground"))->isEnabled());
     }

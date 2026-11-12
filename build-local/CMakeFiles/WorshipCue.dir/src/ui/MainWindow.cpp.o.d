@@ -1051,10 +1051,12 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideTextDelegate.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QStyledItemDelegate \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qstyleditemdelegate.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationSettingsDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../media/BatchRenamer.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/BackgroundLibraryDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/BuiltInBackgrounds.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../media/MediaManager.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../media/../core/MediaSlide.h \
   /opt/homebrew/opt/qt/include/QtCore/QFutureWatcher \

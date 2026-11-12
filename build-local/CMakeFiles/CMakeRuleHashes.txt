@@ -1,4 +1,5 @@
 # Hashes of file build rules.
+cb67bec6e65a07ad2e36c41a9eafb5fd .qt/rcc/qrc_WorshipCue_backgrounds.cpp
 ce6ba40e107c70235bddbdc159c3b746 .qt/rcc/qrc_app_icons.cpp
 5ffca7e9b154f6fae08dcae7dd939978 CMakeFiles/WorshipCueMcpBundle
 2db584f9503e13740d5ffc222e2890c6 CMakeFiles/WorshipCueMcp_autogen

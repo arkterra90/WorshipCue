@@ -4,9 +4,11 @@
 #include "SongEditorDialog.h"
 #include "SlideEditorDialog.h"
 #include "SlideTextDelegate.h"
+#include "SlideGridDelegate.h"
 #include "PresentationSettingsDialog.h"
 #include "MediaImportDialog.h"
 #include "BackgroundLibraryDialog.h"
+#include "../core/BuiltInBackgrounds.h"
 #include "../media/MediaManager.h"
 
 #include <QAbstractItemModel>
@@ -394,7 +396,7 @@ void MainWindow::buildUi() {
     left->addWidget(search_);
     songs_ = new QListWidget(sidebar);
     songs_->setObjectName(QStringLiteral("songLibrary"));
-    songs_->setToolTip(QStringLiteral("Double-click to add a song to this service. Right-click for song actions."));
+    songs_->setToolTip(QStringLiteral("Select to view slides. Double-click to add to this service. Right-click for presentation actions."));
     songs_->setContextMenuPolicy(Qt::CustomContextMenu);
     left->addWidget(songs_, 2);
     auto *songRow = new QHBoxLayout;
@@ -412,13 +414,17 @@ void MainWindow::buildUi() {
     left->addWidget(importButton_);
     connect(importButton_, &QPushButton::clicked, this, &MainWindow::chooseMediaFiles);
     auto *backgroundLibrary = button(QStringLiteral("Background Library…"), sidebar, QStringLiteral("backgroundLibrary"));
-    backgroundLibrary->setToolTip(QStringLiteral("Import reusable backgrounds and assign one to the selected library presentation."));
+    backgroundLibrary->setToolTip(QStringLiteral("Choose an included background or import your own, then assign it to the selected presentation."));
     left->addWidget(backgroundLibrary);
     connect(backgroundLibrary, &QPushButton::clicked, this, [this] { assignBackground(selectedSongId()); });
     connect(search_, &QLineEdit::textChanged, this, [this] { reloadSongs(); });
     connect(newSong, &QPushButton::clicked, this, &MainWindow::createSong);
     connect(edit, &QPushButton::clicked, this, &MainWindow::editSong);
     connect(add, &QPushButton::clicked, this, &MainWindow::appendSong);
+    connect(songs_, &QListWidget::currentRowChanged, this, [this] { showSelectedLibrary(); });
+    connect(songs_, &QListWidget::itemClicked, this, [this] {
+        if (!browsingLibrary_) showSelectedLibrary();
+    });
     connect(songs_, &QListWidget::itemDoubleClicked, this, [this] { appendSong(); });
     connect(songs_, &QListWidget::customContextMenuRequested, this, [this](const QPoint &point) {
         if (auto *item = songs_->itemAt(point)) songs_->setCurrentItem(item); else return;
@@ -453,6 +459,7 @@ void MainWindow::buildUi() {
     connect(services_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
         currentServiceId_ = services_->currentData().toInt();
         QSettings().setValue(QStringLiteral("service/selected"), currentServiceId_);
+        browsingLibrary_ = false;
         reloadService();
     });
     auto *serviceOrder = new ReorderListWidget(sidebar);
@@ -464,6 +471,9 @@ void MainWindow::buildUi() {
     service_->setToolTip(QStringLiteral("Select to preview. Double-click to go live. Drag to save a new service order."));
     left->addWidget(service_, 3);
     connect(service_, &QListWidget::currentRowChanged, this, [this] { showSelectedService(); });
+    connect(service_, &QListWidget::itemClicked, this, [this] {
+        if (browsingLibrary_) showSelectedService();
+    });
     connect(service_, &QListWidget::itemDoubleClicked, this, [this] { goLive(); });
     connect(serviceOrder, &ReorderListWidget::orderChanged, this, &MainWindow::persistServiceOrder);
     connect(service_, &QListWidget::customContextMenuRequested, this, [this](const QPoint &point) {
@@ -535,7 +545,7 @@ void MainWindow::buildUi() {
     center->addLayout(viewTools);
     connect(editSlide_, &QPushButton::clicked, this, &MainWindow::editSelectedSlide);
     connect(timingButton, &QPushButton::clicked, this, [this] {
-        if (service_->currentItem()) configurePresentation(service_->currentItem()->data(Qt::UserRole + 1).toInt());
+        configurePresentation(workspaceSongId());
     });
     selectedTimingInfo_ = new QLabel(workspace);
     selectedTimingInfo_->setObjectName(QStringLiteral("selectedTimingInfo"));
@@ -545,7 +555,7 @@ void MainWindow::buildUi() {
     auto *slideOrder = new ReorderListWidget(workspace);
     slides_ = slideOrder;
     slides_->setObjectName(QStringLiteral("slideWorkspace"));
-    gridDelegate_ = slides_->itemDelegate();
+    gridDelegate_ = new SlideGridDelegate(slides_);
     textDelegate_ = new SlideTextDelegate(slides_);
     slides_->setViewMode(QListView::IconMode);
     slides_->setIconSize(QSize(256, 144));
@@ -565,19 +575,17 @@ void MainWindow::buildUi() {
     connect(slides_, &QListWidget::itemClicked, this, [this] { if (mode_->currentIndex() == 0) goLive(); });
     connect(slides_, &QListWidget::itemDoubleClicked, this, [this] { if (mode_->currentIndex() == 1) editSelectedSlide(); });
     connect(slideOrder, &ReorderListWidget::orderChanged, this, &MainWindow::persistSlideOrder);
-    connect(mode_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
-        slides_->setDragDropMode(mode_->currentIndex() == 1 ? QAbstractItemView::InternalMove : QAbstractItemView::NoDragDrop);
-    });
+    connect(mode_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::updateSlideDragMode);
     connect(slides_, &QListWidget::customContextMenuRequested, this, [this](const QPoint &point) {
         if (auto *item = slides_->itemAt(point)) slides_->setCurrentItem(item); else return;
         QMenu menu(this);
         menu.addAction(QStringLiteral("Edit Slide Text…"), this, &MainWindow::editSelectedSlide);
         menu.addAction(QStringLiteral("Take Live"), this, &MainWindow::goLive);
-        menu.addAction(QStringLiteral("Move Earlier in Service Arrangement"), this, [this] { moveSlide(-1); });
-        menu.addAction(QStringLiteral("Move Later in Service Arrangement"), this, [this] { moveSlide(1); });
-        menu.addAction(QStringLiteral("Reset to Song Order"), this, &MainWindow::resetSlideOrder);
+        menu.addAction(QStringLiteral("Move Earlier in Service Arrangement"), this, [this] { moveSlide(-1); })->setEnabled(!browsingLibrary_);
+        menu.addAction(QStringLiteral("Move Later in Service Arrangement"), this, [this] { moveSlide(1); })->setEnabled(!browsingLibrary_);
+        menu.addAction(QStringLiteral("Reset to Song Order"), this, &MainWindow::resetSlideOrder)->setEnabled(!browsingLibrary_);
         menu.addAction(QStringLiteral("Batch Rename Presentation Media…"), this, [this] {
-            if (service_->currentItem()) renameMediaPresentation(service_->currentItem()->data(Qt::UserRole + 1).toInt());
+            renameMediaPresentation(workspaceSongId());
         });
         menu.exec(slides_->viewport()->mapToGlobal(point));
     });
@@ -714,6 +722,7 @@ void MainWindow::buildUi() {
 
 bool MainWindow::reloadSongs(bool reportFailure) {
     const int selected = selectedSongId();
+    const int slide = slides_->currentRow();
     const auto songs = library_.songs(search_->text().trimmed());
     if (!library_.lastError().isEmpty()) {
         if (reportFailure) reportError(library_.lastError());
@@ -727,6 +736,7 @@ bool MainWindow::reloadSongs(bool reportFailure) {
         if (song.id == selected) songs_->setCurrentItem(item);
     }
     if (!songs_->currentItem() && songs_->count()) songs_->setCurrentRow(0);
+    if (browsingLibrary_) return showSelectedPresentation(selectedSongId() == selected ? slide : 0, reportFailure);
     return true;
 }
 
@@ -802,13 +812,17 @@ bool MainWindow::reloadService(int selectEntryId, int selectSlide, bool reportFa
     if (row < 0 && service_->count()) row = 0;
     service_->setCurrentRow(row);
     rebuilding_ = false;
-    if (!showSelectedService(selectSlide, reportFailure)) return false;
+    if (!showSelectedPresentation(selectSlide, reportFailure)) return false;
     updateLiveUi();
     return true;
 }
 
 int MainWindow::selectedSongId() const {
     return songs_->currentItem() ? songs_->currentItem()->data(Qt::UserRole).toInt() : 0;
+}
+int MainWindow::workspaceSongId() const {
+    return browsingLibrary_ ? selectedSongId()
+        : service_->currentItem() ? service_->currentItem()->data(Qt::UserRole + 1).toInt() : 0;
 }
 int MainWindow::selectedEntryId() const {
     return service_->currentItem() ? service_->currentItem()->data(Qt::UserRole).toInt() : 0;
@@ -847,6 +861,8 @@ QPixmap MainWindow::mediaThumbnail(const SlideMedia &media) const {
 }
 
 QString MainWindow::resolveBackground(const QString &path) const {
+    const QString resource = BuiltInBackgrounds::resourcePath(path);
+    if (!resource.isEmpty()) return resource;
     return path.isEmpty() ? QString() : QDir(library_.databaseDirectory()).absoluteFilePath(path);
 }
 
@@ -866,15 +882,33 @@ QPixmap MainWindow::backgroundPixmap(const QString &absolutePath) const {
 }
 
 bool MainWindow::showSelectedService(int selectSlide, bool reportFailure) {
-    const auto *selected = service_->currentItem();
+    if (rebuilding_) return true;
+    browsingLibrary_ = false;
+    return showSelectedPresentation(selectSlide, reportFailure);
+}
+
+bool MainWindow::showSelectedLibrary(int selectSlide, bool reportFailure) {
+    if (rebuilding_) return true;
+    browsingLibrary_ = true;
+    return showSelectedPresentation(selectSlide, reportFailure);
+}
+
+void MainWindow::updateSlideDragMode() {
+    slides_->setDragDropMode(!browsingLibrary_ && mode_->currentIndex() == 1
+        ? QAbstractItemView::InternalMove : QAbstractItemView::NoDragDrop);
+}
+
+bool MainWindow::showSelectedPresentation(int selectSlide, bool reportFailure) {
     Song song;
     QVector<int> order;
-    if (selected) {
-        song = library_.song(selected->data(Qt::UserRole + 1).toInt());
+    if (workspaceSongId()) {
+        song = library_.song(workspaceSongId());
         if (!library_.lastError().isEmpty()) {
             if (reportFailure) reportError(library_.lastError());
             return false;
         }
+    }
+    if (song.id && !browsingLibrary_) {
         const auto entries = library_.service(currentServiceId_);
         if (!library_.lastError().isEmpty()) {
             if (reportFailure) reportError(library_.lastError());
@@ -900,15 +934,16 @@ bool MainWindow::showSelectedService(int selectSlide, bool reportFailure) {
     const QString transition = settings.transition == SlideTransitionType::Cut || settings.transitionDurationMs == 0
         ? QStringLiteral("Cut") : QStringLiteral("%1 • %2 s").arg(transitionName(settings.transition))
             .arg(settings.transitionDurationMs / 1000.0, 0, 'f', 2);
-    const QString backgroundName = song.backgroundPath.isEmpty() ? QStringLiteral("Built-in background")
-        : QStringLiteral("Background: %1%2").arg(QFileInfo(song.backgroundPath).completeBaseName(),
+    const QString includedTitle = BuiltInBackgrounds::title(song.backgroundPath);
+    const QString backgroundName = song.backgroundPath.isEmpty() ? QStringLiteral("Default background")
+        : QStringLiteral("Background: %1%2").arg(includedTitle.isEmpty() ? QFileInfo(song.backgroundPath).completeBaseName() : includedTitle,
             selectedBackground_.isNull() ? QStringLiteral(" (missing)") : QString());
     selectedTimingInfo_->setText(song.id ? QStringLiteral("%1 • %2 (%3)\n%4").arg(timing, transition,
         song.settings.overrideTransition ? QStringLiteral("presentation override") : QStringLiteral("global default"), backgroundName) : QString());
     const QSignalBlocker block(slides_);
     rebuilding_ = true;
     slides_->clear();
-    if (selected) {
+    if (song.id) {
         if (order.isEmpty()) for (int i = 0; i < song.slides.size(); ++i) order.append(i);
         for (const int sourceIndex : order) {
             if (sourceIndex < 0 || sourceIndex >= song.slides.size()) continue;
@@ -925,9 +960,11 @@ bool MainWindow::showSelectedService(int selectSlide, bool reportFailure) {
             .arg(slides_->count() == 1 ? QStringLiteral("slide") : QStringLiteral("slides")));
         if (slides_->count()) slides_->setCurrentRow(qBound(0, selectSlide, slides_->count() - 1));
     } else {
-        selectedInfo_->setText(QStringLiteral("Add songs to build this service"));
+        selectedInfo_->setText(browsingLibrary_ ? QStringLiteral("Select a library item to view its slides")
+                                              : QStringLiteral("Add songs to build this service"));
     }
     rebuilding_ = false;
+    updateSlideDragMode();
     refreshThumbnails();
     showSelectedSlide();
     return true;
@@ -935,7 +972,7 @@ bool MainWindow::showSelectedService(int selectSlide, bool reportFailure) {
 
 void MainWindow::showSelectedSlide() {
     const auto *item = slides_->currentItem();
-    editSlide_->setEnabled(item && service_->currentItem());
+    editSlide_->setEnabled(item && workspaceSongId());
     const SlideMedia media = item ? item->data(Qt::UserRole + 3).value<SlideMedia>() : SlideMedia{};
     selectedPreview_->setSlide(previewState(item ? item->data(Qt::UserRole + 1).toString() : QString(), resolveMedia(media),
                                            item ? item->data(Qt::UserRole + 4).toString() : QString()),
@@ -1089,8 +1126,8 @@ void MainWindow::editSong() {
     editPresentation(selectedSongId());
 }
 void MainWindow::editSelectedSlide() {
-    if (!service_->currentItem() || !slides_->currentItem()) return;
-    editPresentation(service_->currentItem()->data(Qt::UserRole + 1).toInt(), slides_->currentItem()->data(Qt::UserRole).toInt());
+    if (!slides_->currentItem()) return;
+    editPresentation(workspaceSongId(), slides_->currentItem()->data(Qt::UserRole).toInt());
 }
 void MainWindow::editPresentation(int songId, int sourceSlide) {
     if (!songId) return;
@@ -1141,6 +1178,7 @@ void MainWindow::appendSong() {
     QString error;
     if (!library_.appendToService(currentServiceId_, id, &error)) return reportError(error);
     const auto entries = library_.service(currentServiceId_);
+    browsingLibrary_ = false;
     reloadService(entries.isEmpty() ? 0 : entries.last().id);
     markSaved();
 }
@@ -1183,6 +1221,10 @@ void MainWindow::persistServiceOrder() {
     markSaved();
 }
 void MainWindow::persistSlideOrder() {
+    if (browsingLibrary_) {
+        showSelectedPresentation(slides_->currentRow());
+        return;
+    }
     if (rebuilding_ || !selectedEntryId()) return;
     QString error;
     if (!library_.setEntrySlideOrder(selectedEntryId(), selectedSlideOrder(), &error)) {
@@ -1194,6 +1236,7 @@ void MainWindow::persistSlideOrder() {
     markSaved();
 }
 void MainWindow::moveSlide(int delta) {
+    if (browsingLibrary_) return;
     const int row = slides_->currentRow();
     if (row < 0 || row + delta < 0 || row + delta >= slides_->count()) return;
     auto order = selectedSlideOrder();
@@ -1204,7 +1247,7 @@ void MainWindow::moveSlide(int delta) {
     markSaved();
 }
 void MainWindow::resetSlideOrder() {
-    if (!selectedEntryId()) return;
+    if (browsingLibrary_ || !selectedEntryId()) return;
     QString error;
     if (!library_.setEntrySlideOrder(selectedEntryId(), {}, &error)) return reportError(error);
     showSelectedService();
@@ -1212,6 +1255,16 @@ void MainWindow::resetSlideOrder() {
 }
 
 void MainWindow::goLive() {
+    if (browsingLibrary_) {
+        if (!workspaceSongId() || slides_->currentRow() < 0) return;
+        const Song song = library_.song(workspaceSongId());
+        if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+        liveLibrarySongId_ = song.id;
+        controller_.takeLive(PresentationItem{0, song.title, selectedSlides(), selectedMedia(),
+            song.settings.resolvedWithDefaults(programSettings_), selectedBackgroundPath_, selectedRichText()}, slides_->currentRow());
+        slides_->setFocus();
+        return;
+    }
     if (!selectedEntryId() || slides_->currentRow() < 0) return;
     QVector<PresentationItem> items;
     const auto entries = library_.service(currentServiceId_);
@@ -1229,6 +1282,7 @@ void MainWindow::goLive() {
         items.append({entry.id, song.title, texts, media, song.settings.resolvedWithDefaults(programSettings_), resolveBackground(song.backgroundPath), html});
     }
     if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    liveLibrarySongId_ = 0;
     controller_.takeServiceLive(currentServiceId_, items, selectedEntryId(), slides_->currentRow());
     slides_->setFocus();
 }
@@ -1244,6 +1298,13 @@ void MainWindow::rewind() {
 }
 void MainWindow::syncLiveSelection() {
     const auto &state = controller_.state();
+    if (browsingLibrary_) {
+        if (state.serviceId == 0 && liveLibrarySongId_ == selectedSongId()
+            && selectedSlides() == state.slides && selectedRichText() == state.richText
+            && sameMediaContent(selectedMedia(), state.media) && selectedBackgroundPath_ == state.backgroundPath)
+            slides_->setCurrentRow(state.index);
+        return;
+    }
     if (state.serviceId != currentServiceId_) return;
     for (int i = 0; i < service_->count(); ++i) {
         if (service_->item(i)->data(Qt::UserRole).toInt() != state.entryId) continue;
@@ -1262,7 +1323,9 @@ void MainWindow::refreshThumbnails() {
     const auto &background = selectedBackground_;
     const bool backgroundChanged = thumbnailBackgroundKey_ != background.cacheKey();
     thumbnailBackgroundKey_ = background.cacheKey();
-    const bool same = state.serviceId == currentServiceId_ && state.entryId == selectedEntryId()
+    const bool sameSource = browsingLibrary_ ? state.serviceId == 0 && liveLibrarySongId_ == selectedSongId()
+        : state.serviceId == currentServiceId_ && state.entryId == selectedEntryId();
+    const bool same = sameSource
                       && selectedSlides() == state.slides && selectedRichText() == state.richText && sameMediaContent(selectedMedia(), state.media)
                       && selectedBackgroundPath_ == state.backgroundPath;
     for (int i = 0; i < slides_->count(); ++i) {
@@ -1305,7 +1368,7 @@ void MainWindow::refreshThumbnails() {
 }
 void MainWindow::updateLiveUi() {
     const auto &state = controller_.state();
-    returnToLive_->setEnabled(state.serviceId > 0 && state.entryId > 0 && state.index >= 0);
+    returnToLive_->setEnabled(state.index >= 0 && (liveLibrarySongId_ > 0 || (state.serviceId > 0 && state.entryId > 0)));
     const QString status = state.blackout ? QStringLiteral("BLACKOUT") : state.clear ? QStringLiteral("BACKGROUND ONLY") : QStringLiteral("LIVE");
     liveInfo_->setText(state.index < 0 ? QStringLiteral("%1 • Ready").arg(status)
         : QStringLiteral("%1 • %2 • %3/%4").arg(status, state.title).arg(state.index + 1).arg(state.slides.size()));
@@ -1338,7 +1401,7 @@ void MainWindow::configurePresentation(int songId) {
     QString error;
     if (!library_.updatePresentationSettings(songId, dialog.settings(), &error)) return reportError(error);
     const int row = slides_->currentRow();
-    showSelectedService(row);
+    showSelectedPresentation(row);
     markSaved();
     statusBar()->showMessage(QStringLiteral("Timing and transitions saved. Take a slide live to use the updated settings."), 8000);
 }
@@ -1389,7 +1452,7 @@ void MainWindow::saveProgramTransitions() {
     settings.setValue(QStringLiteral("presentation/transitionDurationMs"), programSettings_.transitionDurationMs);
     controller_.setGlobalTransitionDefaults(programSettings_);
     updateProgramTransitionUi();
-    showSelectedService(slides_->currentRow());
+    showSelectedPresentation(slides_->currentRow());
     statusBar()->showMessage(QStringLiteral("Global transition saved. Applies to the next cue; presentation overrides take priority."), 8000);
 }
 
@@ -1417,6 +1480,19 @@ void MainWindow::updateSlideView() {
 
 void MainWindow::revealLiveCue() {
     const auto &state = controller_.state();
+    if (state.serviceId == 0 && liveLibrarySongId_) {
+        search_->clear();
+        for (int i = 0; i < songs_->count(); ++i) {
+            if (songs_->item(i)->data(Qt::UserRole).toInt() != liveLibrarySongId_) continue;
+            sidebarTabs_->setCurrentIndex(0);
+            songs_->setCurrentRow(i);
+            showSelectedLibrary(state.index);
+            slides_->setFocus();
+            return;
+        }
+        statusBar()->showMessage(QStringLiteral("The live presentation is no longer saved in the library."), 6000);
+        return;
+    }
     const int serviceIndex = services_->findData(state.serviceId);
     if (serviceIndex < 0) {
         statusBar()->showMessage(QStringLiteral("The live service is no longer saved in the library."), 6000);
@@ -1424,6 +1500,7 @@ void MainWindow::revealLiveCue() {
     }
     sidebarTabs_->setCurrentIndex(1);
     services_->setCurrentIndex(serviceIndex);
+    if (browsingLibrary_) showSelectedService();
     syncLiveSelection();
     if (selectedEntryId() != state.entryId) {
         statusBar()->showMessage(QStringLiteral("The live entry was removed from the saved service. Live output is still running."), 6000);
@@ -1445,7 +1522,7 @@ void MainWindow::assignBackground(int songId) {
     if (!song.id) return;
     QString error;
     if (!library_.updatePresentationBackground(song.id, dialog.selectedPath(), &error)) return reportError(error);
-    showSelectedService(slides_->currentRow());
+    showSelectedPresentation(slides_->currentRow());
     markSaved();
     statusBar()->showMessage(QStringLiteral("Background assigned to “%1” and all its service entries. Take a slide live to apply it.").arg(song.title), 8000);
 }

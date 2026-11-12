@@ -1,4 +1,5 @@
 #include "../src/ui/ReorderListWidget.h"
+#include "../src/ui/SlideGridDelegate.h"
 
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
@@ -34,6 +35,79 @@ private:
     }
 
 private slots:
+    void slideCardsHaveConsistentHitAreas_data() {
+        QTest::addColumn<int>("thumbnailWidth");
+        QTest::newRow("small") << 160;
+        QTest::newRow("default") << 224;
+        QTest::newRow("large") << 320;
+    }
+
+    void slideCardsHaveConsistentHitAreas() {
+        QFETCH(int, thumbnailWidth);
+        ReorderListWidget list;
+        list.setItemDelegate(new SlideGridDelegate(&list));
+        list.setViewMode(QListView::IconMode);
+        list.setResizeMode(QListView::Adjust);
+        list.setMovement(QListView::Snap);
+        list.setWrapping(true);
+        list.setWordWrap(false);
+        list.setSpacing(6);
+        list.setMouseTracking(true);
+        list.setIconSize(QSize(thumbnailWidth, thumbnailWidth * 9 / 16));
+        const QSize cardSize(thumbnailWidth + 24, thumbnailWidth * 9 / 16 + 38);
+        list.setGridSize(cardSize);
+        // Exercise the same padding as the operator workspace. Qt's default
+        // icon delegate otherwise shrinks each hit area to its icon/label.
+        list.setStyleSheet(QStringLiteral(
+            "QListWidget::item { padding: 7px 5px; border: 1px solid transparent; }"
+            "QListWidget::item:hover { background: #2b3c53; }"));
+        QPixmap thumbnail(320, 180);
+        thumbnail.fill(Qt::darkBlue);
+        for (const auto &label : {QStringLiteral("1"), QStringLiteral("2 • A long media filename.mov"),
+                                  QStringLiteral("3 • LIVE"), QStringLiteral("4 • MISSING")})
+            new QListWidgetItem(QIcon(thumbnail), label, &list);
+        list.resize(760, 360);
+        list.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&list));
+        QSignalSpy clicked(&list, &QListWidget::itemClicked);
+        QSignalSpy entered(&list, &QListWidget::itemEntered);
+
+        for (const int viewportWidth : {760, 450}) {
+            list.resize(viewportWidth, 360);
+            list.doItemsLayout();
+            for (int row = 0; row < list.count(); ++row) {
+                auto *item = list.item(row);
+                list.scrollToItem(item, QAbstractItemView::PositionAtCenter);
+                QCoreApplication::processEvents();
+                const QRect card = list.visualItemRect(item);
+                QCOMPARE(card.size(), cardSize);
+                const auto points = {card.topLeft() + QPoint(1, 1), card.topRight() + QPoint(-1, 1),
+                                     card.center(), card.bottomLeft() + QPoint(1, -1),
+                                     card.bottomRight() + QPoint(-1, -1)};
+                for (const auto &point : points) {
+                    QVERIFY(list.viewport()->rect().contains(point));
+                    QCOMPARE(list.itemAt(point), item);
+                    // Approach each point from outside the card, so every
+                    // corner must independently establish hover and selection.
+                    QTest::mouseMove(list.viewport(), QPoint(-1, -1));
+                    entered.clear();
+                    QTest::mouseMove(list.viewport(), point);
+                    QTRY_VERIFY(!entered.isEmpty());
+                    QCOMPARE(qvariant_cast<QListWidgetItem *>(entered.last().first()), item);
+                    clicked.clear();
+                    QTest::mouseClick(list.viewport(), Qt::LeftButton, Qt::NoModifier, point);
+                    QCOMPARE(clicked.count(), 1);
+                    QCOMPARE(list.currentItem(), item);
+                }
+            }
+            // Live labels change while the grid is visible. The card bounds
+            // and hit area must remain stable when the label becomes shorter.
+            list.item(2)->setText(QStringLiteral("3"));
+            list.doItemsLayout();
+            QCOMPARE(list.visualItemRect(list.item(2)).size(), cardSize);
+        }
+    }
+
     void modelOrderChangesInBothViewModes_data() {
         QTest::addColumn<int>("viewMode");
         QTest::newRow("service-list") << int(QListView::ListMode);

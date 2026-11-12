@@ -7,7 +7,8 @@ class QListWidget;
 class QLabel;
 class QPushButton;
 
-// Still images are copied into the library, independently of the assignment.
+// Included backgrounds are bundled resources; imported still images are copied
+// into the library independently of the assignment.
 // Cancelling this dialog leaves the presentation's current assignment intact.
 class BackgroundLibraryDialog : public QDialog {
     Q_OBJECT

@@ -87,6 +87,8 @@ private:
     QPushButton *blackoutButton_ = nullptr;
     QPushButton *clearButton_ = nullptr;
     int currentServiceId_ = 0;
+    bool browsingLibrary_ = false;
+    int liveLibrarySongId_ = 0;
     bool rebuilding_ = false;
     qint64 thumbnailBackgroundKey_ = -1;
     QKeySequence blackoutShortcut_;
@@ -103,6 +105,9 @@ private:
     bool reloadServices(int selectServiceId = 0, int selectEntryId = 0, int selectSlide = 0, bool reportFailure = true);
     bool reloadService(int selectEntryId = 0, int selectSlide = 0, bool reportFailure = true);
     bool showSelectedService(int selectSlide = 0, bool reportFailure = true);
+    bool showSelectedLibrary(int selectSlide = 0, bool reportFailure = true);
+    bool showSelectedPresentation(int selectSlide = 0, bool reportFailure = true);
+    void updateSlideDragMode();
     void showSelectedSlide();
     void createService();
     void renameService();
@@ -149,6 +154,7 @@ private:
     void markSaved();
     void reportError(const QString &error);
     int selectedSongId() const;
+    int workspaceSongId() const;
     int selectedEntryId() const;
     QStringList selectedSlides() const;
     QStringList selectedRichText() const;

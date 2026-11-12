@@ -479,6 +479,7 @@
 		"/opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6QDarwinMediaPluginAdditionalTargetInfo.cmake",
 		"/opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaVersionlessAliasTargets.cmake",
 		"/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in",
+		"/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in",
 		"/opt/homebrew/share/cmake/Modules/GNUInstallDirs.cmake",
 		"/opt/homebrew/lib/cmake/Qt6/macos/Info.plist.app.in"
 	],
@@ -488,6 +489,12 @@
 	"DEP_FILE_RULE_NAME" : "WorshipCue_autogen/timestamp",
 	"HEADERS" : 
 	[
+		[
+			"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/BuiltInBackgrounds.h",
+			"Mu",
+			"PRMOGMWJPH/moc_BuiltInBackgrounds.cpp",
+			null
+		],
 		[
 			"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h",
 			"Mu",
@@ -591,6 +598,12 @@
 			null
 		],
 		[
+			"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.h",
+			"Mu",
+			"YPKJ5OE7LN/moc_SlideGridDelegate.cpp",
+			null
+		],
+		[
 			"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.h",
 			"Mu",
 			"YPKJ5OE7LN/moc_SlideRenderer.cpp",
@@ -676,6 +689,7 @@
 	"MOC_RELAXED_MODE" : false,
 	"MOC_SKIP" : 
 	[
+		"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp",
 		"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/.qt/rcc/qrc_app_icons.cpp",
 		"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCueMcp_autogen/mocs_compilation.cpp"
 	],
@@ -766,6 +780,11 @@
 		],
 		[
 			"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.cpp",
+			"Mu",
+			null
+		],
+		[
+			"/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.cpp",
 			"Mu",
 			null
 		],

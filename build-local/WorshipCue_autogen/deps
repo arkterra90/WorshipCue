@@ -825,6 +825,7 @@ WorshipCue_autogen/timestamp: \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/4.4.5/CMakeCXXCompiler.cmake \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/4.4.5/CMakeSystem.cmake \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/moc_predefs.h \
+	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/BuiltInBackgrounds.h \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h \
@@ -858,6 +859,8 @@ WorshipCue_autogen/timestamp: \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.h \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.cpp \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.h \
+	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.cpp \
+	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.h \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.cpp \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.h \
 	/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideTextDelegate.cpp \

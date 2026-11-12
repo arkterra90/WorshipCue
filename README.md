@@ -45,7 +45,9 @@ Choose **Import Song Lyrics…** in the sidebar or File menu to open a UTF-8 tex
 
 ## Presentation backgrounds
 
-Select a library presentation and open **Background Library…**, or right-click a library presentation or service item and choose **Assign Background…**. Use **Import Backgrounds…** to copy still images into the reusable library, select a thumbnail, then **Assign Background**. Choose **Default background** to restore the built-in background for that presentation.
+WorshipCue includes **20 original modern backgrounds** in 4K (3840 × 2160), ready to use offline. The collection combines soft auroras, flowing ribbons, subtle contours, and minimal geometric designs with space for readable lyrics. [Preview the collection](docs/backgrounds-preview.jpg).
+
+Select a library presentation and open **Background Library…**, or right-click a library presentation or service item and choose **Assign Background…**. Select an included background, then **Assign Background**. Use **Import Backgrounds…** to copy your own still images into the same reusable library. Choose **Default background** to restore the app's original gradient for that presentation.
 
 Assignments save with the library presentation, apply to all its service entries, and are copied when the presentation is duplicated. Take a slide live to apply a changed assignment. The background forms a layer beneath lyrics and media. Pictures and video remain undimmed and aspect-fitted above it: their unused edges reveal the background, while a full-canvas JPEG covers it. Clear Text retains these visual layers.
 
@@ -137,7 +139,7 @@ The old unversioned database migrates transactionally to schema **5** using `PRA
 
 A service entry references a library song and stores an optional order of source-slide indices. Repeated entries can have different orders, and copying a service copies those orders. Same-count lyric edits preserve indices. **Changing the number of slides resets that song's saved custom orders to natural order** because stable slide identities are not yet implemented. The currently running service copy is unaffected. Song editing requires Save; service construction and arrangements save after every successful operation.
 
-Back up the database **and its sibling `media` and `backgrounds` directories** while the app is closed. Managed paths are relative to the database directory, so these files can move together. Duplicate presentations share managed files; deleting a presentation currently retains files to protect copies and active snapshots. Automatic backups, recovery of unsaved editor dialogs, service export/import, and portable media packaging are not implemented. A missing background falls back to the built-in background and is identified in the operator UI. Live state is intentionally not restored on restart.
+Back up the database **and its sibling `media` and `backgrounds` directories** while the app is closed. Managed paths are relative to the database directory, so these files can move together. The 20 included backgrounds are bundled with the app and need no separate image backup; their assignments remain in the database. Duplicate presentations share managed files; deleting a presentation currently retains files to protect copies and active snapshots. Automatic backups, recovery of unsaved editor dialogs, service export/import, and portable media packaging are not implemented. A missing background falls back to the default gradient and is identified in the operator UI. Live state is intentionally not restored on restart.
 
 ## Scope and next work
 

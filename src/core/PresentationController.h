@@ -89,6 +89,7 @@ public:
     const LivePresentation &state() const { return state_; }
     void takeLive(const QString &title, const QStringList &slides, int slideIndex = 0,
                   const PresentationSettings &settings = {});
+    void takeLive(const PresentationItem &item, int slideIndex = 0);
     void takeServiceLive(int serviceId, const QVector<PresentationItem> &items,
                          int entryId, int slideIndex = 0);
     bool setSlide(int index);

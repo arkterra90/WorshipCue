@@ -402,6 +402,7 @@ set(CMAKE_MAKEFILE_OUTPUTS
 
 # Byproducts of CMake generate step:
 set(CMAKE_MAKEFILE_PRODUCTS
+  ".qt/rcc/WorshipCue_backgrounds.qrc"
   ".qt/rcc/app_icons.qrc"
   ".qt/info_plist/WorshipCue/Info.plist"
   "CMakeFiles/WorshipCueMcp_autogen.dir/AutogenInfo.json"
