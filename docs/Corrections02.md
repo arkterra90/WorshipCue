@@ -41,3 +41,9 @@
 ## Help
 - I still don't see a local documentation hub for this app.
 - A user should have access to local documentation for this app.
+
+## Video Output
+- The user of the app should be able to determine what kind of video output worship cue sends out.
+- Worshipcue should detect native resolutions but allow for the user to give custom inputs for interlaced, progressive, resolution, or aspect ratio's.
+- A user should be able to have two seperate audience screens fully configurable and two seperate stage screens.
+- Stage screens should be user customizable. Keep the standard we have right now, but allow the user to configure as needed for their situation.
