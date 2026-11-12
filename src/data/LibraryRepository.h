@@ -12,6 +12,9 @@ struct Song {
     QStringList slides;
     QVector<SlideMedia> media;
     PresentationSettings settings;
+    QString backgroundPath;
+    // Canonical editor HTML, aligned with slides; empty entries use plain text.
+    QStringList richText;
 };
 
 struct ServicePlan {
@@ -39,14 +42,20 @@ public:
     QVector<Song> songs(const QString &search = {}) const;
     Song song(int id) const;
     bool createSong(const QString &title, const QStringList &slides, QString *error,
-                    const PresentationSettings &settings = {});
+                    const PresentationSettings &settings = {}, const QString &backgroundPath = {},
+                    const QStringList &richText = {});
     int createPresentation(const QString &title, const QStringList &texts,
                            const QVector<SlideMedia> &media, QString *error,
-                           const PresentationSettings &settings = {});
+                           const PresentationSettings &settings = {}, const QString &backgroundPath = {},
+                           const QStringList &richText = {});
     bool updatePresentationMediaNames(int songId, const QStringList &names, QString *error);
     bool renamePresentation(int songId, const QString &title, QString *error);
     bool updatePresentationSettings(int songId, const PresentationSettings &settings, QString *error);
+    bool updatePresentationBackground(int songId, const QString &path, QString *error);
     bool updateSong(int id, const QString &title, const QStringList &slides, QString *error);
+    // Edits slide text in place, preserving slide identities, media, and arrangements.
+    bool updatePresentationText(int songId, const QString &title, const QStringList &texts,
+                                const QStringList &richText, QString *error);
     bool deleteSong(int id, QString *error);
 
     QVector<ServicePlan> services() const;
@@ -60,6 +69,7 @@ public:
     bool reorderServiceEntries(int serviceId, const QVector<int> &ids, QString *error);
     bool duplicateServiceEntry(int entryId, QString *error);
     QStringList entrySlides(int entryId) const;
+    QStringList entryRichText(int entryId) const;
     QVector<SlideMedia> entryMedia(int entryId) const;
     bool setEntrySlideOrder(int entryId, const QVector<int> &indices, QString *error);
 
@@ -69,7 +79,8 @@ private:
     void close();
     void clearError(QString *error = nullptr) const;
     bool execute(const QString &sql, QString *error = nullptr) const;
-    bool storeSlides(int songId, const QStringList &slides, QString *error);
+    bool storeSlides(int songId, const QStringList &slides, QString *error,
+                     const QStringList &richText = {});
     bool exists(const QString &table, int id, QString *error) const;
     bool fail(const QString &message, QString *error = nullptr) const;
 };

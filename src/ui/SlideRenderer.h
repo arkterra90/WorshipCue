@@ -23,9 +23,10 @@ public:
                                 const QPixmap &outgoing, const QPixmap &incoming,
                                 SlideTransitionType type, qreal progress);
     static QPixmap thumbnail(const QString &text, const QSize &size,
-                             const QPixmap &background = {});
+                             const QPixmap &background = {}, const QString &richText = {});
     // For thumbnails only: a bounded, cached still decode or a video label.
     // paintAudience never accesses the filesystem.
     static QPixmap thumbnail(const QString &text, const SlideMedia &media,
-                             const QSize &size, const QPixmap &background = {});
+                             const QSize &size, const QPixmap &background = {},
+                             const QString &richText = {});
 };

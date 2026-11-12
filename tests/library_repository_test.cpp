@@ -57,6 +57,145 @@ QVector<int> entryIds(const QVector<ServiceEntry> &entries) {
 class LibraryRepositoryTest : public QObject {
     Q_OBJECT
 private slots:
+    void richTextSavesInPlaceAndFollowsArrangementsAndCopies() {
+        QTemporaryDir directory;
+        const QString path = directory.filePath(QStringLiteral("rich.sqlite3"));
+        QString error;
+        int presentationId = 0;
+        int copyId = 0;
+        int entryId = 0;
+        const QStringList texts{QStringLiteral("Welcome"), QString(), QStringLiteral("Closing")};
+        const QStringList html{QStringLiteral("<p><b>Welcome</b></p>"), QStringLiteral("<p></p>"),
+                               QStringLiteral("<p style='color:#00ff99'>Closing</p>")};
+        const QVector<SlideMedia> media{
+            {MediaKind::Image, QStringLiteral("media/session/a.jpg"), QStringLiteral("a.jpg"), false},
+            {},
+            {MediaKind::Video, QStringLiteral("media/session/c.mov"), QStringLiteral("c.mov"), true}};
+        PresentationSettings settings{3000, true, SlideTransitionType::Fade, 800};
+        settings.overrideTransition = true;
+        {
+            LibraryRepository repository;
+            QVERIFY(repository.open(&error, path));
+            presentationId = repository.createPresentation(QStringLiteral("Before"),
+                {QString(), QStringLiteral("Text slide"), QString()}, media, &error, settings,
+                QStringLiteral("backgrounds/service.jpg"));
+            QVERIFY2(presentationId, qPrintable(error));
+            const int plan = repository.services().first().id;
+            QVERIFY(repository.appendToService(plan, presentationId, &error));
+            entryId = repository.service(plan).last().id;
+            QVERIFY(repository.setEntrySlideOrder(entryId, {2, 0, 2, 1}, &error));
+            const auto ids = rawValue(path, QStringLiteral("SELECT group_concat(id,',') FROM "
+                "(SELECT id FROM slides WHERE song_id=%1 ORDER BY position,id)").arg(presentationId));
+            QVERIFY2(repository.updatePresentationText(presentationId, QStringLiteral("After"), texts, html, &error), qPrintable(error));
+            const Song saved = repository.song(presentationId);
+            QCOMPARE(saved.title, QStringLiteral("After"));
+            QCOMPARE(saved.slides, texts);
+            QCOMPARE(saved.richText, html);
+            QCOMPARE(saved.media, media);
+            QCOMPARE(saved.settings, settings);
+            QCOMPARE(saved.backgroundPath, QStringLiteral("backgrounds/service.jpg"));
+            QCOMPARE(repository.service(plan).last().slideOrder, (QVector<int>{2, 0, 2, 1}));
+            QCOMPARE(repository.entryRichText(entryId), (QStringList{html[2], html[0], html[2], html[1]}));
+            QCOMPARE(rawValue(path, QStringLiteral("SELECT group_concat(id,',') FROM "
+                "(SELECT id FROM slides WHERE song_id=%1 ORDER BY position,id)").arg(presentationId)), ids);
+            // A formatted blank text slide remains a valid slide on duplication.
+            copyId = repository.createPresentation(QStringLiteral("Copy"), texts, media, &error,
+                settings, saved.backgroundPath, html);
+            QVERIFY2(copyId, qPrintable(error));
+        }
+        LibraryRepository reopened;
+        QVERIFY(reopened.open(&error, path));
+        QCOMPARE(reopened.song(presentationId).richText, html);
+        QCOMPARE(reopened.song(copyId).richText, html);
+        QCOMPARE(reopened.song(copyId).media, media);
+        QCOMPARE(reopened.entryRichText(entryId), (QStringList{html[2], html[0], html[2], html[1]}));
+        QCOMPARE(reopened.songs(QStringLiteral("Closing")).size(), 2);
+    }
+
+    void richTextValidationAndDatabaseFailureDoNotPartiallySave() {
+        QTemporaryDir directory;
+        const QString path = directory.filePath(QStringLiteral("rollback.sqlite3"));
+        QString error;
+        LibraryRepository repository;
+        QVERIFY(repository.open(&error, path));
+        const Song original = repository.song(1);
+        QVERIFY(!repository.updatePresentationText(1, QStringLiteral("Wrong count"),
+            {QStringLiteral("Only")}, {QStringLiteral("<p>Only</p>")}, &error));
+        QVERIFY(!repository.updatePresentationText(1, QStringLiteral("Wrong HTML count"),
+            original.slides, {QStringLiteral("<p>Only</p>")}, &error));
+        QVERIFY(!repository.createSong(QStringLiteral("Oversize"), {QStringLiteral("Text")}, &error,
+            {}, {}, {QString(1024 * 1024 + 1, QLatin1Char('x'))}));
+        QVERIFY(repository.songs(QStringLiteral("Oversize")).isEmpty());
+        const QStringList changed{QStringLiteral("New first"), QStringLiteral("New last")};
+        const QStringList html{QStringLiteral("<p>New first</p>"), QStringLiteral("<p>New last</p>")};
+        QVERIFY(rawSql(path, {QStringLiteral("CREATE TRIGGER reject_second BEFORE UPDATE OF rich_text ON slides "
+            "WHEN NEW.song_id=1 AND NEW.position=1 BEGIN SELECT RAISE(ABORT,'reject second'); END")}, &error));
+        QVERIFY(!repository.updatePresentationText(1, QStringLiteral("Changed"), changed, html, &error));
+        QCOMPARE(repository.song(1).title, original.title);
+        QCOMPARE(repository.song(1).slides, original.slides);
+        QCOMPARE(repository.song(1).richText, original.richText);
+        QVERIFY(rawSql(path, {QStringLiteral("DROP TRIGGER reject_second")}, &error));
+        QVERIFY(repository.updatePresentationText(1, QStringLiteral("Changed"), changed, html, &error));
+        QCOMPARE(repository.song(1).richText, html);
+    }
+
+    void plainTextEditsPreserveOnlyUnchangedSlideFormatting() {
+        LibraryRepository repository;
+        QString error;
+        QVERIFY(repository.open(&error, QStringLiteral(":memory:")));
+        const QStringList texts{QStringLiteral("One"), QStringLiteral("Two")};
+        const QStringList html{QStringLiteral("<p><b>One</b></p>"), QStringLiteral("<p><i>Two</i></p>")};
+        QVERIFY(repository.createSong(QStringLiteral("Formatted"), texts, &error, {}, {}, html));
+        const int id = repository.songs(QStringLiteral("Formatted")).first().id;
+        QVERIFY(repository.updateSong(id, QStringLiteral("Formatted"), {QStringLiteral("One"), QStringLiteral("Changed")}, &error));
+        QCOMPARE(repository.song(id).richText, (QStringList{html.first(), QString()}));
+        QVERIFY(repository.updateSong(id, QStringLiteral("Formatted"), {QStringLiteral("One")}, &error));
+        QCOMPARE(repository.song(id).richText, (QStringList{QString()}));
+    }
+
+    void migratesVersionFourRichTextAndRollsBackDuplicateColumn() {
+        QTemporaryDir directory;
+        QString error;
+        const auto createV4 = [](const QString &path, bool duplicateRichTextColumn) {
+            return rawSql(path, {
+                QStringLiteral("CREATE TABLE songs(id INTEGER PRIMARY KEY,title TEXT NOT NULL,auto_advance_ms INTEGER NOT NULL DEFAULT 0,"
+                    "presentation_loop INTEGER NOT NULL DEFAULT 0,transition_type INTEGER NOT NULL DEFAULT 0,"
+                    "transition_duration_ms INTEGER NOT NULL DEFAULT 500,transition_override INTEGER NOT NULL DEFAULT 0,background_path TEXT NOT NULL DEFAULT '')"),
+                QStringLiteral("CREATE TABLE slides(id INTEGER PRIMARY KEY,song_id INTEGER NOT NULL REFERENCES songs(id),position INTEGER NOT NULL,text TEXT NOT NULL,"
+                    "media_kind TEXT NOT NULL DEFAULT '',media_path TEXT NOT NULL DEFAULT '',media_name TEXT NOT NULL DEFAULT '',media_loop INTEGER NOT NULL DEFAULT 0%1)")
+                    .arg(duplicateRichTextColumn ? QStringLiteral(",rich_text TEXT NOT NULL DEFAULT ''") : QString()),
+                QStringLiteral("CREATE TABLE services(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL)"),
+                QStringLiteral("CREATE TABLE service_entries(id INTEGER PRIMARY KEY AUTOINCREMENT,service_id INTEGER NOT NULL REFERENCES services(id),song_id INTEGER NOT NULL REFERENCES songs(id),position INTEGER NOT NULL,slide_order TEXT)"),
+                QStringLiteral("INSERT INTO songs(id,title) VALUES(8,'Existing')"),
+                QStringLiteral("INSERT INTO slides(id,song_id,position,text) VALUES(41,8,0,'Old text'),(42,8,1,'Last text')"),
+                QStringLiteral("INSERT INTO services(id,name) VALUES(2,'Existing Service')"),
+                QStringLiteral("INSERT INTO service_entries VALUES(91,2,8,0,'[1,0,1]')"),
+                QStringLiteral("PRAGMA user_version=4")
+            });
+        };
+        const QString path = directory.filePath(QStringLiteral("v4.sqlite3"));
+        QVERIFY(createV4(path, false));
+        {
+            LibraryRepository repository;
+            QVERIFY2(repository.open(&error, path), qPrintable(error));
+            QCOMPARE(repository.song(8).slides, (QStringList{QStringLiteral("Old text"), QStringLiteral("Last text")}));
+            QCOMPARE(repository.song(8).richText, (QStringList{QString(), QString()}));
+            QCOMPARE(repository.entryRichText(91), (QStringList{QString(), QString(), QString()}));
+            QCOMPARE(repository.service(2).first().id, 91);
+        }
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
+        QCOMPARE(rawValue(path, QStringLiteral("SELECT id FROM slides WHERE position=0")).toInt(), 41);
+        const QString badPath = directory.filePath(QStringLiteral("duplicate.sqlite3"));
+        QVERIFY(createV4(badPath, true));
+        {
+            LibraryRepository repository;
+            QVERIFY(!repository.open(&error, badPath));
+            QVERIFY(!error.isEmpty());
+        }
+        QCOMPARE(rawValue(badPath, QStringLiteral("PRAGMA user_version")).toInt(), 4);
+        QCOMPARE(rawValue(badPath, QStringLiteral("SELECT text FROM slides WHERE id=41")).toString(), QStringLiteral("Old text"));
+    }
+
     void savedServicesPersistAndKeepIndependentArrangements() {
         QTemporaryDir directory;
         QVERIFY(directory.isValid());
@@ -119,7 +258,7 @@ private slots:
                 if (service.id == sunday) foundName = service.name == QStringLiteral("Sunday 10:30");
             QVERIFY(foundName);
         }
-        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 3);
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
     }
 
     void migratesLegacyLibraryWithoutChangingIdsOrOrder() {
@@ -449,7 +588,7 @@ private slots:
             QCOMPARE(repository.entrySlides(29), (QStringList{QStringLiteral("Keep lyric"), QStringLiteral("Keep lyric")}));
             QCOMPARE(repository.service(4).first().id, 29);
         }
-        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 3);
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
         const QString badPath = directory.filePath(QStringLiteral("bad-v1.sqlite3"));
         QVERIFY(createV1(badPath, true));
         {
@@ -465,7 +604,7 @@ private slots:
     void presentationSettingsPersistAndSurviveContentEdits() {
         QTemporaryDir directory;
         const QString path = directory.filePath(QStringLiteral("timing.sqlite3"));
-        const PresentationSettings settings{7250, true, SlideTransitionType::Fade, 1250};
+        const PresentationSettings settings{7250, true, SlideTransitionType::Fade, 1250, true};
         QString error;
         int textId = 0;
         int mediaId = 0;
@@ -489,13 +628,13 @@ private slots:
             const int copied = repository.duplicateService(1, QStringLiteral("Copied Service"), &error);
             QVERIFY(copied > 0);
             QCOMPARE(repository.song(repository.service(copied).last().songId).settings, settings);
-            const PresentationSettings changed{9500, false, SlideTransitionType::SlideRight, 300};
+            const PresentationSettings changed{9500, false, SlideTransitionType::SlideRight, 300, true};
             QVERIFY(repository.updatePresentationSettings(textId, changed, &error));
             QCOMPARE(repository.song(textId).settings, changed);
         }
         LibraryRepository reopened;
         QVERIFY2(reopened.open(&error, path), qPrintable(error));
-        QCOMPARE(reopened.song(textId).settings, (PresentationSettings{9500, false, SlideTransitionType::SlideRight, 300}));
+        QCOMPARE(reopened.song(textId).settings, (PresentationSettings{9500, false, SlideTransitionType::SlideRight, 300, true}));
         QCOMPARE(reopened.song(mediaId).settings, settings);
     }
 
@@ -571,7 +710,7 @@ private slots:
             QCOMPARE(repository.service(4).first().slideOrder, (QVector<int>{0, 0}));
             QVERIFY(repository.updatePresentationSettings(17, {100, false, SlideTransitionType::Fade, 0}, &error));
         }
-        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 3);
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
         const QString badPath = directory.filePath(QStringLiteral("bad-v2.sqlite3"));
         QVERIFY(createV2(badPath, true));
         {
@@ -583,6 +722,123 @@ private slots:
         QCOMPARE(rawValue(badPath, QStringLiteral("SELECT COUNT(*) FROM pragma_table_info('songs') WHERE name IN ('auto_advance_ms','presentation_loop','transition_duration_ms')")).toInt(), 0);
         QCOMPARE(rawValue(badPath, QStringLiteral("SELECT title FROM songs WHERE id=17")).toString(), QStringLiteral("Existing Picture"));
         QCOMPARE(rawValue(badPath, QStringLiteral("SELECT media_path FROM slides WHERE id=23")).toString(), QStringLiteral("media/session/a.jpg"));
+    }
+
+    void programTransitionsInheritWithoutChangingPresentationTiming() {
+        const PresentationSettings program{0, false, SlideTransitionType::Fade, 1200};
+        const PresentationSettings inherited{5500, true, SlideTransitionType::Cut, 500};
+        const auto resolved = inherited.resolvedWithDefaults(program);
+        QCOMPARE(resolved.autoAdvanceMs, 5500);
+        QVERIFY(resolved.loop);
+        QCOMPARE(resolved.transition, SlideTransitionType::Fade);
+        QCOMPARE(resolved.transitionDurationMs, 1200);
+        QVERIFY(!resolved.overrideTransition);
+        const PresentationSettings overridden{5500, true, SlideTransitionType::Cut, 0, true};
+        QCOMPARE(overridden.resolvedWithDefaults(program), overridden);
+        auto differentProgram = program;
+        differentProgram.transition = SlideTransitionType::SlideRight;
+        differentProgram.transitionDurationMs = 400;
+        QCOMPARE(inherited.resolvedWithDefaults(differentProgram).transition, SlideTransitionType::SlideRight);
+        QCOMPARE(overridden.resolvedWithDefaults(differentProgram), overridden);
+    }
+
+    void backgroundsPersistWithPresentationsAndValidateManagedPaths() {
+        QTemporaryDir directory;
+        const QString path = directory.filePath(QStringLiteral("backgrounds.sqlite3"));
+        QString error;
+        int copyId = 0;
+        const QString background = QStringLiteral("backgrounds/Sunday blue.jpg");
+        const PresentationSettings settings{6000, true, SlideTransitionType::Fade, 800, true};
+        {
+            LibraryRepository repository;
+            QVERIFY(repository.open(&error, path));
+            QVERIFY(repository.updatePresentationBackground(1, background, &error));
+            QVERIFY(repository.updatePresentationSettings(1, settings, &error));
+            const Song source = repository.song(1);
+            QCOMPARE(source.backgroundPath, background);
+            QVERIFY(repository.updateSong(1, QStringLiteral("Welcome edited"), {QStringLiteral("Welcome")}, &error));
+            QCOMPARE(repository.song(1).backgroundPath, background);
+            QCOMPARE(repository.song(1).settings, settings);
+            QVERIFY(repository.createSong(QStringLiteral("Copied song"), source.slides, &error, source.settings, source.backgroundPath));
+            copyId = repository.songs(QStringLiteral("Copied song")).first().id;
+            const QVector<SlideMedia> media{{MediaKind::Image, QStringLiteral("media/session/a.jpg"), QStringLiteral("a.jpg"), false}};
+            const int mediaId = repository.createPresentation(QStringLiteral("Picture"), {QStringLiteral("")}, media, &error, {}, background);
+            QVERIFY(mediaId > 0);
+            QCOMPARE(repository.song(mediaId).backgroundPath, background);
+            const QStringList invalidPaths{QStringLiteral("/tmp/a.jpg"), QStringLiteral("backgrounds/../a.jpg"),
+                QStringLiteral("backgrounds//a.jpg"), QStringLiteral("media/a.jpg"), QStringLiteral("backgrounds/"),
+                QStringLiteral("backgrounds/a.jpg/"), QStringLiteral("backgrounds\\a.jpg")};
+            for (const QString &invalid : invalidPaths) {
+                QVERIFY(!repository.updatePresentationBackground(1, invalid, &error));
+                QVERIFY(!error.isEmpty());
+                QCOMPARE(repository.song(1).backgroundPath, background);
+                QVERIFY(!repository.createSong(QStringLiteral("Invalid"), {QStringLiteral("Text")}, &error, {}, invalid));
+                QCOMPARE(repository.createPresentation(QStringLiteral("Invalid Picture"), {QStringLiteral("")}, media, &error, {}, invalid), 0);
+            }
+            QVERIFY(!repository.updatePresentationBackground(999, background, &error));
+            QVERIFY(repository.updatePresentationBackground(1, {}, &error));
+            QVERIFY(repository.song(1).backgroundPath.isEmpty());
+        }
+        LibraryRepository reopened;
+        QVERIFY(reopened.open(&error, path));
+        QCOMPARE(reopened.song(copyId).backgroundPath, background);
+        QCOMPARE(reopened.song(copyId).settings, settings);
+        QVERIFY(reopened.song(1).backgroundPath.isEmpty());
+        QVERIFY(rawSql(path, {QStringLiteral("UPDATE songs SET background_path='../outside.jpg' WHERE id=1")}, &error));
+        QCOMPARE(reopened.song(1).id, 0);
+        QVERIFY(reopened.lastError().contains(QStringLiteral("background")));
+    }
+
+    void migratesVersionThreeOverridesAndRollsBackPartialBackgroundMigration() {
+        QTemporaryDir directory;
+        QString error;
+        const auto createV3 = [](const QString &path, bool duplicateBackgroundColumn) {
+            return rawSql(path, {
+                QStringLiteral("CREATE TABLE songs(id INTEGER PRIMARY KEY,title TEXT NOT NULL,auto_advance_ms INTEGER NOT NULL DEFAULT 0,"
+                               "presentation_loop INTEGER NOT NULL DEFAULT 0,transition_type INTEGER NOT NULL DEFAULT 0,"
+                               "transition_duration_ms INTEGER NOT NULL DEFAULT 500%1)")
+                    .arg(duplicateBackgroundColumn ? QStringLiteral(",background_path TEXT") : QString()),
+                QStringLiteral("CREATE TABLE slides(id INTEGER PRIMARY KEY,song_id INTEGER NOT NULL REFERENCES songs(id),position INTEGER NOT NULL,text TEXT NOT NULL,"
+                               "media_kind TEXT NOT NULL DEFAULT '',media_path TEXT NOT NULL DEFAULT '',media_name TEXT NOT NULL DEFAULT '',media_loop INTEGER NOT NULL DEFAULT 0)"),
+                QStringLiteral("CREATE TABLE services(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL)"),
+                QStringLiteral("CREATE TABLE service_entries(id INTEGER PRIMARY KEY AUTOINCREMENT,service_id INTEGER NOT NULL REFERENCES services(id),song_id INTEGER NOT NULL REFERENCES songs(id),position INTEGER NOT NULL,slide_order TEXT)"),
+                QStringLiteral("INSERT INTO songs(id,title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms) "
+                               "VALUES(1,'Inherited',6000,1,0,500),(2,'Fade',0,0,1,800),(3,'Custom cut',0,0,0,0)"),
+                QStringLiteral("INSERT INTO slides(id,song_id,position,text) VALUES(11,1,0,'First'),(12,2,0,'Second'),(13,3,0,'Third')"),
+                QStringLiteral("INSERT INTO services(id,name) VALUES(4,'Existing Service')"),
+                QStringLiteral("INSERT INTO service_entries VALUES(29,4,1,0,'[0,0]')"),
+                QStringLiteral("PRAGMA user_version=3")
+            });
+        };
+        const QString path = directory.filePath(QStringLiteral("v3.sqlite3"));
+        QVERIFY(createV3(path, false));
+        {
+            LibraryRepository repository;
+            QVERIFY2(repository.open(&error, path), qPrintable(error));
+            const Song inherited = repository.song(1);
+            QVERIFY(!inherited.settings.overrideTransition);
+            QCOMPARE(inherited.settings.autoAdvanceMs, 6000);
+            QVERIFY(inherited.settings.loop);
+            QVERIFY(inherited.backgroundPath.isEmpty());
+            QVERIFY(repository.song(2).settings.overrideTransition);
+            QCOMPARE(repository.song(2).settings.transition, SlideTransitionType::Fade);
+            QCOMPARE(repository.song(2).settings.transitionDurationMs, 800);
+            QVERIFY(repository.song(3).settings.overrideTransition);
+            QCOMPARE(repository.song(3).settings.transitionDurationMs, 0);
+            QCOMPARE(repository.service(4).first().id, 29);
+            QCOMPARE(repository.service(4).first().slideOrder, (QVector<int>{0, 0}));
+        }
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
+        const QString badPath = directory.filePath(QStringLiteral("bad-v3.sqlite3"));
+        QVERIFY(createV3(badPath, true));
+        {
+            LibraryRepository repository;
+            QVERIFY(!repository.open(&error, badPath));
+            QVERIFY(!error.isEmpty());
+        }
+        QCOMPARE(rawValue(badPath, QStringLiteral("PRAGMA user_version")).toInt(), 3);
+        QCOMPARE(rawValue(badPath, QStringLiteral("SELECT COUNT(*) FROM pragma_table_info('songs') WHERE name='transition_override'")).toInt(), 0);
+        QCOMPARE(rawValue(badPath, QStringLiteral("SELECT title FROM songs WHERE id=1")).toString(), QStringLiteral("Inherited"));
     }
 
     void readErrorsAreAvailableToOperator() {

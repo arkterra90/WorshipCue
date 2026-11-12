@@ -14,6 +14,9 @@ struct PresentationItem {
     QStringList slides;
     QVector<SlideMedia> media;
     PresentationSettings settings;
+    // Absolute at the playback boundary; the library stores managed relative paths.
+    QString backgroundPath;
+    QStringList richText;
 };
 
 struct LivePresentation {
@@ -31,9 +34,16 @@ struct LivePresentation {
     SlideMedia upcomingMedia;
     quint64 cueRevision = 0;
     PresentationSettings settings;
+    QString backgroundPath;
+    QString upcomingBackgroundPath;
+    QStringList richText;
+    QString upcomingRichText;
 
     QString currentText() const {
         return index >= 0 && index < slides.size() ? slides.at(index) : QString{};
+    }
+    QString currentRichText() const {
+        return index >= 0 && index < richText.size() ? richText.at(index) : QString{};
     }
     // Upcoming previews follow a configured timer loop. Manual Next still
     // allows the operator to leave the presentation at this boundary.
@@ -50,6 +60,15 @@ struct LivePresentation {
         if (index < 0) return {};
         if (loopsAtEnd()) return title;
         return index + 1 < slides.size() ? title : upcomingTitle;
+    }
+    QString nextRichText() const {
+        if (index < 0) return {};
+        if (loopsAtEnd()) return richText.value(0);
+        return index + 1 < slides.size() ? richText.value(index + 1) : upcomingRichText;
+    }
+    QString nextBackgroundPath() const {
+        if (index < 0) return {};
+        return loopsAtEnd() || index + 1 < slides.size() ? backgroundPath : upcomingBackgroundPath;
     }
     SlideMedia currentMedia() const {
         return index >= 0 && index < media.size() ? media.at(index) : SlideMedia{};
@@ -78,6 +97,8 @@ public:
     void toggleBlackout();
     void toggleClear();
     void restoreOutput();
+    // Updates inherited transitions for the next cue without changing current output.
+    void setGlobalTransitionDefaults(const PresentationSettings &defaults);
     // Active includes a suspended countdown; completion clears it entirely.
     bool autoAdvanceActive() const { return autoAdvancePending_; }
     bool autoAdvancePaused() const;
@@ -99,6 +120,9 @@ private:
     bool autoAdvancePending_ = false;
     bool autoAdvanceManuallyPaused_ = false;
     int autoAdvanceRemainingMs_ = 0;
+    PresentationSettings globalTransitionDefaults_;
+    bool hasGlobalTransitionDefaults_ = false;
+    PresentationSettings effectiveSettings(const PresentationSettings &settings) const;
     void activateItem(int itemIndex, int slideIndex);
     void updateUpcoming();
     void resetAutoAdvance();

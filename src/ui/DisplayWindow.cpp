@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QFontMetrics>
 #include <QGuiApplication>
+#include <QImageReader>
 #include <QKeyEvent>
 #include <QPainter>
 #include <QScreen>
@@ -24,6 +25,7 @@ DisplayWindow::DisplayWindow(Kind kind, PresentationController *controller, QWid
     setAutoFillBackground(false);
     if (kind_ == Kind::Audience) {
         audienceState_ = controller_->state();
+        syncBackground();
         rebuildAudienceCanvas();
         transitionTimer_.setTimerType(Qt::PreciseTimer);
         transitionTimer_.setInterval(16);
@@ -65,6 +67,7 @@ void DisplayWindow::showFullscreenOn(QScreen *screen) {
 void DisplayWindow::setBackgroundImage(const QString &path) {
     background_ = QPixmap(path);
     if (kind_ == Kind::Audience) {
+        syncBackground();
         finishTransition();
         rebuildAudienceCanvas();
         audienceChanged();
@@ -92,12 +95,31 @@ void DisplayWindow::audienceChanged() {
     emit audienceFrameChanged();
 }
 
+void DisplayWindow::syncBackground() {
+    const QString path = audienceState_.backgroundPath;
+    if (path.isEmpty()) {
+        activeBackgroundPath_.clear();
+        activeBackground_ = background_;
+    } else if (path != activeBackgroundPath_) {
+        activeBackgroundPath_ = path;
+        QImageReader reader(path);
+        reader.setAutoTransform(true);
+        const QSize source = reader.size();
+        if (source.isValid() && (source.width() > 1920 || source.height() > 1080))
+            reader.setScaledSize(source.scaled(QSize(1920, 1080), Qt::KeepAspectRatio));
+        QImage image = reader.read();
+        if (image.width() > 1920 || image.height() > 1080)
+            image = image.scaled(QSize(1920, 1080), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        activeBackground_ = QPixmap::fromImage(image);
+    }
+}
+
 void DisplayWindow::rebuildAudienceCanvas() {
     // Reuse the video canvas between decoded frames. QPixmap detaches only
     // when a newly started transition still owns the previous canvas.
     if (incomingCanvas_.isNull()) incomingCanvas_ = QPixmap(1920, 1080);
     QPainter painter(&incomingCanvas_);
-    SlideRenderer::paintAudience(painter, incomingCanvas_.rect(), audienceState_, background_, mediaFrame_);
+    SlideRenderer::paintAudience(painter, incomingCanvas_.rect(), audienceState_, activeBackground_, mediaFrame_);
     compositeDirty_ = true;
 }
 
@@ -144,6 +166,7 @@ void DisplayWindow::syncAudienceState() {
     const QPixmap outgoing = animate ? audienceCanvas() : QPixmap{};
     finishTransition();
     audienceState_ = state;
+    syncBackground();
     if (newCue) mediaFrame_ = {};
     rebuildAudienceCanvas();
     if (animate) {

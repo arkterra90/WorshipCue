@@ -18,6 +18,8 @@ set(WORSHIPCUE_DATA_SOURCES
     src/data/LibraryRepository.cpp
 )
 set(WORSHIPCUE_OUTPUT_SOURCES
+    src/ui/RichTextSupport.h
+    src/ui/RichTextSupport.cpp
     src/media/MediaPlayback.h
     src/media/MediaPlayback.cpp
     src/ui/SlideRenderer.h
@@ -28,6 +30,8 @@ set(WORSHIPCUE_OUTPUT_SOURCES
     src/ui/OutputManager.cpp
 )
 set(WORSHIPCUE_OPERATOR_SOURCES
+    src/ui/SlideEditorDialog.h
+    src/ui/SlideEditorDialog.cpp
     src/media/BatchRenamer.h
     src/media/BatchRenamer.cpp
     src/media/MediaManager.h
@@ -36,8 +40,14 @@ set(WORSHIPCUE_OPERATOR_SOURCES
     src/ui/MediaImportDialog.cpp
     src/ui/ReorderListWidget.h
     src/ui/ReorderListWidget.cpp
+    src/ui/SlideTextDelegate.h
+    src/ui/SlideTextDelegate.cpp
     src/ui/SongEditorDialog.h
     src/ui/SongEditorDialog.cpp
+    src/core/LyricsImporter.h
+    src/core/LyricsImporter.cpp
+    src/ui/BackgroundLibraryDialog.h
+    src/ui/BackgroundLibraryDialog.cpp
     src/ui/PresentationSettingsDialog.h
     src/ui/PresentationSettingsDialog.cpp
     src/ui/MainWindow.h
@@ -47,6 +57,18 @@ qt_add_executable(WorshipCue src/main.cpp
     ${WORSHIPCUE_CORE_SOURCES} ${WORSHIPCUE_DATA_SOURCES}
     ${WORSHIPCUE_OUTPUT_SOURCES} ${WORSHIPCUE_OPERATOR_SOURCES}
 )
+qt_add_resources(WorshipCue app_icons
+    PREFIX "/icons"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}/assets/icons"
+    FILES assets/icons/worshipcue.png
+)
+if(APPLE)
+    target_sources(WorshipCue PRIVATE assets/icons/WorshipCue.icns)
+    set_source_files_properties(assets/icons/WorshipCue.icns PROPERTIES
+        MACOSX_PACKAGE_LOCATION Resources)
+    set_target_properties(WorshipCue PROPERTIES
+        MACOSX_BUNDLE_ICON_FILE WorshipCue.icns)
+endif()
 target_link_libraries(WorshipCue PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Sql Qt6::Multimedia Qt6::Concurrent)
 set_target_properties(WorshipCue PROPERTIES
     WIN32_EXECUTABLE TRUE
@@ -71,11 +93,26 @@ if(WORSHIPCUE_BUILD_TESTS)
     target_link_libraries(WorshipCueRepositoryTests PRIVATE Qt6::Core Qt6::Sql Qt6::Test)
     add_test(NAME library_repository COMMAND WorshipCueRepositoryTests)
 
+    qt_add_executable(WorshipCueLyricsImportTests tests/lyrics_import_test.cpp
+        src/core/LyricsImporter.h src/core/LyricsImporter.cpp
+        src/ui/SongEditorDialog.h src/ui/SongEditorDialog.cpp)
+    target_link_libraries(WorshipCueLyricsImportTests PRIVATE Qt6::Widgets Qt6::Sql Qt6::Test)
+    add_test(NAME lyrics_import COMMAND WorshipCueLyricsImportTests)
+
     qt_add_executable(WorshipCueRendererTests tests/slide_renderer_test.cpp
+        src/ui/RichTextSupport.h src/ui/RichTextSupport.cpp
         ${WORSHIPCUE_CORE_SOURCES} src/ui/SlideRenderer.cpp src/ui/SlideRenderer.h
+        src/ui/BackgroundLibraryDialog.cpp src/ui/BackgroundLibraryDialog.h
         src/ui/DisplayWindow.cpp src/ui/DisplayWindow.h src/media/MediaPlayback.h src/media/MediaPlayback.cpp)
     target_link_libraries(WorshipCueRendererTests PRIVATE Qt6::Widgets Qt6::Test Qt6::Multimedia Qt6::Concurrent)
     add_test(NAME slide_renderer COMMAND WorshipCueRendererTests)
+
+    qt_add_executable(WorshipCueSlideEditorTests tests/slide_editor_test.cpp
+        src/ui/SlideEditorDialog.h src/ui/SlideEditorDialog.cpp
+        src/ui/RichTextSupport.h src/ui/RichTextSupport.cpp
+        src/ui/SlideRenderer.h src/ui/SlideRenderer.cpp)
+    target_link_libraries(WorshipCueSlideEditorTests PRIVATE Qt6::Widgets Qt6::Sql Qt6::Test)
+    add_test(NAME slide_editor COMMAND WorshipCueSlideEditorTests)
 
     qt_add_executable(WorshipCueOutputTests tests/output_manager_test.cpp
         ${WORSHIPCUE_CORE_SOURCES} ${WORSHIPCUE_OUTPUT_SOURCES})
@@ -104,12 +141,13 @@ if(WORSHIPCUE_BUILD_TESTS)
     add_test(NAME media_import COMMAND WorshipCueMediaImportTests)
 
     qt_add_executable(WorshipCueMediaPlaybackTests tests/media_playback_test.cpp
+        src/ui/RichTextSupport.h src/ui/RichTextSupport.cpp
         ${WORSHIPCUE_CORE_SOURCES} src/media/MediaPlayback.h src/media/MediaPlayback.cpp src/ui/SlideRenderer.h src/ui/SlideRenderer.cpp
         src/ui/DisplayWindow.h src/ui/DisplayWindow.cpp)
     target_link_libraries(WorshipCueMediaPlaybackTests PRIVATE Qt6::Widgets Qt6::Concurrent Qt6::Multimedia Qt6::Test)
     add_test(NAME media_playback COMMAND WorshipCueMediaPlaybackTests)
 
-    set_tests_properties(slide_renderer output_manager operator_workflow reorder_list batch_renamer media_import media_playback
+    set_tests_properties(slide_renderer slide_editor output_manager operator_workflow reorder_list batch_renamer media_import media_playback lyrics_import
         PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
     # AVFoundation needs Cocoa's native event dispatcher to deliver video frames.
     if(APPLE)

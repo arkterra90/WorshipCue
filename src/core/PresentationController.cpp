@@ -7,6 +7,17 @@ PresentationController::PresentationController(QObject *parent) : QObject(parent
     connect(&autoAdvanceTimer_, &QTimer::timeout, this, &PresentationController::advanceAutomatically);
 }
 
+void PresentationController::setGlobalTransitionDefaults(const PresentationSettings &defaults) {
+    if (!defaults.isValid()) return;
+    globalTransitionDefaults_ = defaults;
+    hasGlobalTransitionDefaults_ = true;
+}
+
+PresentationSettings PresentationController::effectiveSettings(const PresentationSettings &settings) const {
+    const PresentationSettings valid = settings.isValid() ? settings : PresentationSettings{};
+    return hasGlobalTransitionDefaults_ ? valid.resolvedWithDefaults(globalTransitionDefaults_) : valid;
+}
+
 void PresentationController::takeLive(const QString &title, const QStringList &slides, int slideIndex,
                                       const PresentationSettings &settings) {
     const QString titleCopy = title;
@@ -17,7 +28,7 @@ void PresentationController::takeLive(const QString &title, const QStringList &s
     state_ = {};
     state_.title = titleCopy;
     state_.slides = slidesCopy;
-    state_.settings = settingsCopy;
+    state_.settings = effectiveSettings(settingsCopy);
     state_.index = slidesCopy.isEmpty() ? -1 : qBound(0, slideIndex, int(slidesCopy.size()) - 1);
     state_.blackout = false;
     state_.clear = false;
@@ -49,7 +60,9 @@ void PresentationController::activateItem(int itemIndex, int slideIndex) {
     state_.title = item.title;
     state_.slides = item.slides;
     state_.media = item.media;
-    state_.settings = item.settings.isValid() ? item.settings : PresentationSettings{};
+    state_.settings = effectiveSettings(item.settings);
+    state_.backgroundPath = item.backgroundPath;
+    state_.richText = item.richText;
     state_.index = qBound(0, slideIndex, int(item.slides.size()) - 1);
     state_.blackout = false;
     state_.clear = false;
@@ -63,18 +76,23 @@ void PresentationController::updateUpcoming() {
     state_.upcomingTitle.clear();
     state_.upcomingText.clear();
     state_.upcomingMedia = {};
+    state_.upcomingBackgroundPath.clear();
+    state_.upcomingRichText.clear();
     for (int i = itemIndex_ + 1; i < serviceSnapshot_.size(); ++i) {
         const auto &item = serviceSnapshot_.at(i);
         if (item.slides.isEmpty()) continue;
         state_.upcomingTitle = item.title;
         state_.upcomingText = item.slides.first();
         state_.upcomingMedia = item.media.isEmpty() ? SlideMedia{} : item.media.first();
+        state_.upcomingBackgroundPath = item.backgroundPath;
+        state_.upcomingRichText = item.richText.value(0);
         return;
     }
 }
 
 bool PresentationController::setSlide(int index) {
     if (index < 0 || index >= state_.slides.size()) return false;
+    state_.settings = effectiveSettings(state_.settings);
     state_.index = index;
     state_.blackout = false;
     state_.clear = false;

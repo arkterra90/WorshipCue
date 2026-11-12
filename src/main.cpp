@@ -1,6 +1,7 @@
 #include "ui/MainWindow.h"
 
 #include <QApplication>
+#include <QIcon>
 #include <QMessageBox>
 #include <QStyleFactory>
 
@@ -9,6 +10,7 @@ int main(int argc, char *argv[]) {
     QApplication::setOrganizationName(QStringLiteral("WorshipCue"));
     QApplication::setApplicationName(QStringLiteral("WorshipCue"));
     QApplication::setApplicationVersion(QStringLiteral("0.3.0"));
+    app.setWindowIcon(QIcon(QStringLiteral(":/icons/worshipcue.png")));
     QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
 
     MainWindow window;

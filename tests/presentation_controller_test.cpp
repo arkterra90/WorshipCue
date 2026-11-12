@@ -5,6 +5,103 @@
 class PresentationControllerTest : public QObject {
     Q_OBJECT
 private slots:
+    void richTextFollowsSnapshotsUpcomingItemsAndLoops() {
+        PresentationController controller;
+        PresentationItem first{11, QStringLiteral("First"), {QStringLiteral("One"), QStringLiteral("Two")}};
+        first.richText = {QStringLiteral("<p><b>One</b></p>"), QStringLiteral("<p><i>Two</i></p>")};
+        PresentationItem second{12, QStringLiteral("Second"), {QStringLiteral("Three")}};
+        second.richText = {QStringLiteral("<p style='color:red'>Three</p>")};
+        QVector<PresentationItem> items{first, second};
+        controller.takeServiceLive(1, items, 11);
+        items[0].richText[1] = QStringLiteral("Edited after going live");
+        items[1].richText.clear();
+        QCOMPARE(controller.state().currentRichText(), first.richText.first());
+        QCOMPARE(controller.state().nextRichText(), first.richText.last());
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().currentRichText(), first.richText.last());
+        QCOMPARE(controller.state().nextRichText(), second.richText.first());
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().currentRichText(), second.richText.first());
+        QVERIFY(controller.state().nextRichText().isEmpty());
+        first.settings.autoAdvanceMs = 1000;
+        first.settings.loop = true;
+        controller.takeServiceLive(1, {first, second}, 11, 1);
+        controller.setAutoAdvancePaused(true);
+        QCOMPARE(controller.state().nextRichText(), first.richText.first());
+        controller.takeLive(QStringLiteral("Plain"), {QStringLiteral("Plain lyrics")});
+        QVERIFY(controller.state().currentRichText().isEmpty());
+        QVERIFY(controller.state().nextRichText().isEmpty());
+        QVERIFY(controller.state().upcomingRichText.isEmpty());
+    }
+
+    void globalTransitionChangesApplyOnlyToSubsequentInheritedCues() {
+        PresentationController controller;
+        PresentationSettings defaults;
+        defaults.transition = SlideTransitionType::Fade;
+        defaults.transitionDurationMs = 700;
+        controller.setGlobalTransitionDefaults(defaults);
+        PresentationSettings inherited;
+        inherited.autoAdvanceMs = 1000;
+        PresentationSettings overridden = inherited;
+        overridden.overrideTransition = true;
+        overridden.transition = SlideTransitionType::SlideRight;
+        overridden.transitionDurationMs = 400;
+        controller.takeServiceLive(1, {{11, "Inherited", {"One", "Two"}, {}, inherited},
+                                       {12, "Override", {"Three", "Four"}, {}, overridden}}, 11);
+        controller.setAutoAdvancePaused(true);
+        QCOMPARE(controller.state().settings.transition, SlideTransitionType::Fade);
+        const auto revision = controller.state().cueRevision;
+        const auto before = controller.state().settings;
+        const int remaining = controller.autoAdvanceRemainingMs();
+        QSignalSpy changes(&controller, &PresentationController::stateChanged);
+        defaults.transition = SlideTransitionType::SlideLeft;
+        defaults.transitionDurationMs = 1200;
+        controller.setGlobalTransitionDefaults(defaults);
+        QCOMPARE(changes.count(), 0);
+        QCOMPARE(controller.state().cueRevision, revision);
+        QCOMPARE(controller.state().settings, before);
+        QCOMPARE(controller.autoAdvanceRemainingMs(), remaining);
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().settings.transition, SlideTransitionType::SlideLeft);
+        QCOMPARE(controller.state().settings.transitionDurationMs, 1200);
+        QVERIFY(controller.autoAdvanceManuallyPaused());
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().settings.transition, SlideTransitionType::SlideRight);
+        defaults.transition = SlideTransitionType::Cut;
+        controller.setGlobalTransitionDefaults(defaults);
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().settings.transition, SlideTransitionType::SlideRight);
+        QCOMPARE(controller.state().settings.transitionDurationMs, 400);
+    }
+
+    void backgroundsFollowPresentationSnapshotsAndUpcomingLoops() {
+        PresentationController controller;
+        PresentationItem first{11, QStringLiteral("First"), {QStringLiteral("One"), QStringLiteral("Two")}};
+        first.backgroundPath = QStringLiteral("/first.png");
+        PresentationItem second{12, QStringLiteral("Second"), {QStringLiteral("Three")}};
+        second.backgroundPath = QStringLiteral("/second.png");
+        QVector<PresentationItem> items{first, second};
+        controller.takeServiceLive(1, items, 11);
+        items[0].backgroundPath = QStringLiteral("/changed.png");
+        items[1].backgroundPath.clear();
+        QCOMPARE(controller.state().backgroundPath, first.backgroundPath);
+        QCOMPARE(controller.state().nextBackgroundPath(), first.backgroundPath);
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().nextBackgroundPath(), second.backgroundPath);
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().backgroundPath, second.backgroundPath);
+        QVERIFY(controller.previous());
+        QCOMPARE(controller.state().backgroundPath, first.backgroundPath);
+        first.settings.autoAdvanceMs = 1000;
+        first.settings.loop = true;
+        controller.takeServiceLive(1, {first, second}, 11, 1);
+        controller.setAutoAdvancePaused(true);
+        QCOMPARE(controller.state().nextBackgroundPath(), first.backgroundPath);
+        controller.takeLive(QStringLiteral("Standalone"), {QStringLiteral("Lyrics")});
+        QVERIFY(controller.state().backgroundPath.isEmpty());
+        QVERIFY(controller.state().upcomingBackgroundPath.isEmpty());
+    }
+
     void upcomingPreviewFollowsTimedLoopAndManualNextCanLeave() {
         PresentationController controller;
         const PresentationSettings settings{1000, true, SlideTransitionType::Fade, 300};

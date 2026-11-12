@@ -11,7 +11,9 @@ class PresentationSettingsDialog : public QDialog {
     Q_OBJECT
 public:
     PresentationSettingsDialog(const QString &title, const PresentationSettings &settings,
-                               QWidget *parent = nullptr);
+                               QWidget *parent = nullptr,
+                               const PresentationSettings &programDefaults = {},
+                               bool programMode = false);
     PresentationSettings settings() const;
 
 private:
@@ -20,4 +22,6 @@ private:
     QCheckBox *loop_;
     QComboBox *transition_;
     QDoubleSpinBox *duration_;
+    QCheckBox *overrideTransition_;
+    bool programMode_ = false;
 };

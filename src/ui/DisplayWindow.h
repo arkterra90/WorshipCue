@@ -40,6 +40,8 @@ private:
     Kind kind_;
     PresentationController *controller_;
     QPixmap background_;
+    QPixmap activeBackground_;
+    QString activeBackgroundPath_;
     QPointer<MediaPlayback> playback_;
     LivePresentation audienceState_;
     QPixmap mediaFrame_;
@@ -52,6 +54,7 @@ private:
     qreal transitionProgress_ = 1;
     bool waitingForMedia_ = false;
     void syncAudienceState();
+    void syncBackground();
     void syncMediaFrame();
     void rebuildAudienceCanvas();
     void startTransition();

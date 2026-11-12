@@ -10,6 +10,12 @@
 
 class QCloseEvent;
 class QComboBox;
+class QDoubleSpinBox;
+class QSplitter;
+class QTabWidget;
+class QSlider;
+class SlideTextDelegate;
+class QAbstractItemDelegate;
 class QLabel;
 class QLineEdit;
 class QListWidget;
@@ -54,8 +60,18 @@ private:
     QLabel *mediaStatus_ = nullptr;
     QLabel *timingStatus_ = nullptr;
     QLabel *selectedTimingInfo_ = nullptr;
-    QPushButton *presentationSettings_ = nullptr;
     QPushButton *pauseAutoAdvance_ = nullptr;
+    QPushButton *editSlide_ = nullptr;
+    QComboBox *globalTransitionType_ = nullptr;
+    QDoubleSpinBox *globalTransitionTime_ = nullptr;
+    QComboBox *slideViewMode_ = nullptr;
+    QSlider *slideSize_ = nullptr;
+    QSplitter *operatorSplitter_ = nullptr;
+    QSplitter *libraryServiceSplitter_ = nullptr;
+    QTabWidget *previewTabs_ = nullptr;
+    SlideTextDelegate *textDelegate_ = nullptr;
+    QAbstractItemDelegate *gridDelegate_ = nullptr;
+    QPushButton *returnToLive_ = nullptr;
     QPushButton *importButton_ = nullptr;
     QPushButton *pauseVideo_ = nullptr;
     QPushButton *restartVideo_ = nullptr;
@@ -73,6 +89,9 @@ private:
     qint64 thumbnailBackgroundKey_ = -1;
     QKeySequence blackoutShortcut_;
     QKeySequence clearShortcut_;
+    PresentationSettings programSettings_;
+    QPixmap selectedBackground_;
+    QString selectedBackgroundPath_;
 
     void buildUi();
     void reloadSongs();
@@ -84,13 +103,22 @@ private:
     void renameService();
     void duplicateService();
     void createSong();
+    void importLyrics();
     void editSong();
+    void editSelectedSlide();
+    void editPresentation(int songId, int sourceSlide = 0);
     void duplicateSong();
     void chooseMediaFiles();
     void renameMedia();
     void renameMediaPresentation(int id);
     void updatePlaybackUi();
     void configurePresentation(int songId);
+    void configureProgramTransitions();
+    void saveProgramTransitions();
+    void updateProgramTransitionUi();
+    void updateSlideView();
+    void revealLiveCue();
+    void assignBackground(int songId);
     void updateTimingUi();
     void deleteSong();
     void appendSong();
@@ -107,7 +135,6 @@ private:
     void syncLiveSelection();
     void updateLiveUi();
     void refreshThumbnails();
-    void selectBackground();
     void refreshOutputOptions();
     void updateOutputStatus();
     void configureShortcuts();
@@ -117,8 +144,11 @@ private:
     int selectedSongId() const;
     int selectedEntryId() const;
     QStringList selectedSlides() const;
+    QStringList selectedRichText() const;
     QVector<int> selectedSlideOrder() const;
     QVector<SlideMedia> selectedMedia() const;
     SlideMedia resolveMedia(SlideMedia media) const;
     QPixmap mediaThumbnail(const SlideMedia &media) const;
+    QString resolveBackground(const QString &path) const;
+    QPixmap backgroundPixmap(const QString &absolutePath) const;
 };

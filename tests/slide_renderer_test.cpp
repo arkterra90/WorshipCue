@@ -1,11 +1,21 @@
 #include "../src/ui/DisplayWindow.h"
 #include "../src/ui/SlideRenderer.h"
+#include "../src/ui/RichTextSupport.h"
+#include "../src/ui/BackgroundLibraryDialog.h"
 #include "../src/media/MediaPlayback.h"
 
 #include <QImage>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QListWidget>
 #include <QPainter>
+#include <QPushButton>
 #include <QSignalSpy>
 #include <QTemporaryDir>
+#include <QTextBlock>
+#include <QTextCursor>
+#include <QTextDocument>
 #include <QtTest/QtTest>
 
 class SlideRendererTest : public QObject {
@@ -35,8 +45,116 @@ private:
         audience.paintAudience(painter, image.rect());
         return image;
     }
+    static QRect redTextBounds(const QImage &image) {
+        QRect bounds;
+        for (int y = 0; y < image.height(); ++y) {
+            for (int x = 0; x < image.width(); ++x) {
+                const QColor color = image.pixelColor(x, y);
+                if (color.red() > 180 && color.green() < 80 && color.blue() < 80)
+                    bounds |= QRect(x, y, 1, 1);
+            }
+        }
+        return bounds;
+    }
 
 private slots:
+    void richTextKeepsCharacterStylesAndParagraphAlignment() {
+        const QString html = QStringLiteral(
+            "<p align='right'><span style=\"font-family:'Helvetica'; font-size:96px; "
+            "font-weight:700; font-style:italic; text-decoration:underline; color:#ff0000;\">"
+            "Glory &amp; light</span></p>");
+        QTextDocument document;
+        RichTextSupport::load(&document, QString(), html);
+        QCOMPARE(document.toPlainText(), QStringLiteral("Glory & light"));
+        QCOMPARE(document.documentMargin(), qreal(0));
+        QVERIFY(document.firstBlock().blockFormat().alignment().testFlag(Qt::AlignRight));
+        QTextCursor cursor(&document);
+        cursor.setPosition(1);
+        const QTextCharFormat format = cursor.charFormat();
+        QCOMPARE(format.foreground().color(), QColor(Qt::red));
+        QCOMPARE(format.font().pixelSize(), 96);
+        QVERIFY(format.fontWeight() >= QFont::Bold);
+        QVERIFY(format.fontItalic());
+        QVERIFY(format.fontUnderline());
+        QVERIFY(format.fontFamilies().toStringList().contains(QStringLiteral("Helvetica")));
+    }
+
+    void richTextSizesColorsAndAlignmentReachAudienceAndThumbnails() {
+        LivePresentation state;
+        state.slides = {QStringLiteral("WORD")};
+        state.index = 0;
+        state.richText = {QStringLiteral("<p align='left' style='font-size:144px;color:#ff0000'>WORD</p>")};
+        const QSize size(640, 360);
+        const QImage left = render(state, size);
+        const QRect leftBounds = redTextBounds(left);
+        QVERIFY(!leftBounds.isEmpty());
+        QCOMPARE(SlideRenderer::thumbnail(state.currentText(), size, {}, state.currentRichText())
+            .toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied), left);
+        state.richText = {QStringLiteral("<p align='right' style='font-size:144px;color:#ff0000'>WORD</p>")};
+        const QRect rightBounds = redTextBounds(render(state, size));
+        QVERIFY(rightBounds.left() > leftBounds.right());
+        state.richText = {QStringLiteral("<p align='left' style='font-size:36px;color:#ff0000'>WORD</p>")};
+        const QRect small = redTextBounds(render(state, size));
+        QVERIFY(leftBounds.height() > small.height() * 2);
+        QVERIFY(leftBounds.width() > small.width() * 2);
+
+        state.clear = true;
+        const QImage cleared = render(state, size);
+        QVERIFY(redTextBounds(cleared).isEmpty());
+        state.richText.clear();
+        state.slides = {QString()};
+        state.clear = false;
+        QCOMPARE(render(state, size), cleared);
+        state.blackout = true;
+        QCOMPARE(render(state, size).pixelColor(320, 180), QColor(Qt::black));
+    }
+
+    void richTextLongSlidesShrinkWithinTheSameCanvasMargins() {
+        LivePresentation state;
+        state.slides = {QStringLiteral("Long text")};
+        state.index = 0;
+        QStringList lines;
+        for (int i = 0; i < 18; ++i) lines.append(QStringLiteral("<p style='font-size:180px;color:#ff0000'>Line %1</p>").arg(i + 1));
+        state.richText = {lines.join(QString())};
+        const QRect bounds = redTextBounds(render(state, QSize(1920, 1080)));
+        QVERIFY(!bounds.isEmpty());
+        QVERIFY(bounds.top() >= 130);
+        QVERIFY(bounds.bottom() < 950);
+        QVERIFY(bounds.left() >= 154);
+        QVERIFY(bounds.right() < 1766);
+        QVERIFY(bounds.height() > 700);
+    }
+
+    void pastedHtmlCannotLoadImagesOrKeepResourceReferences() {
+        class ResourceSpy final : public QTextDocument {
+        public:
+            int loads = 0;
+        protected:
+            QVariant loadResource(int, const QUrl &) override { ++loads; return {}; }
+        } document;
+        const QString input = QStringLiteral(
+            "<p align='center'><a href='https://example.invalid'>Visible text</a>"
+            "<img src='file:///private/not-a-slide-image.png' />"
+            "<img src='https://example.invalid/tracking.png' /></p>");
+        const QString clean = RichTextSupport::sanitize(input);
+        QVERIFY(!clean.contains(QStringLiteral("<img"), Qt::CaseInsensitive));
+        QVERIFY(!clean.contains(QStringLiteral("href="), Qt::CaseInsensitive));
+        QVERIFY(!clean.contains(QStringLiteral("file:///")));
+        QVERIFY(!clean.contains(QStringLiteral("example.invalid")));
+        RichTextSupport::load(&document, QStringLiteral("Fallback"), input);
+        document.setTextWidth(1612);
+        document.size();
+        QCOMPARE(document.loads, 0);
+        QCOMPARE(document.toPlainText().trimmed(), QStringLiteral("Visible text"));
+        RichTextSupport::load(&document, QStringLiteral("Plain\nsecond line"), QString());
+        QCOMPARE(document.toPlainText(), QStringLiteral("Plain\nsecond line"));
+        QCOMPARE(document.firstBlock().blockFormat().alignment(), Qt::AlignHCenter);
+        QTextDocument lineBreaks;
+        lineBreaks.setPlainText(QStringLiteral("First\u2028Second\u2029Third"));
+        RichTextSupport::load(&document, QString(), lineBreaks.toHtml());
+        QCOMPARE(document.toPlainText(), QStringLiteral("First\nSecond\nThird"));
+    }
+
     void transitionEndpointsAndFadeMixture() {
         QPixmap red(320, 180), blue(320, 180);
         red.fill(Qt::red);
@@ -168,24 +286,99 @@ private slots:
         state.index = 0;
         QPixmap picture(100, 100);
         picture.fill(Qt::red);
-        const QImage normal = render(state, QSize(320, 180), {}, picture);
+        QPixmap background(320, 180);
+        background.fill(Qt::blue);
+        const QImage normal = render(state, QSize(320, 180), background, picture);
         QCOMPARE(normal.pixelColor(160, 90), QColor(Qt::red));
-        QCOMPARE(normal.pixelColor(0, 90), QColor(Qt::black));
+        QVERIFY(normal.pixelColor(0, 90).blue() > 100);
+        QCOMPARE(normal.pixelColor(0, 90).red(), 0);
         state.clear = true;
-        QCOMPARE(render(state, QSize(320, 180), {}, picture), normal);
+        QCOMPARE(render(state, QSize(320, 180), background, picture), normal);
+        QPixmap fullCanvas(320, 180);
+        fullCanvas.fill(Qt::red);
+        const QImage fullScreen = render(state, QSize(320, 180), background, fullCanvas);
+        QCOMPARE(fullScreen.pixelColor(0, 90), QColor(Qt::red));
+        QCOMPARE(fullScreen.pixelColor(319, 90), QColor(Qt::red));
         state.blackout = true;
-        QCOMPARE(render(state, QSize(320, 180), {}, picture).pixelColor(160, 90), QColor(Qt::black));
+        QCOMPARE(render(state, QSize(320, 180), background, picture).pixelColor(160, 90), QColor(Qt::black));
     }
 
-    void missingMediaFrameProjectsBlackWithoutFileInformation() {
+    void missingMediaFramePreservesBackgroundWithoutFileInformation() {
         LivePresentation state;
         state.slides = {QString{}};
         state.media = {{MediaKind::Video, QStringLiteral("/private/file/path.mov"), QStringLiteral("Video"), false}};
         state.index = 0;
         const QImage result = render(state, QSize(320, 180));
-        for (int y = 0; y < result.height(); ++y)
-            for (int x = 0; x < result.width(); ++x)
-                QCOMPARE(result.pixelColor(x, y), QColor(Qt::black));
+        state.media.clear();
+        QCOMPARE(result, render(state, QSize(320, 180)));
+    }
+
+    void assignedBackgroundsFollowPresentationCuesAndTransitionTogether() {
+        QTemporaryDir directory;
+        const QString redPath = directory.filePath(QStringLiteral("red.png"));
+        const QString bluePath = directory.filePath(QStringLiteral("blue.png"));
+        QImage image(320, 180, QImage::Format_RGB32);
+        image.fill(Qt::red);
+        QVERIFY(image.save(redPath));
+        image.fill(Qt::blue);
+        QVERIFY(image.save(bluePath));
+        PresentationController controller;
+        DisplayWindow audience(DisplayWindow::Kind::Audience, &controller);
+        PresentationItem first{11, QStringLiteral("First"), {QString(), QString()}};
+        first.backgroundPath = redPath;
+        PresentationItem second{12, QStringLiteral("Second"), {QString()}};
+        second.backgroundPath = bluePath;
+        second.settings.transition = SlideTransitionType::Fade;
+        second.settings.transitionDurationMs = 200;
+        controller.takeServiceLive(1, {first, second}, 11);
+        const QColor red = audienceImage(audience).pixelColor(160, 90);
+        QVERIFY(red.red() > 100);
+        QCOMPARE(red.blue(), 0);
+        controller.next();
+        QCOMPARE(audienceImage(audience).pixelColor(160, 90), red);
+        controller.next();
+        QCOMPARE(audienceImage(audience).pixelColor(160, 90), red);
+        QTRY_VERIFY_WITH_TIMEOUT(audienceImage(audience).pixelColor(160, 90).blue() > 100, 1000);
+        QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience).pixelColor(160, 90).red(), 0, 1000);
+        const QColor blue = audienceImage(audience).pixelColor(160, 90);
+        QCOMPARE(blue.red(), 0);
+        controller.toggleClear();
+        QCOMPARE(audienceImage(audience).pixelColor(160, 90), blue);
+        controller.previous();
+        QCOMPARE(audienceImage(audience).pixelColor(160, 90), red);
+    }
+
+    void importedBackgroundsAreManagedReusableAndLeaveOriginalsIntact() {
+        QTemporaryDir directory;
+        const QString source = directory.filePath(QStringLiteral("Source.jpg"));
+        const QString databaseDirectory = directory.filePath(QStringLiteral("library"));
+        QImage image(320, 180, QImage::Format_RGB32);
+        image.fill(Qt::cyan);
+        QVERIFY(image.save(source));
+        BackgroundLibraryDialog dialog(databaseDirectory, {});
+        QString error;
+        QVERIFY2(dialog.importFiles({source}, &error), qPrintable(error));
+        const QString first = dialog.selectedPath();
+        QVERIFY(first.startsWith(QStringLiteral("backgrounds/")));
+        QVERIFY(QFileInfo::exists(QDir(databaseDirectory).filePath(first)));
+        QVERIFY(QFileInfo::exists(source));
+        BackgroundLibraryDialog reopened(databaseDirectory, first);
+        QCOMPARE(reopened.selectedPath(), first);
+        auto *items = reopened.findChild<QListWidget *>(QStringLiteral("backgroundLibraryItems"));
+        QVERIFY(items);
+        QCOMPARE(items->count(), 2);
+        QVERIFY2(reopened.importFiles({source}, &error), qPrintable(error));
+        QVERIFY(reopened.selectedPath() != first);
+        QCOMPARE(items->count(), 3);
+        QFile bad(directory.filePath(QStringLiteral("broken.png")));
+        QVERIFY(bad.open(QIODevice::WriteOnly));
+        bad.write("not an image");
+        bad.close();
+        QVERIFY(!reopened.importFiles({bad.fileName()}, &error));
+        QVERIFY(!error.isEmpty());
+        QCOMPARE(items->count(), 3);
+        reopened.setAssignmentEnabled(false);
+        QVERIFY(!reopened.findChild<QPushButton *>(QStringLiteral("assignBackground"))->isEnabled());
     }
 
     void blackoutOverridesTextAndBackground() {

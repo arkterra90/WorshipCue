@@ -11,6 +11,18 @@ struct PresentationSettings {
     bool loop = false;
     SlideTransitionType transition = SlideTransitionType::Cut;
     int transitionDurationMs = 500;
+    // Presentations inherit the program transition until explicitly overridden.
+    bool overrideTransition = false;
+
+    PresentationSettings resolvedWithDefaults(const PresentationSettings &defaults) const {
+        PresentationSettings result = *this;
+        if (!overrideTransition) {
+            const PresentationSettings validDefaults = defaults.isValid() ? defaults : PresentationSettings{};
+            result.transition = validDefaults.transition;
+            result.transitionDurationMs = validDefaults.transitionDurationMs;
+        }
+        return result;
+    }
 
     bool isValid() const {
         return (autoAdvanceMs == 0 || (autoAdvanceMs >= 100 && autoAdvanceMs <= 3600000))
@@ -20,7 +32,8 @@ struct PresentationSettings {
     }
     bool operator==(const PresentationSettings &other) const {
         return autoAdvanceMs == other.autoAdvanceMs && loop == other.loop
-            && transition == other.transition && transitionDurationMs == other.transitionDurationMs;
+            && transition == other.transition && transitionDurationMs == other.transitionDurationMs
+            && overrideTransition == other.overrideTransition;
     }
     bool operator!=(const PresentationSettings &other) const { return !(*this == other); }
 };

@@ -14,7 +14,19 @@
 #include <QVariant>
 
 namespace {
-constexpr int schemaVersion = 3;
+constexpr int schemaVersion = 5;
+
+bool validRichText(const QStringList &texts, const QStringList &richText) {
+    if (!richText.isEmpty() && richText.size() != texts.size()) return false;
+    // Keep malformed imported payloads from producing unbounded documents.
+    qsizetype total = 0;
+    for (const auto &html : richText) {
+        if (html.size() > 1024 * 1024 || html.contains(QChar::Null)) return false;
+        total += html.size();
+        if (total > 16 * 1024 * 1024) return false;
+    }
+    return true;
+}
 
 class Transaction {
 public:
@@ -30,6 +42,15 @@ private:
     QSqlDatabase &database_;
     bool active_;
 };
+
+bool validBackgroundPath(const QString &path) {
+    return path.isEmpty() || (!QDir::isAbsolutePath(path)
+        && path.startsWith(QStringLiteral("backgrounds/"))
+        && path.size() > QStringLiteral("backgrounds/").size()
+        && !path.endsWith(QLatin1Char('/'))
+        && QDir::cleanPath(path) == path
+        && !path.contains(QLatin1Char('\\')) && !path.contains(QChar::Null));
+}
 
 QString encodedOrder(const QVector<int> &order) {
     QJsonArray array;
@@ -184,6 +205,27 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         for (const auto &sql : migration) if (!execute(sql, error)) return false;
         if (!transaction.commit()) return fail(db_.lastError().text(), error);
     }
+    if (version < 4) {
+        Transaction transaction(db_);
+        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        const QStringList migration = {
+            QStringLiteral("ALTER TABLE songs ADD COLUMN transition_override INTEGER NOT NULL DEFAULT 0 "
+                           "CHECK(transition_override IN (0,1))"),
+            QStringLiteral("ALTER TABLE songs ADD COLUMN background_path TEXT NOT NULL DEFAULT ''"),
+            // Preserve deliberate choices in older libraries; untouched presentations inherit.
+            QStringLiteral("UPDATE songs SET transition_override=1 WHERE transition_type<>0 OR transition_duration_ms<>500"),
+            QStringLiteral("PRAGMA user_version=4")
+        };
+        for (const auto &sql : migration) if (!execute(sql, error)) return false;
+        if (!transaction.commit()) return fail(db_.lastError().text(), error);
+    }
+    if (version < 5) {
+        Transaction transaction(db_);
+        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        if (!execute(QStringLiteral("ALTER TABLE slides ADD COLUMN rich_text TEXT NOT NULL DEFAULT ''"), error)
+            || !execute(QStringLiteral("PRAGMA user_version=5"), error)) return false;
+        if (!transaction.commit()) return fail(db_.lastError().text(), error);
+    }
     return true;
 }
 
@@ -219,7 +261,7 @@ Song LibraryRepository::song(int id) const {
     clearError();
     Song result;
     QSqlQuery query(db_);
-    query.prepare(QStringLiteral("SELECT id,title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms "
+    query.prepare(QStringLiteral("SELECT id,title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms,transition_override,background_path "
                                  "FROM songs WHERE id=?"));
     query.addBindValue(id);
     if (!query.exec()) { fail(query.lastError().text()); return {}; }
@@ -228,7 +270,7 @@ Song LibraryRepository::song(int id) const {
     result.title = query.value(1).toString();
     // Refuse malformed stored settings rather than silently changing a live
     // presentation's timing or interpreting a future transition as a cut.
-    for (int column = 2; column <= 5; ++column) {
+    for (int column = 2; column <= 6; ++column) {
         bool valid = false;
         const int value = query.value(column).toInt(&valid);
         if (!valid || query.value(column).toDouble() != value) {
@@ -241,16 +283,25 @@ Song LibraryRepository::song(int id) const {
     result.settings.loop = loop != 0;
     result.settings.transition = SlideTransitionType(query.value(4).toInt());
     result.settings.transitionDurationMs = query.value(5).toInt();
-    if (!result.settings.isValid() || (loop != 0 && loop != 1)) {
+    const int overrideTransition = query.value(6).toInt();
+    result.settings.overrideTransition = overrideTransition != 0;
+    result.backgroundPath = query.value(7).toString();
+    if (!result.settings.isValid() || (loop != 0 && loop != 1)
+        || (overrideTransition != 0 && overrideTransition != 1)) {
         fail(QStringLiteral("A presentation contains invalid timing or transition settings."));
         return {};
     }
+    if (!validBackgroundPath(result.backgroundPath)) {
+        fail(QStringLiteral("A presentation contains an invalid background path."));
+        return {};
+    }
     QSqlQuery slides(db_);
-    slides.prepare(QStringLiteral("SELECT text,media_kind,media_path,media_name,media_loop FROM slides WHERE song_id=? ORDER BY position,id"));
+    slides.prepare(QStringLiteral("SELECT text,media_kind,media_path,media_name,media_loop,rich_text FROM slides WHERE song_id=? ORDER BY position,id"));
     slides.addBindValue(id);
     if (!slides.exec()) { fail(slides.lastError().text()); return {}; }
     while (slides.next()) {
         result.slides << slides.value(0).toString();
+        result.richText << slides.value(5).toString();
         const QString kind = slides.value(1).toString();
         if (!kind.isEmpty() && kind != QStringLiteral("image") && kind != QStringLiteral("video")) {
             fail(QStringLiteral("A presentation contains an unknown media type."));
@@ -260,45 +311,63 @@ Song LibraryRepository::song(int id) const {
                             : kind == QStringLiteral("video") ? MediaKind::Video : MediaKind::None,
                              slides.value(2).toString(), slides.value(3).toString(), slides.value(4).toBool()});
     }
+    if (!validRichText(result.slides, result.richText)) {
+        fail(QStringLiteral("A presentation contains invalid or oversized rich text."));
+        return {};
+    }
     return result;
 }
 
-bool LibraryRepository::storeSlides(int songId, const QStringList &slides, QString *error) {
+bool LibraryRepository::storeSlides(int songId, const QStringList &slides, QString *error,
+                                     const QStringList &richText) {
     QSqlQuery query(db_);
-    query.prepare(QStringLiteral("INSERT INTO slides(song_id,position,text) VALUES(?,?,?)"));
+    // The text-only form is also used before rich_text exists during version-0 seeding.
+    query.prepare(richText.isEmpty()
+        ? QStringLiteral("INSERT INTO slides(song_id,position,text) VALUES(?,?,?)")
+        : QStringLiteral("INSERT INTO slides(song_id,position,text,rich_text) VALUES(?,?,?,?)"));
     for (int i = 0; i < slides.size(); ++i) {
         query.bindValue(0, songId);
         query.bindValue(1, i);
-        query.bindValue(2, slides.at(i).trimmed());
+        const QString text = richText.value(i).isEmpty() ? slides.at(i).trimmed() : slides.at(i);
+        query.bindValue(2, text.isNull() ? QStringLiteral("") : text);
+        if (!richText.isEmpty()) query.bindValue(3, richText.at(i).isNull() ? QStringLiteral("") : richText.at(i));
         if (!query.exec()) return fail(query.lastError().text(), error);
     }
     return true;
 }
 
 bool LibraryRepository::createSong(const QString &title, const QStringList &slides, QString *error,
-                                   const PresentationSettings &settings) {
+                                   const PresentationSettings &settings, const QString &backgroundPath,
+                                   const QStringList &richText) {
     clearError(error);
     if (title.trimmed().isEmpty() || slides.isEmpty())
         return fail(QStringLiteral("A song must have a title and at least one slide."), error);
     if (!settings.isValid()) return fail(QStringLiteral("The presentation timing or transition settings are invalid."), error);
+    if (!validBackgroundPath(backgroundPath))
+        return fail(QStringLiteral("Choose a managed image from the background library."), error);
+    if (!validRichText(slides, richText))
+        return fail(QStringLiteral("Provide one rich-text document per slide, no larger than 1 MB each (16 MB total)."), error);
     Transaction transaction(db_);
     if (!transaction.active()) return fail(db_.lastError().text(), error);
     QSqlQuery query(db_);
-    query.prepare(QStringLiteral("INSERT INTO songs(title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms) VALUES(?,?,?,?,?)"));
+    query.prepare(QStringLiteral("INSERT INTO songs(title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms,transition_override,background_path) VALUES(?,?,?,?,?,?,?)"));
     query.addBindValue(title.trimmed());
     query.addBindValue(settings.autoAdvanceMs);
     query.addBindValue(settings.loop);
     query.addBindValue(int(settings.transition));
     query.addBindValue(settings.transitionDurationMs);
+    query.addBindValue(settings.overrideTransition);
+    query.addBindValue(backgroundPath.isNull() ? QStringLiteral("") : backgroundPath);
     if (!query.exec()) return fail(query.lastError().text(), error);
-    if (!storeSlides(query.lastInsertId().toInt(), slides, error)) return false;
+    if (!storeSlides(query.lastInsertId().toInt(), slides, error, richText)) return false;
     if (!transaction.commit()) return fail(db_.lastError().text(), error);
     return true;
 }
 
 int LibraryRepository::createPresentation(const QString &title, const QStringList &texts,
                                           const QVector<SlideMedia> &media, QString *error,
-                                          const PresentationSettings &settings) {
+                                          const PresentationSettings &settings, const QString &backgroundPath,
+                                          const QStringList &richText) {
     clearError(error);
     if (title.trimmed().isEmpty() || texts.isEmpty() || texts.size() != media.size()) {
         fail(QStringLiteral("A presentation needs a title and matching slide and media lists."), error);
@@ -308,12 +377,17 @@ int LibraryRepository::createPresentation(const QString &title, const QStringLis
         fail(QStringLiteral("The presentation timing or transition settings are invalid."), error);
         return 0;
     }
+    if (!validRichText(texts, richText)) {
+        fail(QStringLiteral("Provide one rich-text document per slide, no larger than 1 MB each (16 MB total)."), error);
+        return 0;
+    }
     bool hasMedia = false;
     QSet<QString> names;
     for (int i = 0; i < media.size(); ++i) {
         const auto &item = media.at(i);
         if (item.kind == MediaKind::None) {
-            if (texts.at(i).trimmed().isEmpty() || !item.path.isEmpty() || !item.name.isEmpty() || item.loop) {
+            if ((texts.at(i).trimmed().isEmpty() && richText.isEmpty())
+                || !item.path.isEmpty() || !item.name.isEmpty() || item.loop) {
                 fail(QStringLiteral("A text slide needs content and cannot contain media settings."), error);
                 return 0;
             }
@@ -344,30 +418,37 @@ int LibraryRepository::createPresentation(const QString &title, const QStringLis
         fail(QStringLiteral("Use the song editor to create presentations containing only text."), error);
         return 0;
     }
+    if (!validBackgroundPath(backgroundPath)) {
+        fail(QStringLiteral("Choose a managed image from the background library."), error);
+        return 0;
+    }
     Transaction transaction(db_);
     if (!transaction.active()) { fail(db_.lastError().text(), error); return 0; }
     QSqlQuery query(db_);
-    query.prepare(QStringLiteral("INSERT INTO songs(title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms) VALUES(?,?,?,?,?)"));
+    query.prepare(QStringLiteral("INSERT INTO songs(title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms,transition_override,background_path) VALUES(?,?,?,?,?,?,?)"));
     query.addBindValue(title.trimmed());
     query.addBindValue(settings.autoAdvanceMs);
     query.addBindValue(settings.loop);
     query.addBindValue(int(settings.transition));
     query.addBindValue(settings.transitionDurationMs);
+    query.addBindValue(settings.overrideTransition);
+    query.addBindValue(backgroundPath.isNull() ? QStringLiteral("") : backgroundPath);
     if (!query.exec()) { fail(query.lastError().text(), error); return 0; }
     const int id = query.lastInsertId().toInt();
-    query.prepare(QStringLiteral("INSERT INTO slides(song_id,position,text,media_kind,media_path,media_name,media_loop) "
-                                 "VALUES(?,?,?,?,?,?,?)"));
+    query.prepare(QStringLiteral("INSERT INTO slides(song_id,position,text,media_kind,media_path,media_name,media_loop,rich_text) "
+                                 "VALUES(?,?,?,?,?,?,?,?)"));
     for (int i = 0; i < texts.size(); ++i) {
         const auto &item = media.at(i);
         query.bindValue(0, id);
         query.bindValue(1, i);
-        const QString text = texts.at(i).trimmed();
+        const QString text = richText.value(i).isEmpty() ? texts.at(i).trimmed() : texts.at(i);
         query.bindValue(2, text.isNull() ? QStringLiteral("") : text);
         query.bindValue(3, item.kind == MediaKind::Image ? QStringLiteral("image")
                            : item.kind == MediaKind::Video ? QStringLiteral("video") : QStringLiteral(""));
         query.bindValue(4, item.path.isNull() ? QStringLiteral("") : item.path);
         query.bindValue(5, item.name.isNull() ? QStringLiteral("") : item.name.trimmed());
         query.bindValue(6, item.loop);
+        query.bindValue(7, richText.value(i).isNull() ? QStringLiteral("") : richText.value(i));
         if (!query.exec()) { fail(query.lastError().text(), error); return 0; }
     }
     if (!transaction.commit()) { fail(db_.lastError().text(), error); return 0; }
@@ -392,11 +473,25 @@ bool LibraryRepository::updatePresentationSettings(int songId, const Presentatio
         return fail(QStringLiteral("Use an auto-advance interval of 0.1–3600 seconds (or turn it off), "
                                    "a supported transition, and a transition duration of 0–10 seconds."), error);
     QSqlQuery query(db_);
-    query.prepare(QStringLiteral("UPDATE songs SET auto_advance_ms=?,presentation_loop=?,transition_type=?,transition_duration_ms=? WHERE id=?"));
+    query.prepare(QStringLiteral("UPDATE songs SET auto_advance_ms=?,presentation_loop=?,transition_type=?,transition_duration_ms=?,transition_override=? WHERE id=?"));
     query.addBindValue(settings.autoAdvanceMs);
     query.addBindValue(settings.loop);
     query.addBindValue(int(settings.transition));
     query.addBindValue(settings.transitionDurationMs);
+    query.addBindValue(settings.overrideTransition);
+    query.addBindValue(songId);
+    if (!query.exec()) return fail(query.lastError().text(), error);
+    if (!query.numRowsAffected()) return fail(QStringLiteral("This presentation no longer exists."), error);
+    return true;
+}
+
+bool LibraryRepository::updatePresentationBackground(int songId, const QString &path, QString *error) {
+    clearError(error);
+    if (!validBackgroundPath(path))
+        return fail(QStringLiteral("Choose a managed image from the background library."), error);
+    QSqlQuery query(db_);
+    query.prepare(QStringLiteral("UPDATE songs SET background_path=? WHERE id=?"));
+    query.addBindValue(path.isNull() ? QStringLiteral("") : path);
     query.addBindValue(songId);
     if (!query.exec()) return fail(query.lastError().text(), error);
     if (!query.numRowsAffected()) return fail(QStringLiteral("This presentation no longer exists."), error);
@@ -467,12 +562,56 @@ bool LibraryRepository::updateSong(int id, const QString &title, const QStringLi
     query.prepare(QStringLiteral("DELETE FROM slides WHERE song_id=?"));
     query.addBindValue(id);
     if (!query.exec()) return fail(query.lastError().text(), error);
-    if (!storeSlides(id, slides, error)) return false;
+    QStringList preservedRichText;
+    if (original.slides.size() == slides.size()) {
+        for (int i = 0; i < slides.size(); ++i)
+            preservedRichText.append(original.slides.at(i) == slides.at(i).trimmed()
+                ? original.richText.value(i) : QString());
+    }
+    if (!storeSlides(id, slides, error, preservedRichText)) return false;
     // Source indices no longer identify the same arrangement after a slide-count change.
     if (original.slides.size() != slides.size()) {
         query.prepare(QStringLiteral("UPDATE service_entries SET slide_order=NULL WHERE song_id=?"));
         query.addBindValue(id);
         if (!query.exec()) return fail(query.lastError().text(), error);
+    }
+    if (!transaction.commit()) return fail(db_.lastError().text(), error);
+    return true;
+}
+
+bool LibraryRepository::updatePresentationText(int songId, const QString &title,
+    const QStringList &texts, const QStringList &richText, QString *error) {
+    clearError(error);
+    if (title.trimmed().isEmpty() || texts.isEmpty())
+        return fail(QStringLiteral("A presentation needs a title and at least one slide."), error);
+    if (richText.size() != texts.size() || !validRichText(texts, richText))
+        return fail(QStringLiteral("Provide one rich-text document per slide, no larger than 1 MB each (16 MB total)."), error);
+
+    Transaction transaction(db_);
+    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    QSqlQuery query(db_);
+    query.prepare(QStringLiteral("SELECT id FROM slides WHERE song_id=? ORDER BY position,id"));
+    query.addBindValue(songId);
+    if (!query.exec()) return fail(query.lastError().text(), error);
+    QVector<int> slideIds;
+    while (query.next()) slideIds.append(query.value(0).toInt());
+    query.finish();
+    if (slideIds.size() != texts.size())
+        return fail(QStringLiteral("The presentation's slides changed while editing. Reopen the editor before saving."), error);
+    query.prepare(QStringLiteral("UPDATE songs SET title=? WHERE id=?"));
+    query.addBindValue(title.trimmed());
+    query.addBindValue(songId);
+    if (!query.exec()) return fail(query.lastError().text(), error);
+    if (!query.numRowsAffected()) return fail(QStringLiteral("This presentation no longer exists."), error);
+    query.prepare(QStringLiteral("UPDATE slides SET text=?,rich_text=? WHERE id=? AND song_id=?"));
+    for (int i = 0; i < texts.size(); ++i) {
+        query.bindValue(0, texts.at(i).isNull() ? QStringLiteral("") : texts.at(i));
+        query.bindValue(1, richText.at(i).isNull() ? QStringLiteral("") : richText.at(i));
+        query.bindValue(2, slideIds.at(i));
+        query.bindValue(3, songId);
+        if (!query.exec()) return fail(query.lastError().text(), error);
+        if (query.numRowsAffected() != 1)
+            return fail(QStringLiteral("A slide could not be saved. Reopen the editor and try again."), error);
     }
     if (!transaction.commit()) return fail(db_.lastError().text(), error);
     return true;
@@ -673,6 +812,32 @@ QStringList LibraryRepository::entrySlides(int entryId) const {
             return {};
         }
         result.append(source.slides.at(index));
+    }
+    return result;
+}
+
+QStringList LibraryRepository::entryRichText(int entryId) const {
+    clearError();
+    QSqlQuery query(db_);
+    query.prepare(QStringLiteral("SELECT song_id,slide_order FROM service_entries WHERE id=?"));
+    query.addBindValue(entryId);
+    if (!query.exec()) { fail(query.lastError().text()); return {}; }
+    if (!query.next()) return {};
+    QVector<int> order;
+    if (!decodeOrder(query.value(1), &order)) {
+        fail(QStringLiteral("A service item contains an invalid slide arrangement."));
+        return {};
+    }
+    const Song source = song(query.value(0).toInt());
+    if (!lastError_.isEmpty()) return {};
+    if (order.isEmpty()) return source.richText;
+    QStringList result;
+    for (int index : order) {
+        if (index >= source.richText.size()) {
+            fail(QStringLiteral("A service item's slide arrangement references missing rich text."));
+            return {};
+        }
+        result.append(source.richText.at(index));
     }
     return result;
 }

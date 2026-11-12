@@ -1,4 +1,5 @@
 #include "SlideRenderer.h"
+#include "RichTextSupport.h"
 
 #include <QFontDatabase>
 #include <QDateTime>
@@ -78,18 +79,9 @@ void SlideRenderer::paintAudience(QPainter &painter, const QRect &destination,
     const QRect canvas(0, 0, CanvasWidth, CanvasHeight);
     painter.setClipRect(canvas, Qt::IntersectClip);
 
-    if (state.currentMedia().kind != MediaKind::None) {
-        // Media slides are the image itself, without the lyric-background
-        // dimming/cropping. The decoder supplies a shared, ready-to-paint frame.
-        painter.fillRect(canvas, Qt::black);
-        if (!mediaFrame.isNull()) {
-            const QSizeF fitted = mediaFrame.size().scaled(canvas.size(), Qt::KeepAspectRatio);
-            const QRectF target((CanvasWidth - fitted.width()) / 2,
-                                (CanvasHeight - fitted.height()) / 2,
-                                fitted.width(), fitted.height());
-            painter.drawPixmap(target, mediaFrame, QRectF(mediaFrame.rect()));
-        }
-    } else if (!background.isNull()) {
+    // A presentation background is a separate layer. Pictures and video sit
+    // above it, so fitted media can reveal the background around its edges.
+    if (!background.isNull()) {
         const qreal coverScale = qMax(CanvasWidth / qreal(background.width()),
                                       CanvasHeight / qreal(background.height()));
         const QSizeF cover(background.width() * coverScale, background.height() * coverScale);
@@ -105,17 +97,31 @@ void SlideRenderer::paintAudience(QPainter &painter, const QRect &destination,
         painter.fillRect(canvas, gradient);
     }
 
-    if (!state.clear) drawLyrics(painter, state.currentText());
+    if (state.currentMedia().kind != MediaKind::None && !mediaFrame.isNull()) {
+        // Only the background is dimmed. Full-canvas JPEGs cover it completely
+        // and media retains its original brightness and aspect ratio.
+        const QSizeF fitted = mediaFrame.size().scaled(canvas.size(), Qt::KeepAspectRatio);
+        const QRectF target((CanvasWidth - fitted.width()) / 2,
+                            (CanvasHeight - fitted.height()) / 2,
+                            fitted.width(), fitted.height());
+        painter.drawPixmap(target, mediaFrame, QRectF(mediaFrame.rect()));
+    }
+
+    if (!state.clear) {
+        if (state.currentRichText().isEmpty()) drawLyrics(painter, state.currentText());
+        else RichTextSupport::paint(painter, QRectF(154, 130, 1612, 820), state.currentText(), state.currentRichText());
+    }
     painter.restore();
 }
 
 QPixmap SlideRenderer::thumbnail(const QString &text, const QSize &size,
-                                 const QPixmap &background) {
+                                 const QPixmap &background, const QString &richText) {
     if (size.isEmpty()) return {};
     QPixmap result(size);
     result.fill(Qt::black);
     LivePresentation state;
     state.slides = {text};
+    state.richText = {richText};
     state.index = 0;
     QPainter painter(&result);
     paintAudience(painter, result.rect(), state, background);
@@ -157,13 +163,15 @@ void SlideRenderer::paintTransition(QPainter &painter, const QRect &destination,
 }
 
 QPixmap SlideRenderer::thumbnail(const QString &text, const SlideMedia &media,
-                                 const QSize &size, const QPixmap &background) {
-    if (media.kind == MediaKind::None) return thumbnail(text, size, background);
+                                 const QSize &size, const QPixmap &background,
+                                 const QString &richText) {
+    if (media.kind == MediaKind::None) return thumbnail(text, size, background, richText);
     if (size.isEmpty()) return {};
     QPixmap result(size);
     result.fill(Qt::black);
     LivePresentation state;
     state.slides = {text};
+    state.richText = {richText};
     state.media = {media};
     state.index = 0;
     const QPixmap frame = media.kind == MediaKind::Image ? thumbnailImage(media.path) : QPixmap{};
