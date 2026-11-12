@@ -30,6 +30,8 @@
 - Somehow the app should self-check for a valid auth code at startup and not be tamperable by the user.
 - If the code isn't valid on the local machine it should check with the cloudflare DB
 - If that isn't valid the user should be prompted to get a valid auth code.
+- The code should be valid for 5 instances of the app installed on seperate machines.
+- Make this as secure and tamper proof as possible.
 - I also want you to package the app for shipping and have a one click install.
     - There should be a file that I can post on my website a user can download and then with one click install on their machine.
 
