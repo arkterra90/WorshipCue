@@ -47,3 +47,18 @@
 - Worshipcue should detect native resolutions but allow for the user to give custom inputs for interlaced, progressive, resolution, or aspect ratio's.
 - A user should be able to have two seperate audience screens fully configurable and two seperate stage screens.
 - Stage screens should be user customizable. Keep the standard we have right now, but allow the user to configure as needed for their situation.
+
+## Blackout and Clear Text
+- The global fade and transition settings should determine these behaviours.
+- If a presentation has different fade and transition settings those will over ride.
+
+## Fade and Transition
+- A user should be able to select all the content of a service playlist and assign the same fade and transition settings to all items.
+
+## Midi
+- A user should be able to configure midi control input and output
+- Slides, when right clicked, should be able to have a user selected output for the slide.
+    - If output is selected Worshipcue should emit that signal.
+    - If intput is selected Worshipcue should allow that signal for that slide to control that slide
+- Further users should be able to configure global midi controls for things like blackout, clear, etc
+- Reference how pro presentor does this and do likewise.
