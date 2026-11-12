@@ -2,6 +2,12 @@
 
 WorshipCue is a native C++17 / Qt 6 Widgets church presentation application with an offline SQLite library, picture/video presentations, batch naming, automatic slide advancement, and slide transitions.
 
+## Create service orders with AI
+
+Open **Settings → AI / MCP Setup…** to connect an AI client to WorshipCue's local MCP server. The client can create song and sermon presentations, search your library, inspect past services, and preview/save new service orders. With Planning Center credentials configured, it can read a Services plan and import its order, matching library songs or creating slides from available arrangement lyrics. New services appear in the app automatically while live output continues unchanged. The normal app build includes the `WorshipCueMcp` companion; no model API key is required in WorshipCue.
+
+See [MCP setup, example prompts, and tool details](docs/MCP.md).
+
 ## Run a service
 
 1. Use **+ New** to create slides in the rich text editor, or **Import Song Lyrics…** for text/ChordPro import. Use **Edit** in the library or **Edit Slide Text…** above the slide workspace to edit an existing presentation. Save commits the draft; Cancel discards it.
@@ -17,9 +23,9 @@ Switching modes, browsing another service, changing saved order, or saving song 
 
 The live preview uses the same 16:9 renderer as audience output; non-16:9 windows letterbox the canvas. It shows audience content even when the physical output is Off; check the separate routing status to see whether a window is active.
 
-Choose **Grid** for audience thumbnails or **Text** for readable, wrapped lyrics. **Slide size** adjusts the thumbnails or text size for the operator. Drag the dividers between the three columns or between the library and service playlist to allocate space. View, size, divider positions, and preview tab are remembered when you close the app.
+Choose **Grid** for audience thumbnails or **Text** for readable, wrapped lyrics. **Slide size** adjusts the thumbnails or text size for the operator. Choose **Content Library** or **Service Playlist** at the top of the left sidebar; the selected view uses its full height. The library shows which saved service receives added items. Drag the dividers between the three columns to allocate space. View, size, column widths, sidebar choice, and preview tab are remembered when you close the app.
 
-Use **Command+F** on macOS or **Ctrl+F** on Windows to focus the library search. **Return to Live** reveals the saved service and cue corresponding to the running copy without cueing it again. If that saved content has changed or been removed, WorshipCue reports the difference and keeps the live output. Audience controls remain directly beneath the live preview; timing and video controls appear when applicable.
+Use **Command+F** on macOS or **Ctrl+F** on Windows to open Content Library and focus its search. **Return to Live** reveals the saved service and cue corresponding to the running copy without cueing it again. If that saved content has changed or been removed, WorshipCue reports the difference and keeps the live output. Audience controls remain directly beneath the live preview; timing and video controls appear when applicable.
 
 See [the ProPresenter UI audit](docs/PROPRESENTER_UI_AUDIT.md) for the comparison, applied changes, and deferred workflows.
 
@@ -96,7 +102,7 @@ Routing preferences persist. Closing an output window sets its route to Off. A d
 
 ## Build
 
-Install Qt **6.4 or newer**, including Widgets, SQL, the SQLite driver, **Multimedia**, **Concurrent**, CMake, and a compatible C++ compiler. Multimedia and Concurrent are standard Qt modules used for playback and background imports; no separate FFmpeg dependency is introduced. Open `CMakeLists.txt` in Qt Creator and use a matching macOS or Windows kit, or build from the command line.
+Install Qt **6.4 or newer**, including Widgets, SQL, the SQLite driver, **Multimedia**, **Concurrent**, **Network**, CMake, and a compatible C++ compiler. Multimedia and Concurrent are standard Qt modules used for playback and background imports; no separate FFmpeg dependency is introduced. Open `CMakeLists.txt` in Qt Creator and use a matching macOS or Windows kit, or build from the command line.
 
 macOS (replace the example prefix with your Qt installation):
 
@@ -119,7 +125,7 @@ ctest --test-dir build -C Release --output-on-failure
 .\build\Release\WorshipCue.exe
 ```
 
-Qt Test is required when `WORSHIPCUE_BUILD_TESTS=ON`. Tests use temporary databases and isolated preferences. Most widget tests use Qt’s offscreen backend. On macOS, the operator and media-playback suites use native Cocoa windows in a logged-in desktop session because AVFoundation needs its event dispatcher to decode video. The eleven suites cover migrations and rollback, persistence, service snapshots, timed advancement and pause/loop boundaries, transition defaults and overrides, background layering, rich text editing/rendering and undo, lyric import, routing, reordering, batch naming/import, real H.264 playback, and operator interactions. Windows commands are provided for development; Windows has **not** been tested in this milestone.
+Qt Test is required when `WORSHIPCUE_BUILD_TESTS=ON`. Tests use temporary databases and isolated preferences. Most widget tests use Qt’s offscreen backend. On macOS, the operator and media-playback suites use native Cocoa windows in a logged-in desktop session because AVFoundation needs its event dispatcher to decode video. The twelve suites cover MCP protocol and subprocess transport, atomic service creation, migrations and rollback, persistence, service snapshots, timed advancement and pause/loop boundaries, transition defaults and overrides, background layering, rich text editing/rendering and undo, lyric import, routing, reordering, batch naming/import, real H.264 playback, and operator interactions. Windows commands are provided for development; Windows has **not** been tested in this milestone.
 
 Use `macdeployqt` or `windeployqt` from the matching Qt installation to package runtime libraries and plugins. Signing, notarization, native installers, and distribution updates remain future work.
 
@@ -135,9 +141,9 @@ Back up the database **and its sibling `media` and `backgrounds` directories** w
 
 ## Scope and next work
 
-The current application includes a searchable content library, lyric import/paste, named saved services, picture/video import with batch naming, presentation backgrounds, global transition defaults with presentation overrides, presentation auto-advance/looping, service and slide reordering, Show/Edit operation, shared audience-style previews, live/next monitoring, keyboard controls, and output recovery handling. The rich text slide editor supports direct canvas editing, formatting, per-slide undo/redo, and preview. The bulk lyrics importer retains editable `---` separators.
+The current application includes a searchable content library, lyric import/paste, named saved services, local MCP service-order creation, picture/video import with batch naming, presentation backgrounds, global transition defaults with presentation overrides, presentation auto-advance/looping, service and slide reordering, Show/Edit operation, shared audience-style previews, live/next monitoring, keyboard controls, and output recovery handling. The rich text slide editor supports direct canvas editing, formatting, per-slide undo/redo, and preview. The bulk lyrics importer retains editable `---` separators.
 
-The next editor work includes Reflow, section labels, stable slide identities, named arrangements, reusable themes, and freeform multi-object slide layouts. Library collections, full media source editing, motion lyric backgrounds, countdown timers, Scripture generation, dedicated sermon presentations, external integrations, and installers remain unimplemented.
+The next editor work includes Reflow, section labels, stable slide identities, named arrangements, reusable themes, and freeform multi-object slide layouts. Library collections, full media source editing, motion lyric backgrounds, countdown timers, Scripture generation, dedicated sermon presentations, additional external integrations, and installers remain unimplemented.
 
 See [the roadmap](docs/ROADMAP.md) and [architecture](docs/ARCHITECTURE.md) for the inspection findings, boundaries, and remaining risks. Automated macOS checks do not replace rehearsal with real projectors, physical hot-plug, macOS Spaces, high DPI, and a Windows build before production use.
 

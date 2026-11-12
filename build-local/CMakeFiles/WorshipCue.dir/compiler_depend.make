@@ -11162,6 +11162,9 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: /Users/jeremykuehn/Documents/
   /opt/homebrew/opt/qt/include/QtCore/QElapsedTimer \
   /opt/homebrew/opt/qt/include/QtCore/QFileInfo \
   /opt/homebrew/opt/qt/include/QtCore/QFutureWatcher \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonArray \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonDocument \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonObject \
   /opt/homebrew/opt/qt/include/QtCore/QMetaType \
   /opt/homebrew/opt/qt/include/QtCore/QObject \
   /opt/homebrew/opt/qt/include/QtCore/QPointer \
@@ -11175,6 +11178,7 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: /Users/jeremykuehn/Documents/
   /opt/homebrew/opt/qt/include/QtCore/QTimer \
   /opt/homebrew/opt/qt/include/QtCore/QVector \
   /opt/homebrew/opt/qt/include/QtGui/QAction \
+  /opt/homebrew/opt/qt/include/QtGui/QClipboard \
   /opt/homebrew/opt/qt/include/QtGui/QCloseEvent \
   /opt/homebrew/opt/qt/include/QtGui/QImageReader \
   /opt/homebrew/opt/qt/include/QtGui/QKeyEvent \
@@ -11206,10 +11210,12 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: /Users/jeremykuehn/Documents/
   /opt/homebrew/opt/qt/include/QtWidgets/QPlainTextEdit \
   /opt/homebrew/opt/qt/include/QtWidgets/QProgressDialog \
   /opt/homebrew/opt/qt/include/QtWidgets/QPushButton \
+  /opt/homebrew/opt/qt/include/QtWidgets/QScrollBar \
   /opt/homebrew/opt/qt/include/QtWidgets/QSlider \
   /opt/homebrew/opt/qt/include/QtWidgets/QSplitter \
   /opt/homebrew/opt/qt/include/QtWidgets/QStatusBar \
   /opt/homebrew/opt/qt/include/QtWidgets/QStyledItemDelegate \
+  /opt/homebrew/opt/qt/include/QtWidgets/QTabBar \
   /opt/homebrew/opt/qt/include/QtWidgets/QTabWidget \
   /opt/homebrew/opt/qt/include/QtWidgets/QTextEdit \
   /opt/homebrew/opt/qt/include/QtWidgets/QVBoxLayout \
@@ -11303,6 +11309,7 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: /Users/jeremykuehn/Documents/
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qitemselectionmodel.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiterable.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiterator.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonarray.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonobject.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
@@ -11405,6 +11412,7 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: /Users/jeremykuehn/Documents/
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qaction.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbitmap.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbrush.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qclipboard.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcolor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcursor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qevent.h \
@@ -11497,6 +11505,7 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: /Users/jeremykuehn/Documents/
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qprogressdialog.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qpushbutton.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qrubberband.h \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qscrollbar.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qsizepolicy.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qslider.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qspinbox.h \
@@ -21089,8 +21098,6 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: /Users/jeremykuehn/Docu
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.cpp:
 
-/opt/homebrew/opt/qt/include/QtWidgets/QScrollBar:
-
 /opt/homebrew/opt/qt/include/QtGui/QDropEvent:
 
 /opt/homebrew/opt/qt/include/QtGui/QDragLeaveEvent:
@@ -21141,9 +21148,13 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: /Users/jeremykuehn/Docu
 
 /opt/homebrew/opt/qt/include/QtWidgets/QTabWidget:
 
+/opt/homebrew/opt/qt/include/QtWidgets/QTabBar:
+
 /opt/homebrew/opt/qt/include/QtWidgets/QStyledItemDelegate:
 
 /opt/homebrew/opt/qt/include/QtWidgets/QSplitter:
+
+/opt/homebrew/opt/qt/include/QtWidgets/QScrollBar:
 
 /opt/homebrew/opt/qt/include/QtWidgets/QProgressDialog:
 
@@ -21698,6 +21709,8 @@ WorshipCue_autogen/YPKJ5OE7LN/moc_ReorderListWidget.cpp:
 /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/__stdarg_va_arg.h:
 
 /opt/homebrew/opt/qt/include/QtGui/QFont:
+
+/opt/homebrew/opt/qt/include/QtCore/QJsonObject:
 
 /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/__stdarg___va_copy.h:
 

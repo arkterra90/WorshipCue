@@ -14,6 +14,8 @@ MainWindow ───────── LibraryRepository ─── SQLite librar
     ├── MediaPlayback ────── one Qt Multimedia decoder / shared live frame
     └── OutputManager ────── audience and stage DisplayWindows
 
+WorshipCueMcp ── McpServer ── LibraryRepository ── same SQLite library
+
 SlideRenderer ─── audience window, live/selected/next previews, slide thumbnails
 BatchRenamer ─── naming rules and collision validation
 ```
@@ -55,6 +57,14 @@ Arrangements store source-slide indices in JSON. Null/empty means natural order.
 
 Writes return errors; read failures are logged and exposed through `lastError()`. Callers must inspect a read error before issuing another repository operation.
 
+## MCP service planning
+
+`WorshipCueMcp` is a separate console executable linked to Qt Core, Network, and SQL. AI clients launch it over newline-delimited JSON-RPC on stdin/stdout; diagnostics go to stderr. The app build includes it beside the GUI executable (inside the macOS bundle). It uses the same organization/application identity and repository implementation; `--database` selects the exact library. There is no socket listener, embedded model, or model credential storage.
+
+`McpServer` exposes library search, presentation inspection, saved service listing/inspection, standalone song/sermon text presentation creation, and new service-order creation. `PlanningCenterClient` reads Services plans over authenticated HTTPS using credentials from the process environment. It enforces the API host, rejects redirects/foreign pagination, and bounds response size and request time. Import previews resolve library matches, available lyrics, and labelled sequences; unresolved items block the atomic save unless overridden or explicitly permitted as placeholders. Ordinary item notes are not projected. Planning Center remains read-only. Schemas and runtime validation bound inputs and distinguish existing presentation references from new plain-text slides. A dry run returns an ordered preview. Committing delegates to `LibraryRepository::createServiceOrder`, which validates references and arrangements and saves the service, new presentations, slides, and entries in one SQLite transaction. It does not call individual transaction-owning repository mutations inside that transaction. Repeated entries receive separate IDs; existing library content retains its settings and media.
+
+The GUI polls `PRAGMA data_version` on its own connection once per second. A committed change from another connection refreshes saved services and library content while preserving the operator's selected service, entry, slide, and the controller's live snapshot. Refresh waits while a modal dialog or mouse drag is active. The Settings-menu setup dialog generates client configuration from the actual executable and database paths. See [MCP setup and tool usage](MCP.md).
+
 ## MediaManager: managed imports and thumbnails
 
 Importing copies selected files into `media/<batch UUID>/<chosen filename>` beside the database. Original files are unchanged. Stored paths are relative, allowing the closed database and its media directory to move together. A batch UUID isolates import destinations from existing content; files are never overwritten.
@@ -79,7 +89,7 @@ A crash between file copying and database commit can leave an unreferenced impor
 
 ## Operator interaction and rendering
 
-The left sidebar contains the searchable content library and named services, separated by a vertical splitter. The center offers Grid thumbnails or a Text list with wrapped lyrics; a size slider adjusts thumbnails or operator text. `SlideTextDelegate` reads the existing slide roles without modifying presentation content. Thumbnails are cached at 320×180 to support the full size range. The right shows Live with audience controls immediately underneath, Up Next/Selected preview tabs, transport, and contextual timing/media controls. Both splitter positions, slide view/size, and preview tab persist in QSettings. Preview tabs retain a minimum height that fits their child preview, including during timed video playback at 1080×680.
+The left sidebar switches between Content Library and Service Playlist tabs, each using the full sidebar height. The library identifies the current destination service; Find opens the library, and Return to Live opens the playlist. The center offers Grid thumbnails or a Text list with wrapped lyrics; a size slider adjusts thumbnails or operator text. `SlideTextDelegate` reads the existing slide roles without modifying presentation content. Thumbnails are cached at 320×180 to support the full size range. The right shows Live with audience controls immediately underneath, Up Next/Selected preview tabs, transport, and contextual timing/media controls. Column widths, sidebar tab, slide view/size, and preview tab persist in QSettings. Preview tabs retain a minimum height that fits their child preview, including during timed video playback at 1080×680.
 
 Lyrics/media import and the background library are available from the sidebar. Presentation timing/transitions and background assignment are available in library/service context menus; global transition defaults are visible below the slide workspace and in Settings/File. Media presentation titles, labels, and arrangements persist. Picture cards show decoded thumbnails; video cards identify the filename/type. Missing media receives an operator warning.
 
@@ -105,7 +115,7 @@ Screen identities combine OS name, manufacturer, model, and serial number. Ident
 
 ## Verification and remaining work
 
-The media milestone built on macOS 15.7.4 with Qt 6.12 and AppleClang 17 and passed its nine CTest suites; its historical validation is recorded in [MILESTONE_0.3.md](MILESTONE_0.3.md). The current eleven suites additionally cover lyric parsing/import, schema-v5 migration, rich text editing/rendering, global transition inheritance/overrides, and presentation background layering. Operator and video-playback tests use Cocoa on macOS because AVFoundation needs its native event dispatcher; other widget suites use offscreen rendering.
+The media milestone built on macOS 15.7.4 with Qt 6.12 and AppleClang 17 and passed its nine CTest suites; its historical validation is recorded in [MILESTONE_0.3.md](MILESTONE_0.3.md). The current twelve suites additionally cover MCP protocol/stdio transport, atomic service-order creation and external refresh, lyric parsing/import, schema-v5 migration, rich text editing/rendering, global transition inheritance/overrides, and presentation background layering. Operator and video-playback tests use Cocoa on macOS because AVFoundation needs its native event dispatcher; other widget suites use offscreen rendering.
 
 Offscreen tests do not establish real projector routing, physical mouse dragging, codec coverage, audio-device behavior, or hardware-accelerated fullscreen video. Windows and physical multi-monitor testing remain outstanding. Keep backup/restore, real-output rehearsal, large-media profiling, and bounded cache/memory checks alongside the next explicit slide-editor/Reflow/themes milestone.
 

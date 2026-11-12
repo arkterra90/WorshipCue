@@ -24,6 +24,7 @@ class SlidePreview;
 class MediaManager;
 class QProgressDialog;
 class QAction;
+class QTimer;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -67,7 +68,8 @@ private:
     QComboBox *slideViewMode_ = nullptr;
     QSlider *slideSize_ = nullptr;
     QSplitter *operatorSplitter_ = nullptr;
-    QSplitter *libraryServiceSplitter_ = nullptr;
+    QTabWidget *sidebarTabs_ = nullptr;
+    QLabel *libraryDestination_ = nullptr;
     QTabWidget *previewTabs_ = nullptr;
     SlideTextDelegate *textDelegate_ = nullptr;
     QAbstractItemDelegate *gridDelegate_ = nullptr;
@@ -92,12 +94,15 @@ private:
     PresentationSettings programSettings_;
     QPixmap selectedBackground_;
     QString selectedBackgroundPath_;
+    QString databasePath_;
+    qint64 externalDataVersion_ = -1;
+    QTimer *libraryRefreshTimer_ = nullptr;
 
     void buildUi();
-    void reloadSongs();
-    void reloadServices(int selectServiceId = 0);
-    void reloadService(int selectEntryId = 0, int selectSlide = 0);
-    void showSelectedService(int selectSlide = 0);
+    bool reloadSongs(bool reportFailure = true);
+    bool reloadServices(int selectServiceId = 0, int selectEntryId = 0, int selectSlide = 0, bool reportFailure = true);
+    bool reloadService(int selectEntryId = 0, int selectSlide = 0, bool reportFailure = true);
+    bool showSelectedService(int selectSlide = 0, bool reportFailure = true);
     void showSelectedSlide();
     void createService();
     void renameService();
@@ -138,6 +143,8 @@ private:
     void refreshOutputOptions();
     void updateOutputStatus();
     void configureShortcuts();
+    void configureMcp();
+    void refreshExternalChanges();
     void focusOperator();
     void markSaved();
     void reportError(const QString &error);

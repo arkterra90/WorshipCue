@@ -1,0 +1,49 @@
+{
+  "data": [
+    {
+      "type": "Item",
+      "id": "30",
+      "attributes": {
+        "title": "New Remote Song",
+        "item_type": "song",
+        "sequence": 1,
+        "custom_arrangement_sequence": [
+          "Chorus",
+          "Verse 1",
+          "Chorus"
+        ]
+      },
+      "relationships": {
+        "song": {
+          "data": {
+            "id": "50"
+          }
+        },
+        "arrangement": {
+          "data": {
+            "id": "60"
+          }
+        }
+      }
+    }
+  ],
+  "included": [
+    {
+      "type": "Song",
+      "id": "50",
+      "attributes": {
+        "title": "New Remote Song"
+      }
+    },
+    {
+      "type": "Arrangement",
+      "id": "60",
+      "attributes": {
+        "lyrics": "Verse 1\nFirst verse\n\nChorus\nSing together"
+      }
+    }
+  ],
+  "links": {
+    "next": null
+  }
+}

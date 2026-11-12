@@ -1105,6 +1105,8 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qguiapplication.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qinputmethod.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qguiapplication_platform.h \
+  /opt/homebrew/opt/qt/include/QtGui/QClipboard \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qclipboard.h \
   /opt/homebrew/opt/qt/include/QtGui/QCloseEvent \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qevent.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiodevice.h \
@@ -1186,6 +1188,10 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextcursor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextdocument.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextformat.h \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonArray \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonarray.h \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonDocument \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonObject \
   /opt/homebrew/opt/qt/include/QtGui/QKeyEvent \
   /opt/homebrew/opt/qt/include/QtWidgets/QKeySequenceEdit \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qkeysequenceedit.h \
@@ -1217,6 +1223,8 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/include/QtCore/QSettings \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsettings.h \
   /opt/homebrew/opt/qt/include/QtCore/QSignalBlocker \
+  /opt/homebrew/opt/qt/include/QtWidgets/QScrollBar \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qscrollbar.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QSplitter \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qsplitter.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QSlider \

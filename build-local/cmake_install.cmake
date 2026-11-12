@@ -47,6 +47,19 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   endif()
 endif()
 
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/WorshipCue.app/Contents/MacOS" TYPE EXECUTABLE FILES "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCueMcp")
+  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/WorshipCue.app/Contents/MacOS/WorshipCueMcp" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/WorshipCue.app/Contents/MacOS/WorshipCueMcp")
+    execute_process(COMMAND /usr/bin/install_name_tool
+      -delete_rpath "/opt/homebrew/opt/qt/lib"
+      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/WorshipCue.app/Contents/MacOS/WorshipCueMcp")
+    if(CMAKE_INSTALL_DO_STRIP)
+      execute_process(COMMAND "/usr/bin/strip" -u -r "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/WorshipCue.app/Contents/MacOS/WorshipCueMcp")
+    endif()
+  endif()
+endif()
+
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)

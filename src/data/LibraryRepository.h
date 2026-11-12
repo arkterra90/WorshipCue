@@ -29,6 +29,15 @@ struct ServiceEntry {
     QVector<int> slideOrder;
 };
 
+// One occurrence in a new service. Use an existing songId, or leave it zero
+// and provide title/slides to create a reusable text presentation.
+struct ServiceOrderItem {
+    int songId = 0;
+    QString title;
+    QStringList slides;
+    QVector<int> slideOrder;
+};
+
 class LibraryRepository {
 public:
     LibraryRepository() = default;
@@ -39,9 +48,14 @@ public:
     bool open(QString *error, const QString &databasePath = {});
     QString lastError() const { return lastError_; }
     QString databaseDirectory() const;
+    // Changes when another connection commits; useful for refreshing the operator UI.
+    qint64 dataVersion() const;
     QVector<Song> songs(const QString &search = {}) const;
     Song song(int id) const;
     bool createSong(const QString &title, const QStringList &slides, QString *error,
+                    const PresentationSettings &settings = {}, const QString &backgroundPath = {},
+                    const QStringList &richText = {});
+    int createTextPresentation(const QString &title, const QStringList &slides, QString *error,
                     const PresentationSettings &settings = {}, const QString &backgroundPath = {},
                     const QStringList &richText = {});
     int createPresentation(const QString &title, const QStringList &texts,
@@ -60,6 +74,9 @@ public:
 
     QVector<ServicePlan> services() const;
     int createService(const QString &name, QString *error);
+    // Saves the complete service and any new text presentations in one transaction.
+    // Returns zero on failure; no part of the order is saved in that case.
+    int createServiceOrder(const QString &name, const QVector<ServiceOrderItem> &items, QString *error);
     bool renameService(int id, const QString &name, QString *error);
     int duplicateService(int id, const QString &name, QString *error);
     QVector<ServiceEntry> service(int serviceId) const;

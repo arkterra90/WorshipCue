@@ -13,6 +13,7 @@
 #include <QAbstractSpinBox>
 #include <QAction>
 #include <QApplication>
+#include <QClipboard>
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -25,6 +26,9 @@
 #include <QCollator>
 #include <QFormLayout>
 #include <QInputDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QKeyEvent>
 #include <QKeySequenceEdit>
 #include <QLabel>
@@ -40,6 +44,7 @@
 #include <QProgressDialog>
 #include <QSettings>
 #include <QSignalBlocker>
+#include <QScrollBar>
 #include <QSplitter>
 #include <QSlider>
 #include <QTabWidget>
@@ -178,7 +183,12 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow() = default;
 
 bool MainWindow::initialize(QString *error, const QString &databasePath) {
+    if (libraryRefreshTimer_) libraryRefreshTimer_->stop();
     if (!library_.open(error, databasePath)) return false;
+    externalDataVersion_ = library_.dataVersion();
+    databasePath_ = databasePath == QStringLiteral(":memory:") ? databasePath
+        : databasePath.isEmpty() ? QDir(library_.databaseDirectory()).filePath(QStringLiteral("library.sqlite3"))
+        : QFileInfo(databasePath).absoluteFilePath();
     mediaManager_ = std::make_unique<MediaManager>(library_.databaseDirectory());
     connect(mediaManager_.get(), &MediaManager::thumbnailReady, this, [this](const QString &path) {
         for (int i = 0; i < slides_->count(); ++i) {
@@ -228,6 +238,13 @@ bool MainWindow::initialize(QString *error, const QString &databasePath) {
         if (error) *error = library_.lastError();
         return false;
     }
+    if (!libraryRefreshTimer_) {
+        libraryRefreshTimer_ = new QTimer(this);
+        libraryRefreshTimer_->setObjectName(QStringLiteral("externalLibraryRefresh"));
+        libraryRefreshTimer_->setInterval(1000);
+        connect(libraryRefreshTimer_, &QTimer::timeout, this, &MainWindow::refreshExternalChanges);
+    }
+    libraryRefreshTimer_->start();
     statusBar()->showMessage(QStringLiteral("Show: click a slide to take it live. Edit: preview and drag slides to arrange."), 10000);
     return true;
 }
@@ -292,11 +309,18 @@ void MainWindow::buildUi() {
     connect(programTransitionAction, &QAction::triggered, this, &MainWindow::configureProgramTransitions);
     auto *settingsMenu = menuBar()->addMenu(QStringLiteral("&Settings"));
     settingsMenu->addAction(programTransitionAction);
+    auto *mcpAction = settingsMenu->addAction(QStringLiteral("AI / MCP Setup…"));
+    mcpAction->setObjectName(QStringLiteral("mcpSetupAction"));
+    connect(mcpAction, &QAction::triggered, this, &MainWindow::configureMcp);
     auto *findAction = new QAction(QStringLiteral("Find in Library"), this);
     findAction->setObjectName(QStringLiteral("focusLibrarySearch"));
     findAction->setShortcuts(QKeySequence::Find);
     menuBar()->addMenu(QStringLiteral("&Edit"))->addAction(findAction);
-    connect(findAction, &QAction::triggered, this, [this] { search_->setFocus(); search_->selectAll(); });
+    connect(findAction, &QAction::triggered, this, [this] {
+        sidebarTabs_->setCurrentIndex(0);
+        search_->setFocus();
+        search_->selectAll();
+    });
     connect(fileMenu->addAction(QStringLiteral("Keyboard Shortcuts…")), &QAction::triggered, this, &MainWindow::configureShortcuts);
     connect(fileMenu->addAction(QStringLiteral("Quit")), &QAction::triggered, this, &QWidget::close);
 
@@ -353,9 +377,16 @@ void MainWindow::buildUi() {
     split->setChildrenCollapsible(false);
     layout->addWidget(split, 1);
     QVBoxLayout *left;
-    auto *sidebar = column(split, &left);
-    sidebar->setMinimumWidth(275);
-    left->addWidget(header(QStringLiteral("CONTENT LIBRARY"), sidebar));
+    sidebarTabs_ = new QTabWidget(split);
+    sidebarTabs_->setObjectName(QStringLiteral("sidebarTabs"));
+    sidebarTabs_->setMinimumWidth(275);
+    sidebarTabs_->setDocumentMode(true);
+    auto *sidebar = column(sidebarTabs_, &left);
+    sidebarTabs_->addTab(sidebar, QStringLiteral("Content Library"));
+    libraryDestination_ = new QLabel(sidebar);
+    libraryDestination_->setObjectName(QStringLiteral("libraryDestination"));
+    libraryDestination_->setWordWrap(true);
+    left->addWidget(libraryDestination_);
     search_ = new QLineEdit(sidebar);
     search_->setObjectName(QStringLiteral("songSearch"));
     search_->setPlaceholderText(QStringLiteral("Search titles, lyrics, media names…"));
@@ -384,7 +415,7 @@ void MainWindow::buildUi() {
     backgroundLibrary->setToolTip(QStringLiteral("Import reusable backgrounds and assign one to the selected library presentation."));
     left->addWidget(backgroundLibrary);
     connect(backgroundLibrary, &QPushButton::clicked, this, [this] { assignBackground(selectedSongId()); });
-    connect(search_, &QLineEdit::textChanged, this, &MainWindow::reloadSongs);
+    connect(search_, &QLineEdit::textChanged, this, [this] { reloadSongs(); });
     connect(newSong, &QPushButton::clicked, this, &MainWindow::createSong);
     connect(edit, &QPushButton::clicked, this, &MainWindow::editSong);
     connect(add, &QPushButton::clicked, this, &MainWindow::appendSong);
@@ -403,13 +434,8 @@ void MainWindow::buildUi() {
         menu.exec(songs_->viewport()->mapToGlobal(point));
     });
 
-    libraryServiceSplitter_ = new QSplitter(Qt::Vertical, split);
-    libraryServiceSplitter_->setObjectName(QStringLiteral("libraryServiceSplitter"));
-    libraryServiceSplitter_->setChildrenCollapsible(false);
-    split->insertWidget(0, libraryServiceSplitter_);
-    libraryServiceSplitter_->addWidget(sidebar);
-    sidebar = column(libraryServiceSplitter_, &left);
-    left->addWidget(header(QStringLiteral("SERVICE PLAYLIST"), sidebar));
+    sidebar = column(sidebarTabs_, &left);
+    sidebarTabs_->addTab(sidebar, QStringLiteral("Service Playlist"));
     services_ = new QComboBox(sidebar);
     services_->setObjectName(QStringLiteral("savedServices"));
     left->addWidget(services_);
@@ -676,10 +702,9 @@ void MainWindow::buildUi() {
     right->insertLayout(2, safety);
     right->insertWidget(3, restore);
     split->setSizes({300, 710, 350});
-    libraryServiceSplitter_->setSizes({280, 360});
     const QSettings preferences;
     split->restoreState(preferences.value(QStringLiteral("workspace/panels")).toByteArray());
-    libraryServiceSplitter_->restoreState(preferences.value(QStringLiteral("workspace/sidebar")).toByteArray());
+    sidebarTabs_->setCurrentIndex(qBound(0, preferences.value(QStringLiteral("workspace/sidebarView"), 0).toInt(), 1));
     slideViewMode_->setCurrentIndex(qBound(0, preferences.value(QStringLiteral("workspace/slideView"), 0).toInt(), 1));
     slideSize_->setValue(preferences.value(QStringLiteral("workspace/slideSize"), 224).toInt());
     previewTabs_->setCurrentIndex(qBound(0, preferences.value(QStringLiteral("workspace/previewTab"), 0).toInt(), 1));
@@ -687,23 +712,31 @@ void MainWindow::buildUi() {
     statusBar();
 }
 
-void MainWindow::reloadSongs() {
+bool MainWindow::reloadSongs(bool reportFailure) {
     const int selected = selectedSongId();
+    const auto songs = library_.songs(search_->text().trimmed());
+    if (!library_.lastError().isEmpty()) {
+        if (reportFailure) reportError(library_.lastError());
+        return false;
+    }
     const QSignalBlocker block(songs_);
     songs_->clear();
-    for (const auto &song : library_.songs(search_->text().trimmed())) {
+    for (const auto &song : songs) {
         auto *item = new QListWidgetItem(song.title, songs_);
         item->setData(Qt::UserRole, song.id);
         if (song.id == selected) songs_->setCurrentItem(item);
     }
     if (!songs_->currentItem() && songs_->count()) songs_->setCurrentRow(0);
-    if (!library_.lastError().isEmpty()) reportError(library_.lastError());
+    return true;
 }
 
-void MainWindow::reloadServices(int selectServiceId) {
+bool MainWindow::reloadServices(int selectServiceId, int selectEntryId, int selectSlide, bool reportFailure) {
     if (!selectServiceId) selectServiceId = currentServiceId_;
     const auto plans = library_.services();
-    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    if (!library_.lastError().isEmpty()) {
+        if (reportFailure) reportError(library_.lastError());
+        return false;
+    }
     const QSignalBlocker block(services_);
     services_->clear();
     for (const auto &plan : plans) services_->addItem(plan.name, plan.id);
@@ -712,17 +745,46 @@ void MainWindow::reloadServices(int selectServiceId) {
     services_->setCurrentIndex(index);
     currentServiceId_ = services_->currentData().toInt();
     QSettings().setValue(QStringLiteral("service/selected"), currentServiceId_);
-    reloadService();
+    return reloadService(selectEntryId, selectSlide, reportFailure);
 }
 
-void MainWindow::reloadService(int selectEntryId, int selectSlide) {
+void MainWindow::refreshExternalChanges() {
+    // Keep editor drafts and in-progress drag operations stable until the operator finishes.
+    if (rebuilding_ || QApplication::activeModalWidget() || QApplication::activePopupWidget()
+        || QApplication::mouseButtons() != Qt::NoButton) return;
+    const qint64 version = library_.dataVersion();
+    if (version < 0 || version == externalDataVersion_) return;
+    const int entryId = selectedEntryId();
+    const int slide = slides_->currentRow();
+    const int songScroll = songs_->verticalScrollBar()->value();
+    const int serviceScroll = service_->verticalScrollBar()->value();
+    const int slideScroll = slides_->verticalScrollBar()->value();
+    if (!reloadSongs(false) || !reloadServices(currentServiceId_, entryId, slide, false)) {
+        statusBar()->showMessage(QStringLiteral("External library update could not be loaded. Retrying automatically."), 5000);
+        return;
+    }
+    songs_->verticalScrollBar()->setValue(songScroll);
+    service_->verticalScrollBar()->setValue(serviceScroll);
+    slides_->verticalScrollBar()->setValue(slideScroll);
+    externalDataVersion_ = version;
+    statusBar()->showMessage(QStringLiteral("Library and saved services updated by an external connection."), 8000);
+}
+
+bool MainWindow::reloadService(int selectEntryId, int selectSlide, bool reportFailure) {
+    libraryDestination_->setText(QStringLiteral("Adding to: %1").arg(services_->currentText()));
     if (!selectEntryId) selectEntryId = selectedEntryId();
     const auto entries = library_.service(currentServiceId_);
-    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    if (!library_.lastError().isEmpty()) {
+        if (reportFailure) reportError(library_.lastError());
+        return false;
+    }
     QVector<Song> songs;
     for (const auto &entry : entries) {
         songs.append(library_.song(entry.songId));
-        if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+        if (!library_.lastError().isEmpty()) {
+            if (reportFailure) reportError(library_.lastError());
+            return false;
+        }
     }
     const QSignalBlocker block(service_);
     rebuilding_ = true;
@@ -740,8 +802,9 @@ void MainWindow::reloadService(int selectEntryId, int selectSlide) {
     if (row < 0 && service_->count()) row = 0;
     service_->setCurrentRow(row);
     rebuilding_ = false;
-    showSelectedService(selectSlide);
+    if (!showSelectedService(selectSlide, reportFailure)) return false;
     updateLiveUi();
+    return true;
 }
 
 int MainWindow::selectedSongId() const {
@@ -802,21 +865,29 @@ QPixmap MainWindow::backgroundPixmap(const QString &absolutePath) const {
     return result;
 }
 
-void MainWindow::showSelectedService(int selectSlide) {
+bool MainWindow::showSelectedService(int selectSlide, bool reportFailure) {
     const auto *selected = service_->currentItem();
     Song song;
     QVector<int> order;
     if (selected) {
         song = library_.song(selected->data(Qt::UserRole + 1).toInt());
-        if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+        if (!library_.lastError().isEmpty()) {
+            if (reportFailure) reportError(library_.lastError());
+            return false;
+        }
         const auto entries = library_.service(currentServiceId_);
-        if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+        if (!library_.lastError().isEmpty()) {
+            if (reportFailure) reportError(library_.lastError());
+            return false;
+        }
         for (const auto &entry : entries) {
             if (entry.id == selectedEntryId()) { order = entry.slideOrder; break; }
         }
         for (int index : order) {
-            if (index < 0 || index >= song.slides.size())
-                return reportError(QStringLiteral("This service arrangement references a missing slide. Reset its order from the slide context menu."));
+            if (index < 0 || index >= song.slides.size()) {
+                if (reportFailure) reportError(QStringLiteral("This service arrangement references a missing slide. Reset its order from the slide context menu."));
+                return false;
+            }
         }
     }
     selectedBackgroundPath_ = resolveBackground(song.backgroundPath);
@@ -859,6 +930,7 @@ void MainWindow::showSelectedService(int selectSlide) {
     rebuilding_ = false;
     refreshThumbnails();
     showSelectedSlide();
+    return true;
 }
 
 void MainWindow::showSelectedSlide() {
@@ -1350,6 +1422,7 @@ void MainWindow::revealLiveCue() {
         statusBar()->showMessage(QStringLiteral("The live service is no longer saved in the library."), 6000);
         return;
     }
+    sidebarTabs_->setCurrentIndex(1);
     services_->setCurrentIndex(serviceIndex);
     syncLiveSelection();
     if (selectedEntryId() != state.entryId) {
@@ -1459,6 +1532,77 @@ void MainWindow::configureShortcuts() {
     });
     dialog.exec();
 }
+void MainWindow::configureMcp() {
+    QDialog dialog(this);
+    dialog.setObjectName(QStringLiteral("mcpSetupDialog"));
+    dialog.setWindowTitle(QStringLiteral("AI / MCP Setup"));
+    dialog.resize(760, 620);
+    auto *layout = new QVBoxLayout(&dialog);
+    auto *intro = new QLabel(QStringLiteral(
+        "Connect a desktop AI client that supports local stdio MCP to create saved service orders. "
+        "The AI can create song and sermon presentations, search the library, and import Planning Center plans into saved services. Your AI client receives the library content it requests "
+        "and provides the model; WorshipCue does not need an API key."), &dialog);
+    intro->setWordWrap(true);
+    layout->addWidget(intro);
+    auto *planningCenterHelp = new QLabel(QStringLiteral(
+        "For Planning Center, add PLANNING_CENTER_APPLICATION_ID and PLANNING_CENTER_SECRET "
+        "to this server's environment in your AI client. Get a "
+        "<a style=\"color: #8dc6ff;\" href=\"https://api.planningcenteronline.com/personal_access_tokens\">Personal Access Token</a> "
+        "for an account with Services access. Other MCP tools work without these credentials."), &dialog);
+    planningCenterHelp->setObjectName(QStringLiteral("planningCenterSetupHelp"));
+    planningCenterHelp->setWordWrap(true);
+    planningCenterHelp->setOpenExternalLinks(true);
+    layout->addWidget(planningCenterHelp);
+
+    QString executable = QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("WorshipCueMcp"));
+#ifdef Q_OS_WIN
+    executable += QStringLiteral(".exe");
+#endif
+    const bool persistent = !databasePath_.isEmpty() && databasePath_ != QStringLiteral(":memory:");
+    const bool available = QFileInfo(executable).isExecutable();
+    auto *status = new QLabel(!persistent
+        ? QStringLiteral("This library has no persistent database file. Open a saved library before connecting an AI client.")
+        : available ? QStringLiteral("Ready. Add the configuration below to your AI client's MCP server settings, then reconnect the client.")
+        : QStringLiteral("The MCP server executable is missing. Rebuild WorshipCue to install its companion server before connecting."), &dialog);
+    status->setObjectName(QStringLiteral("mcpSetupStatus"));
+    status->setWordWrap(true);
+    layout->addWidget(status);
+    auto *paths = new QLabel(QStringLiteral("Server: %1\nLibrary: %2").arg(executable, databasePath_), &dialog);
+    paths->setObjectName(QStringLiteral("mcpSetupPaths"));
+    paths->setTextFormat(Qt::PlainText);
+    paths->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    paths->setWordWrap(true);
+    layout->addWidget(paths);
+
+    const QJsonObject server{{QStringLiteral("command"), executable},
+                             {QStringLiteral("args"), QJsonArray{QStringLiteral("--database"), databasePath_}}};
+    const QJsonObject config{{QStringLiteral("mcpServers"), QJsonObject{{QStringLiteral("worshipcue"), server}}}};
+    const QString configuration = QString::fromUtf8(QJsonDocument(config).toJson(QJsonDocument::Indented));
+    auto *editor = new QPlainTextEdit(&dialog);
+    editor->setObjectName(QStringLiteral("mcpConfiguration"));
+    editor->setReadOnly(true);
+    editor->setPlainText(configuration);
+    layout->addWidget(editor, 1);
+    auto *copy = new QPushButton(QStringLiteral("Copy Configuration"), &dialog);
+    copy->setObjectName(QStringLiteral("copyMcpConfiguration"));
+    copy->setEnabled(persistent && available);
+    connect(copy, &QPushButton::clicked, &dialog, [configuration, copy] {
+        QApplication::clipboard()->setText(configuration);
+        copy->setText(QStringLiteral("Copied"));
+    });
+    layout->addWidget(copy);
+    auto *example = new QLabel(QStringLiteral(
+        "Try: “Create a service named Sunday Morning with a welcome slide, two songs from my library, "
+        "a message title slide, and a closing song. Show me a preview before saving.”\n\n"
+        "New services appear in the saved service selector automatically. Taking a service live remains an operator action."), &dialog);
+    example->setWordWrap(true);
+    layout->addWidget(example);
+    auto *actions = new QDialogButtonBox(QDialogButtonBox::Close, &dialog);
+    connect(actions, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    layout->addWidget(actions);
+    dialog.exec();
+}
+
 void MainWindow::markSaved() {
     saveInfo_->setText(QStringLiteral("✓ All service changes saved"));
 }
@@ -1470,7 +1614,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     QSettings().setValue(QStringLiteral("control/geometry"), saveGeometry());
     QSettings settings;
     settings.setValue(QStringLiteral("workspace/panels"), operatorSplitter_->saveState());
-    settings.setValue(QStringLiteral("workspace/sidebar"), libraryServiceSplitter_->saveState());
+    settings.setValue(QStringLiteral("workspace/sidebarView"), sidebarTabs_->currentIndex());
     settings.setValue(QStringLiteral("workspace/slideView"), slideViewMode_->currentIndex());
     settings.setValue(QStringLiteral("workspace/slideSize"), slideSize_->value());
     settings.setValue(QStringLiteral("workspace/previewTab"), previewTabs_->currentIndex());

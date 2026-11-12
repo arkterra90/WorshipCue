@@ -57,6 +57,137 @@ QVector<int> entryIds(const QVector<ServiceEntry> &entries) {
 class LibraryRepositoryTest : public QObject {
     Q_OBJECT
 private slots:
+    void completeServiceOrdersPersistWithNewAndRepeatedPresentations() {
+        QTemporaryDir directory;
+        QVERIFY(directory.isValid());
+        const QString path = directory.filePath(QStringLiteral("service-order.sqlite3"));
+        QString error;
+        int serviceId = 0;
+        QVector<int> ids;
+        {
+            LibraryRepository repository;
+            QVERIFY2(repository.open(&error, path), qPrintable(error));
+            const Song original = repository.song(2);
+            const int oldSongs = repository.songs().size();
+            serviceId = repository.createServiceOrder(QStringLiteral("  Sunday 10:30  "), {
+                {0, QStringLiteral("  Welcome & Prayer  "), {QStringLiteral(" Welcome everyone "), QStringLiteral("Let us pray")}, {1, 0, 1}},
+                {2, {}, {}, {2, 0, 2, 1}},
+                {2, {}, {}, {}}
+            }, &error);
+            QVERIFY2(serviceId > 0, qPrintable(error));
+            QCOMPARE(repository.songs().size(), oldSongs + 1);
+            const auto entries = repository.service(serviceId);
+            QCOMPARE(entries.size(), 3);
+            ids = entryIds(entries);
+            QVERIFY(entries[0].id != entries[1].id);
+            QVERIFY(entries[1].id != entries[2].id);
+            QVERIFY(entries[0].songId != 2);
+            QCOMPARE(entries[1].songId, 2);
+            QCOMPARE(entries[2].songId, 2);
+            const Song created = repository.song(entries[0].songId);
+            QCOMPARE(created.title, QStringLiteral("Welcome & Prayer"));
+            QCOMPARE(created.slides, (QStringList{QStringLiteral("Welcome everyone"), QStringLiteral("Let us pray")}));
+            QCOMPARE(created.settings, PresentationSettings{});
+            QVERIFY(created.backgroundPath.isEmpty());
+            QCOMPARE(repository.entrySlides(entries[0].id),
+                (QStringList{QStringLiteral("Let us pray"), QStringLiteral("Welcome everyone"), QStringLiteral("Let us pray")}));
+            QCOMPARE(repository.entrySlides(entries[1].id),
+                (QStringList{original.slides[2], original.slides[0], original.slides[2], original.slides[1]}));
+            QCOMPARE(repository.entrySlides(entries[2].id), original.slides);
+            QCOMPARE(repository.song(2).slides, original.slides);
+        }
+        LibraryRepository reopened;
+        QVERIFY2(reopened.open(&error, path), qPrintable(error));
+        QCOMPARE(entryIds(reopened.service(serviceId)), ids);
+        bool found = false;
+        for (const auto &plan : reopened.services())
+            if (plan.id == serviceId) found = plan.name == QStringLiteral("Sunday 10:30");
+        QVERIFY(found);
+        QCOMPARE(reopened.service(1).size(), 2);
+    }
+
+    void completeServiceOrderRejectsInvalidRequestsWithoutChanges() {
+        LibraryRepository repository;
+        QString error;
+        QVERIFY2(repository.open(&error, QStringLiteral(":memory:")), qPrintable(error));
+        const auto songCount = repository.songs().size();
+        const auto serviceCount = repository.services().size();
+        const ServiceOrderItem validNew{0, QStringLiteral("Prayer"), {QStringLiteral("Let us pray")}, {}};
+        const auto reject = [&](const QString &name, const QVector<ServiceOrderItem> &items) {
+            const int id = repository.createServiceOrder(name, items, &error);
+            if (id != 0 || error.isEmpty() || repository.songs().size() != songCount
+                || repository.services().size() != serviceCount) return false;
+            return true;
+        };
+        QVERIFY(reject(QStringLiteral(" "), {validNew}));
+        QVERIFY(reject(QString(257, QLatin1Char('x')), {validNew}));
+        QVERIFY(reject(QStringLiteral("Order"), {}));
+        QVERIFY(reject(QStringLiteral("Order"), QVector<ServiceOrderItem>(501, {2, {}, {}, {}})));
+        QVERIFY(reject(QStringLiteral("Order"), {validNew, {999999, {}, {}, {}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {validNew, {-1, {}, {}, {}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {validNew, {2, QStringLiteral("Ambiguous"), {}, {}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {{0, QStringLiteral("Empty"), {}, {}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {{0, QStringLiteral("Blank"), {QStringLiteral(" \n\t ")}, {}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {{0, QStringLiteral("Null"), {QString(QChar::Null)}, {}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {{0, QStringLiteral("Oversize"), {QString(64 * 1024 + 1, QLatin1Char('x'))}, {}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {validNew, {2, {}, {}, {-1}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {validNew, {2, {}, {}, {3}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {{0, QStringLiteral("Prayer"), {QStringLiteral("Text")}, {1}}}));
+        QVERIFY(reject(QStringLiteral("Order"), {{2, {}, {}, QVector<int>(10001, 0)}}));
+        QVERIFY(repository.createServiceOrder(QStringLiteral("Valid afterward"), {validNew}, &error) > 0);
+    }
+
+    void completeServiceOrderRollsBackDatabaseFailures() {
+        QTemporaryDir directory;
+        const QString path = directory.filePath(QStringLiteral("service-order-rollback.sqlite3"));
+        LibraryRepository repository;
+        QString error;
+        QVERIFY2(repository.open(&error, path), qPrintable(error));
+        const auto songCount = repository.songs().size();
+        const auto serviceCount = repository.services().size();
+        const auto entryCount = rawValue(path, QStringLiteral("SELECT COUNT(*) FROM service_entries")).toInt();
+        const QVector<ServiceOrderItem> order{
+            {0, QStringLiteral("Welcome"), {QStringLiteral("Hello"), QStringLiteral("Prayer")}, {}},
+            {2, {}, {}, {2, 0, 1}}
+        };
+        QVERIFY(rawSql(path, {QStringLiteral("CREATE TRIGGER reject_service_entry BEFORE INSERT ON service_entries "
+            "WHEN NEW.position=1 BEGIN SELECT RAISE(ABORT,'reject entry'); END")}, &error));
+        QCOMPARE(repository.createServiceOrder(QStringLiteral("Rejected service"), order, &error), 0);
+        QVERIFY(!error.isEmpty());
+        QCOMPARE(repository.songs().size(), songCount);
+        QCOMPARE(repository.services().size(), serviceCount);
+        QCOMPARE(rawValue(path, QStringLiteral("SELECT COUNT(*) FROM service_entries")).toInt(), entryCount);
+        QVERIFY(rawSql(path, {QStringLiteral("DROP TRIGGER reject_service_entry"),
+            QStringLiteral("CREATE TRIGGER reject_order_slide BEFORE INSERT ON slides "
+                "WHEN NEW.position=1 BEGIN SELECT RAISE(ABORT,'reject slide'); END")}, &error));
+        QCOMPARE(repository.createServiceOrder(QStringLiteral("Rejected slide"), order, &error), 0);
+        QVERIFY(!error.isEmpty());
+        QCOMPARE(repository.songs().size(), songCount);
+        QCOMPARE(repository.services().size(), serviceCount);
+        QCOMPARE(rawValue(path, QStringLiteral("SELECT COUNT(*) FROM service_entries")).toInt(), entryCount);
+        QVERIFY(rawSql(path, {QStringLiteral("DROP TRIGGER reject_order_slide")}, &error));
+        const int saved = repository.createServiceOrder(QStringLiteral("Saved after failure"), order, &error);
+        QVERIFY2(saved > 0, qPrintable(error));
+        QCOMPARE(repository.service(saved).size(), 2);
+    }
+
+    void dataVersionDetectsOtherConnectionCommits() {
+        QTemporaryDir directory;
+        const QString path = directory.filePath(QStringLiteral("version.sqlite3"));
+        LibraryRepository operatorRepository;
+        LibraryRepository aiRepository;
+        QString error;
+        QVERIFY(operatorRepository.open(&error, path));
+        QVERIFY(aiRepository.open(&error, path));
+        const qint64 version = operatorRepository.dataVersion();
+        QVERIFY(version >= 0);
+        QVERIFY(operatorRepository.createService(QStringLiteral("Local edit"), &error) > 0);
+        QCOMPARE(operatorRepository.dataVersion(), version);
+        QVERIFY(aiRepository.createServiceOrder(QStringLiteral("AI order"), {{2, {}, {}, {}}}, &error) > 0);
+        QVERIFY(operatorRepository.dataVersion() != version);
+        QCOMPARE(operatorRepository.services().size(), 3);
+    }
+
     void richTextSavesInPlaceAndFollowsArrangementsAndCopies() {
         QTemporaryDir directory;
         const QString path = directory.filePath(QStringLiteral("rich.sqlite3"));

@@ -16,6 +16,9 @@
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QInputDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
@@ -24,6 +27,8 @@
 #include <QSettings>
 #include <QSlider>
 #include <QSplitter>
+#include <QSqlQuery>
+#include <QStatusBar>
 #include <QTabWidget>
 #include <QTemporaryDir>
 #include <QTimer>
@@ -61,6 +66,160 @@ private slots:
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings_.path());
     }
     void init() { QSettings().clear(); }
+
+    void externalServiceOrderRefreshPreservesSelectionAndLiveOutput() {
+        QTemporaryDir temp;
+        const QString path = temp.filePath(QStringLiteral("library.sqlite3"));
+        QString error;
+        LibraryRepository external;
+        QVERIFY2(external.open(&error, path), qPrintable(error));
+        const int songId = external.songs(QStringLiteral("Sample Song")).first().id;
+        const int planId = external.createService(QStringLiteral("Current service"), &error);
+        QVERIFY(external.appendToService(planId, songId, &error));
+        QVERIFY(external.appendToService(planId, songId, &error));
+        const int entryId = external.service(planId).last().id;
+
+        MainWindow window;
+        QVERIFY2(window.initialize(&error, path), qPrintable(error));
+        window.show();
+        auto *plans = control<QComboBox>(window, "savedServices");
+        auto *entries = control<QListWidget>(window, "serviceOrder");
+        auto *slides = control<QListWidget>(window, "slideWorkspace");
+        auto *songs = control<QListWidget>(window, "songLibrary");
+        auto *controller = control<PresentationController>(window, "presentationController");
+        plans->setCurrentIndex(plans->findData(planId));
+        entries->setCurrentRow(1);
+        slides->setCurrentRow(1);
+        QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
+        controller->toggleBlackout();
+        const auto live = controller->state();
+        const int selectedSong = songs->currentItem()->data(Qt::UserRole).toInt();
+
+        ServiceOrderItem welcome;
+        welcome.title = QStringLiteral("AI Welcome");
+        welcome.slides = {QStringLiteral("Welcome to Sunday worship")};
+        ServiceOrderItem existing;
+        existing.songId = songId;
+        existing.slideOrder = {1, 0, 1};
+        control<QTabWidget>(window, "sidebarTabs")->setCurrentIndex(1);
+        plans->showPopup();
+        QVERIFY(QApplication::activePopupWidget());
+        const int generatedId = external.createServiceOrder(QStringLiteral("AI Sunday"), {welcome, existing}, &error);
+        QVERIFY2(generatedId > 0, qPrintable(error));
+        // Poll synchronously while the popup is observed open; native window activation
+        // events can otherwise dismiss it during a timed wait on macOS.
+        QVERIFY(QApplication::activePopupWidget());
+        QVERIFY(QMetaObject::invokeMethod(control<QTimer>(window, "externalLibraryRefresh"), "timeout", Qt::DirectConnection));
+        QVERIFY(QApplication::activePopupWidget());
+        QVERIFY(plans->findData(generatedId) < 0);
+        plans->hidePopup();
+        QTRY_VERIFY_WITH_TIMEOUT(plans->findData(generatedId) >= 0, 5000);
+        QCOMPARE(plans->currentData().toInt(), planId);
+        QCOMPARE(entries->currentItem()->data(Qt::UserRole).toInt(), entryId);
+        QCOMPARE(slides->currentRow(), 1);
+        QCOMPARE(songs->currentItem()->data(Qt::UserRole).toInt(), selectedSong);
+        bool welcomeVisible = false;
+        for (int i = 0; i < songs->count(); ++i)
+            if (songs->item(i)->text() == welcome.title) welcomeVisible = true;
+        QVERIFY(welcomeVisible);
+        QCOMPARE(controller->state().cueRevision, live.cueRevision);
+        QCOMPARE(controller->state().slides, live.slides);
+        QCOMPARE(controller->state().entryId, live.entryId);
+        QCOMPARE(controller->state().index, live.index);
+        QVERIFY(controller->state().blackout);
+
+        plans->setCurrentIndex(plans->findData(generatedId));
+        QCOMPARE(entries->count(), 2);
+        QCOMPARE(entries->item(0)->data(Qt::UserRole + 2).toString(), welcome.title);
+        QCOMPARE(slides->item(0)->data(Qt::UserRole + 1).toString(), welcome.slides.first());
+        QCOMPARE(controller->state().cueRevision, live.cueRevision);
+        QVERIFY(controller->state().blackout);
+    }
+
+    void mcpSetupUsesActualDatabasePath() {
+        QTemporaryDir temp;
+        const QString path = temp.filePath(QStringLiteral("custom service library.sqlite3"));
+        QString error;
+        MainWindow window;
+        QVERIFY2(window.initialize(&error, path), qPrintable(error));
+        window.show();
+        QJsonObject config;
+        QString status;
+        bool foundDialog = false;
+        QTimer::singleShot(0, [&] {
+            auto *dialog = qobject_cast<QDialog *>(QApplication::activeModalWidget());
+            if (!dialog) return;
+            foundDialog = dialog->objectName() == QStringLiteral("mcpSetupDialog");
+            auto *editor = dialog->findChild<QPlainTextEdit *>(QStringLiteral("mcpConfiguration"));
+            auto *label = dialog->findChild<QLabel *>(QStringLiteral("mcpSetupStatus"));
+            if (editor) config = QJsonDocument::fromJson(editor->toPlainText().toUtf8()).object();
+            if (label) status = label->text();
+            if (qEnvironmentVariableIsSet("WORSHIPCUE_MCP_UI_SCREENSHOT"))
+                dialog->grab().save(qEnvironmentVariable("WORSHIPCUE_MCP_UI_SCREENSHOT"));
+            dialog->reject();
+        });
+        control<QAction>(window, "mcpSetupAction")->trigger();
+        QVERIFY(foundDialog);
+        QVERIFY(!status.isEmpty());
+        const auto server = config.value(QStringLiteral("mcpServers")).toObject().value(QStringLiteral("worshipcue")).toObject();
+        const QString executable = server.value(QStringLiteral("command")).toString();
+        QVERIFY(QFileInfo(executable).isAbsolute());
+        QVERIFY(executable.contains(QStringLiteral("WorshipCueMcp")));
+        QCOMPARE(server.value(QStringLiteral("args")).toArray(), QJsonArray({QStringLiteral("--database"), path}));
+    }
+
+    void failedExternalRefreshKeepsLibraryAndRetriesSameVersion() {
+        QTemporaryDir temp;
+        const QString path = temp.filePath(QStringLiteral("library.sqlite3"));
+        QString error;
+        LibraryRepository external;
+        QVERIFY2(external.open(&error, path), qPrintable(error));
+        const auto previousConnections = QSqlDatabase::connectionNames();
+        MainWindow window;
+        QVERIFY2(window.initialize(&error, path), qPrintable(error));
+        window.show();
+        QString appConnection;
+        for (const auto &name : QSqlDatabase::connectionNames())
+            if (!previousConnections.contains(name)) appConnection = name;
+        QVERIFY(!appConnection.isEmpty());
+        auto *plans = control<QComboBox>(window, "savedServices");
+        auto *songs = control<QListWidget>(window, "songLibrary");
+        const int songCount = songs->count();
+        const int selectedSong = songs->currentItem()->data(Qt::UserRole).toInt();
+        const int newService = external.createService(QStringLiteral("Refresh recovery"), &error);
+        QVERIFY2(newService > 0, qPrintable(error));
+
+        // Make the next library read fail after an external commit. Repair through the
+        // app's own connection so its data_version does not change a second time.
+        QString externalConnection;
+        for (const auto &name : previousConnections) {
+            if (QSqlDatabase::database(name).databaseName() == path) externalConnection = name;
+        }
+        QVERIFY(!externalConnection.isEmpty());
+        {
+            QSqlQuery query(QSqlDatabase::database(externalConnection));
+            QVERIFY(query.exec(QStringLiteral("ALTER TABLE songs RENAME TO songs_temporarily_unavailable")));
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(window.statusBar()->currentMessage().contains(QStringLiteral("Retrying automatically")), 5000);
+        QVERIFY(!QApplication::activeModalWidget());
+        QCOMPARE(songs->count(), songCount);
+        QCOMPARE(songs->currentItem()->data(Qt::UserRole).toInt(), selectedSong);
+        QVERIFY(plans->findData(newService) < 0);
+        {
+            QSqlQuery query(QSqlDatabase::database(appConnection));
+            QVERIFY(query.exec(QStringLiteral("PRAGMA data_version")));
+            QVERIFY(query.next());
+            const qint64 version = query.value(0).toLongLong();
+            query.finish();
+            QVERIFY(query.exec(QStringLiteral("ALTER TABLE songs_temporarily_unavailable RENAME TO songs")));
+            QVERIFY(query.exec(QStringLiteral("PRAGMA data_version")));
+            QVERIFY(query.next());
+            QCOMPARE(query.value(0).toLongLong(), version);
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(plans->findData(newService) >= 0, 5000);
+        QCOMPARE(songs->count(), songCount);
+        QCOMPARE(songs->currentItem()->data(Qt::UserRole).toInt(), selectedSong);
+    }
 
     void richSlideEditingUsesSourceIndexAndKeepsLiveCopy() {
         QTemporaryDir temp;
@@ -295,8 +454,10 @@ private slots:
         QTRY_VERIFY(slides->hasFocus());
         auto *find = control<QAction>(window, "focusLibrarySearch");
         QVERIFY(!find->shortcuts().isEmpty());
+        control<QTabWidget>(window, "sidebarTabs")->setCurrentIndex(1);
         QTest::keySequence(slides, QKeySequence(QKeySequence::Find));
         QTRY_VERIFY(search->hasFocus());
+        QCOMPARE(control<QTabWidget>(window, "sidebarTabs")->currentIndex(), 0);
         QCOMPARE(search->text(), QStringLiteral("a saved search"));
         QCOMPARE(search->selectedText(), search->text());
         QCOMPARE(controller->state().cueRevision, live.cueRevision);
@@ -308,7 +469,6 @@ private slots:
         const QString path = temp.filePath(QStringLiteral("library.sqlite3"));
         QString error;
         QList<int> panelSizes;
-        QList<int> sidebarSizes;
         {
             MainWindow window;
             QVERIFY2(window.initialize(&error, path), qPrintable(error));
@@ -335,12 +495,20 @@ private slots:
             control<QSlider>(window, "slideSize")->setValue(272);
             control<QTabWidget>(window, "previewTabs")->setCurrentIndex(1);
             auto *panels = control<QSplitter>(window, "operatorSplitter");
-            auto *sidebar = control<QSplitter>(window, "libraryServiceSplitter");
+            auto *sidebar = control<QTabWidget>(window, "sidebarTabs");
+            auto *library = control<QListWidget>(window, "songLibrary");
+            auto *playlist = control<QListWidget>(window, "serviceOrder");
+            sidebar->setCurrentIndex(0);
+            QVERIFY(library->isVisible());
+            QVERIFY(!playlist->isVisible());
+            const auto revision = control<PresentationController>(window, "presentationController")->state().cueRevision;
+            sidebar->setCurrentIndex(1);
+            QVERIFY(playlist->isVisible());
+            QVERIFY(!library->isVisible());
+            QCOMPARE(control<PresentationController>(window, "presentationController")->state().cueRevision, revision);
             panels->setSizes({310, 620, 330});
-            sidebar->setSizes({280, 360});
             QCoreApplication::processEvents();
             panelSizes = panels->sizes();
-            sidebarSizes = sidebar->sizes();
             window.close();
         }
         MainWindow reopened;
@@ -351,13 +519,10 @@ private slots:
         QCOMPARE(control<QSlider>(reopened, "slideSize")->value(), 272);
         QCOMPARE(control<QTabWidget>(reopened, "previewTabs")->currentIndex(), 1);
         const auto restoredPanels = control<QSplitter>(reopened, "operatorSplitter")->sizes();
-        const auto restoredSidebar = control<QSplitter>(reopened, "libraryServiceSplitter")->sizes();
+        QCOMPARE(control<QTabWidget>(reopened, "sidebarTabs")->currentIndex(), 1);
         QCOMPARE(restoredPanels.size(), panelSizes.size());
-        QCOMPARE(restoredSidebar.size(), sidebarSizes.size());
         for (int i = 0; i < panelSizes.size(); ++i)
             QVERIFY(qAbs(restoredPanels.at(i) - panelSizes.at(i)) <= 5);
-        for (int i = 0; i < sidebarSizes.size(); ++i)
-            QVERIFY(qAbs(restoredSidebar.at(i) - sidebarSizes.at(i)) <= 5);
     }
 
     void compactWorkspaceKeepsTimedVideoControlsVisible() {

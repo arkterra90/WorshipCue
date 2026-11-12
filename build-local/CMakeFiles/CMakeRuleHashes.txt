@@ -1,4 +1,7 @@
 # Hashes of file build rules.
 ce6ba40e107c70235bddbdc159c3b746 .qt/rcc/qrc_app_icons.cpp
+5ffca7e9b154f6fae08dcae7dd939978 CMakeFiles/WorshipCueMcpBundle
+2db584f9503e13740d5ffc222e2890c6 CMakeFiles/WorshipCueMcp_autogen
 2db584f9503e13740d5ffc222e2890c6 CMakeFiles/WorshipCue_autogen
+68b2fd817b923a512d91fdb9544ebe62 WorshipCueMcp_autogen/timestamp
 bed83e192bde8f0135aa60dee50f752b WorshipCue_autogen/timestamp

@@ -162,6 +162,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named WorshipCueMcp
+
+# Build rule for target.
+WorshipCueMcp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMcp
+.PHONY : WorshipCueMcp
+
+# fast build rule for target.
+WorshipCueMcp/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/build
+.PHONY : WorshipCueMcp/fast
+
+#=============================================================================
 # Target rules for targets named WorshipCue
 
 # Build rule for target.
@@ -173,6 +186,45 @@ WorshipCue: cmake_check_build_system
 WorshipCue/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/build
 .PHONY : WorshipCue/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueMcpBundle
+
+# Build rule for target.
+WorshipCueMcpBundle: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMcpBundle
+.PHONY : WorshipCueMcpBundle
+
+# fast build rule for target.
+WorshipCueMcpBundle/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcpBundle.dir/build.make CMakeFiles/WorshipCueMcpBundle.dir/build
+.PHONY : WorshipCueMcpBundle/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueMcp_autogen_timestamp_deps
+
+# Build rule for target.
+WorshipCueMcp_autogen_timestamp_deps: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMcp_autogen_timestamp_deps
+.PHONY : WorshipCueMcp_autogen_timestamp_deps
+
+# fast build rule for target.
+WorshipCueMcp_autogen_timestamp_deps/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp_autogen_timestamp_deps.dir/build.make CMakeFiles/WorshipCueMcp_autogen_timestamp_deps.dir/build
+.PHONY : WorshipCueMcp_autogen_timestamp_deps/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueMcp_autogen
+
+# Build rule for target.
+WorshipCueMcp_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMcp_autogen
+.PHONY : WorshipCueMcp_autogen
+
+# fast build rule for target.
+WorshipCueMcp_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp_autogen.dir/build.make CMakeFiles/WorshipCueMcp_autogen.dir/build
+.PHONY : WorshipCueMcp_autogen/fast
 
 #=============================================================================
 # Target rules for targets named WorshipCue_autogen_timestamp_deps
@@ -199,6 +251,30 @@ WorshipCue_autogen: cmake_check_build_system
 WorshipCue_autogen/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue_autogen.dir/build.make CMakeFiles/WorshipCue_autogen.dir/build
 .PHONY : WorshipCue_autogen/fast
+
+WorshipCueMcp_autogen/mocs_compilation.o: WorshipCueMcp_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueMcp_autogen/mocs_compilation.o
+
+# target to build an object file
+WorshipCueMcp_autogen/mocs_compilation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/WorshipCueMcp_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueMcp_autogen/mocs_compilation.cpp.o
+
+WorshipCueMcp_autogen/mocs_compilation.i: WorshipCueMcp_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueMcp_autogen/mocs_compilation.i
+
+# target to preprocess a source file
+WorshipCueMcp_autogen/mocs_compilation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/WorshipCueMcp_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueMcp_autogen/mocs_compilation.cpp.i
+
+WorshipCueMcp_autogen/mocs_compilation.s: WorshipCueMcp_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueMcp_autogen/mocs_compilation.s
+
+# target to generate assembly for a file
+WorshipCueMcp_autogen/mocs_compilation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/WorshipCueMcp_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueMcp_autogen/mocs_compilation.cpp.s
 
 WorshipCue_autogen/mocs_compilation.o: WorshipCue_autogen/mocs_compilation.cpp.o
 .PHONY : WorshipCue_autogen/mocs_compilation.o
@@ -253,6 +329,7 @@ src/core/LyricsImporter.o: src/core/LyricsImporter.cpp.o
 
 # target to build an object file
 src/core/LyricsImporter.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/LyricsImporter.cpp.o
 .PHONY : src/core/LyricsImporter.cpp.o
 
@@ -261,6 +338,7 @@ src/core/LyricsImporter.i: src/core/LyricsImporter.cpp.i
 
 # target to preprocess a source file
 src/core/LyricsImporter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/LyricsImporter.cpp.i
 .PHONY : src/core/LyricsImporter.cpp.i
 
@@ -269,6 +347,7 @@ src/core/LyricsImporter.s: src/core/LyricsImporter.cpp.s
 
 # target to generate assembly for a file
 src/core/LyricsImporter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/LyricsImporter.cpp.s
 .PHONY : src/core/LyricsImporter.cpp.s
 
@@ -301,6 +380,7 @@ src/data/LibraryRepository.o: src/data/LibraryRepository.cpp.o
 
 # target to build an object file
 src/data/LibraryRepository.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.o
 .PHONY : src/data/LibraryRepository.cpp.o
 
@@ -309,6 +389,7 @@ src/data/LibraryRepository.i: src/data/LibraryRepository.cpp.i
 
 # target to preprocess a source file
 src/data/LibraryRepository.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.i
 .PHONY : src/data/LibraryRepository.cpp.i
 
@@ -317,6 +398,7 @@ src/data/LibraryRepository.s: src/data/LibraryRepository.cpp.s
 
 # target to generate assembly for a file
 src/data/LibraryRepository.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.s
 .PHONY : src/data/LibraryRepository.cpp.s
 
@@ -343,6 +425,102 @@ src/main.s: src/main.cpp.s
 src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
+
+src/mcp/McpCreationTools.o: src/mcp/McpCreationTools.cpp.o
+.PHONY : src/mcp/McpCreationTools.o
+
+# target to build an object file
+src/mcp/McpCreationTools.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o
+.PHONY : src/mcp/McpCreationTools.cpp.o
+
+src/mcp/McpCreationTools.i: src/mcp/McpCreationTools.cpp.i
+.PHONY : src/mcp/McpCreationTools.i
+
+# target to preprocess a source file
+src/mcp/McpCreationTools.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.i
+.PHONY : src/mcp/McpCreationTools.cpp.i
+
+src/mcp/McpCreationTools.s: src/mcp/McpCreationTools.cpp.s
+.PHONY : src/mcp/McpCreationTools.s
+
+# target to generate assembly for a file
+src/mcp/McpCreationTools.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.s
+.PHONY : src/mcp/McpCreationTools.cpp.s
+
+src/mcp/McpServer.o: src/mcp/McpServer.cpp.o
+.PHONY : src/mcp/McpServer.o
+
+# target to build an object file
+src/mcp/McpServer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o
+.PHONY : src/mcp/McpServer.cpp.o
+
+src/mcp/McpServer.i: src/mcp/McpServer.cpp.i
+.PHONY : src/mcp/McpServer.i
+
+# target to preprocess a source file
+src/mcp/McpServer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.i
+.PHONY : src/mcp/McpServer.cpp.i
+
+src/mcp/McpServer.s: src/mcp/McpServer.cpp.s
+.PHONY : src/mcp/McpServer.s
+
+# target to generate assembly for a file
+src/mcp/McpServer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.s
+.PHONY : src/mcp/McpServer.cpp.s
+
+src/mcp/PlanningCenterClient.o: src/mcp/PlanningCenterClient.cpp.o
+.PHONY : src/mcp/PlanningCenterClient.o
+
+# target to build an object file
+src/mcp/PlanningCenterClient.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o
+.PHONY : src/mcp/PlanningCenterClient.cpp.o
+
+src/mcp/PlanningCenterClient.i: src/mcp/PlanningCenterClient.cpp.i
+.PHONY : src/mcp/PlanningCenterClient.i
+
+# target to preprocess a source file
+src/mcp/PlanningCenterClient.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.i
+.PHONY : src/mcp/PlanningCenterClient.cpp.i
+
+src/mcp/PlanningCenterClient.s: src/mcp/PlanningCenterClient.cpp.s
+.PHONY : src/mcp/PlanningCenterClient.s
+
+# target to generate assembly for a file
+src/mcp/PlanningCenterClient.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.s
+.PHONY : src/mcp/PlanningCenterClient.cpp.s
+
+src/mcp/main.o: src/mcp/main.cpp.o
+.PHONY : src/mcp/main.o
+
+# target to build an object file
+src/mcp/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/main.cpp.o
+.PHONY : src/mcp/main.cpp.o
+
+src/mcp/main.i: src/mcp/main.cpp.i
+.PHONY : src/mcp/main.i
+
+# target to preprocess a source file
+src/mcp/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/main.cpp.i
+.PHONY : src/mcp/main.cpp.i
+
+src/mcp/main.s: src/mcp/main.cpp.s
+.PHONY : src/mcp/main.s
+
+# target to generate assembly for a file
+src/mcp/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/main.cpp.s
+.PHONY : src/mcp/main.cpp.s
 
 src/media/BatchRenamer.o: src/media/BatchRenamer.cpp.o
 .PHONY : src/media/BatchRenamer.o
@@ -716,9 +894,16 @@ help:
 	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
+	@echo "... WorshipCueMcpBundle"
+	@echo "... WorshipCueMcp_autogen"
+	@echo "... WorshipCueMcp_autogen_timestamp_deps"
 	@echo "... WorshipCue_autogen"
 	@echo "... WorshipCue_autogen_timestamp_deps"
 	@echo "... WorshipCue"
+	@echo "... WorshipCueMcp"
+	@echo "... WorshipCueMcp_autogen/mocs_compilation.o"
+	@echo "... WorshipCueMcp_autogen/mocs_compilation.i"
+	@echo "... WorshipCueMcp_autogen/mocs_compilation.s"
 	@echo "... WorshipCue_autogen/mocs_compilation.o"
 	@echo "... WorshipCue_autogen/mocs_compilation.i"
 	@echo "... WorshipCue_autogen/mocs_compilation.s"
@@ -737,6 +922,18 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/mcp/McpCreationTools.o"
+	@echo "... src/mcp/McpCreationTools.i"
+	@echo "... src/mcp/McpCreationTools.s"
+	@echo "... src/mcp/McpServer.o"
+	@echo "... src/mcp/McpServer.i"
+	@echo "... src/mcp/McpServer.s"
+	@echo "... src/mcp/PlanningCenterClient.o"
+	@echo "... src/mcp/PlanningCenterClient.i"
+	@echo "... src/mcp/PlanningCenterClient.s"
+	@echo "... src/mcp/main.o"
+	@echo "... src/mcp/main.i"
+	@echo "... src/mcp/main.s"
 	@echo "... src/media/BatchRenamer.o"
 	@echo "... src/media/BatchRenamer.i"
 	@echo "... src/media/BatchRenamer.s"

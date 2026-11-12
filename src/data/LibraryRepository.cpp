@@ -234,6 +234,16 @@ QString LibraryRepository::databaseDirectory() const {
     return path.isEmpty() || path == QStringLiteral(":memory:") ? QString() : QFileInfo(path).absolutePath();
 }
 
+qint64 LibraryRepository::dataVersion() const {
+    clearError();
+    QSqlQuery query(db_);
+    if (!query.exec(QStringLiteral("PRAGMA data_version")) || !query.next()) {
+        fail(query.lastError().text());
+        return -1;
+    }
+    return query.value(0).toLongLong();
+}
+
 QVector<Song> LibraryRepository::songs(const QString &search) const {
     clearError();
     QVector<Song> result;
@@ -339,6 +349,12 @@ bool LibraryRepository::storeSlides(int songId, const QStringList &slides, QStri
 bool LibraryRepository::createSong(const QString &title, const QStringList &slides, QString *error,
                                    const PresentationSettings &settings, const QString &backgroundPath,
                                    const QStringList &richText) {
+    return createTextPresentation(title, slides, error, settings, backgroundPath, richText) > 0;
+}
+
+int LibraryRepository::createTextPresentation(const QString &title, const QStringList &slides, QString *error,
+                                   const PresentationSettings &settings, const QString &backgroundPath,
+                                   const QStringList &richText) {
     clearError(error);
     if (title.trimmed().isEmpty() || slides.isEmpty())
         return fail(QStringLiteral("A song must have a title and at least one slide."), error);
@@ -359,9 +375,10 @@ bool LibraryRepository::createSong(const QString &title, const QStringList &slid
     query.addBindValue(settings.overrideTransition);
     query.addBindValue(backgroundPath.isNull() ? QStringLiteral("") : backgroundPath);
     if (!query.exec()) return fail(query.lastError().text(), error);
-    if (!storeSlides(query.lastInsertId().toInt(), slides, error, richText)) return false;
+    const int id = query.lastInsertId().toInt();
+    if (!storeSlides(id, slides, error, richText)) return 0;
     if (!transaction.commit()) return fail(db_.lastError().text(), error);
-    return true;
+    return id;
 }
 
 int LibraryRepository::createPresentation(const QString &title, const QStringList &texts,
@@ -647,6 +664,94 @@ int LibraryRepository::createService(const QString &name, QString *error) {
     query.addBindValue(name.trimmed());
     if (!query.exec()) { fail(query.lastError().text(), error); return 0; }
     return query.lastInsertId().toInt();
+}
+
+int LibraryRepository::createServiceOrder(const QString &name, const QVector<ServiceOrderItem> &items,
+                                          QString *error) {
+    clearError(error);
+    const auto reject = [this, error](const QString &message) {
+        fail(message, error);
+        return 0;
+    };
+    if (name.trimmed().isEmpty() || name.size() > 256 || name.contains(QChar::Null))
+        return reject(QStringLiteral("A service needs a name of 1 to 256 characters without null characters."));
+    if (items.isEmpty() || items.size() > 500)
+        return reject(QStringLiteral("A service order must contain 1 to 500 items."));
+
+    qsizetype totalText = 0;
+    qsizetype totalSlides = 0;
+    qsizetype totalOrder = 0;
+    for (const auto &item : items) {
+        if (item.songId < 0)
+            return reject(QStringLiteral("An existing presentation ID must be a positive integer."));
+        if (item.songId > 0) {
+            if (!item.title.isEmpty() || !item.slides.isEmpty())
+                return reject(QStringLiteral("Use an existing presentation ID or a new title and slides, not both."));
+        } else {
+            if (item.title.trimmed().isEmpty() || item.title.size() > 256 || item.title.contains(QChar::Null))
+                return reject(QStringLiteral("A new presentation needs a title of 1 to 256 characters without null characters."));
+            if (item.slides.isEmpty() || item.slides.size() > 1000)
+                return reject(QStringLiteral("A new presentation must contain 1 to 1000 text slides."));
+            totalSlides += item.slides.size();
+            if (totalSlides > 5000)
+                return reject(QStringLiteral("A service order can create at most 5000 text slides."));
+            for (const auto &text : item.slides) {
+                if (text.trimmed().isEmpty() || text.size() > 64 * 1024 || text.contains(QChar::Null))
+                    return reject(QStringLiteral("Each new slide needs nonblank text of at most 64 Ki characters without null characters."));
+                totalText += text.size();
+                if (totalText > 4 * 1024 * 1024)
+                    return reject(QStringLiteral("A service order can create at most 4 Mi characters of slide text."));
+            }
+        }
+        totalOrder += item.slideOrder.size();
+        if (item.slideOrder.size() > 10000 || totalOrder > 50000)
+            return reject(QStringLiteral("Slide arrangements are limited to 10000 indices per item and 50000 per service order."));
+    }
+
+    Transaction transaction(db_);
+    if (!transaction.active()) return reject(db_.lastError().text());
+    // Validate every reference inside the transaction, including arrangements,
+    // before creating the service or any new library presentations.
+    QSqlQuery query(db_);
+    query.prepare(QStringLiteral("SELECT COUNT(slides.id) FROM songs LEFT JOIN slides ON slides.song_id=songs.id "
+                                 "WHERE songs.id=? GROUP BY songs.id"));
+    for (const auto &item : items) {
+        int count = int(item.slides.size());
+        if (item.songId > 0) {
+            query.bindValue(0, item.songId);
+            if (!query.exec()) return reject(query.lastError().text());
+            if (!query.next() || query.value(0).toInt() < 1)
+                return reject(QStringLiteral("Presentation %1 no longer exists or has no slides.").arg(item.songId));
+            count = query.value(0).toInt();
+            query.finish();
+        }
+        for (int index : item.slideOrder)
+            if (index < 0 || index >= count)
+                return reject(QStringLiteral("The arrangement contains an invalid source slide."));
+    }
+    query.prepare(QStringLiteral("INSERT INTO services(name) VALUES(?)"));
+    query.addBindValue(name.trimmed());
+    if (!query.exec()) return reject(query.lastError().text());
+    const int serviceId = query.lastInsertId().toInt();
+    for (int position = 0; position < items.size(); ++position) {
+        const auto &item = items.at(position);
+        int songId = item.songId;
+        if (songId == 0) {
+            query.prepare(QStringLiteral("INSERT INTO songs(title) VALUES(?)"));
+            query.addBindValue(item.title.trimmed());
+            if (!query.exec()) return reject(query.lastError().text());
+            songId = query.lastInsertId().toInt();
+            if (!storeSlides(songId, item.slides, error)) return 0;
+        }
+        query.prepare(QStringLiteral("INSERT INTO service_entries(service_id,song_id,position,slide_order) VALUES(?,?,?,?)"));
+        query.addBindValue(serviceId);
+        query.addBindValue(songId);
+        query.addBindValue(position);
+        query.addBindValue(item.slideOrder.isEmpty() ? QVariant() : QVariant(encodedOrder(item.slideOrder)));
+        if (!query.exec()) return reject(query.lastError().text());
+    }
+    if (!transaction.commit()) return reject(db_.lastError().text());
+    return serviceId;
 }
 
 bool LibraryRepository::renameService(int id, const QString &name, QString *error) {

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Sql Multimedia Concurrent)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Sql Multimedia Concurrent Network)
 
 set(WORSHIPCUE_CORE_SOURCES
     src/core/MediaSlide.h
@@ -17,6 +17,20 @@ set(WORSHIPCUE_DATA_SOURCES
     src/data/LibraryRepository.h
     src/data/LibraryRepository.cpp
 )
+set(WORSHIPCUE_MCP_SOURCES
+    src/mcp/McpServer.h
+    src/mcp/McpServer.cpp
+    src/mcp/McpCreationTools.cpp
+    src/mcp/PlanningCenterClient.h
+    src/mcp/PlanningCenterClient.cpp
+    src/core/LyricsImporter.h
+    src/core/LyricsImporter.cpp
+)
+# A console companion keeps MCP stdio independent of the GUI subsystem on Windows
+# and avoids loading Widgets or Multimedia in AI client subprocesses.
+add_executable(WorshipCueMcp src/mcp/main.cpp
+    ${WORSHIPCUE_DATA_SOURCES} ${WORSHIPCUE_MCP_SOURCES})
+target_link_libraries(WorshipCueMcp PRIVATE Qt6::Core Qt6::Sql Qt6::Network)
 set(WORSHIPCUE_OUTPUT_SOURCES
     src/ui/RichTextSupport.h
     src/ui/RichTextSupport.cpp
@@ -57,6 +71,18 @@ qt_add_executable(WorshipCue src/main.cpp
     ${WORSHIPCUE_CORE_SOURCES} ${WORSHIPCUE_DATA_SOURCES}
     ${WORSHIPCUE_OUTPUT_SOURCES} ${WORSHIPCUE_OPERATOR_SOURCES}
 )
+add_dependencies(WorshipCue WorshipCueMcp)
+if(APPLE)
+    # Run on every app build, including when only the companion has changed.
+    add_custom_target(WorshipCueMcpBundle
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:WorshipCue>"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:WorshipCueMcp>" "$<TARGET_FILE_DIR:WorshipCue>/WorshipCueMcp"
+        DEPENDS WorshipCueMcp
+        COMMENT "Copying the local MCP server into WorshipCue.app"
+        VERBATIM)
+    add_dependencies(WorshipCue WorshipCueMcpBundle)
+endif()
 qt_add_resources(WorshipCue app_icons
     PREFIX "/icons"
     BASE "${CMAKE_CURRENT_SOURCE_DIR}/assets/icons"
@@ -80,6 +106,11 @@ set_target_properties(WorshipCue PROPERTIES
 
 include(GNUInstallDirs)
 install(TARGETS WorshipCue BUNDLE DESTINATION . RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(APPLE)
+    install(TARGETS WorshipCueMcp RUNTIME DESTINATION WorshipCue.app/Contents/MacOS)
+else()
+    install(TARGETS WorshipCueMcp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 option(WORSHIPCUE_BUILD_TESTS "Build WorshipCue behavior and persistence tests" OFF)
 if(WORSHIPCUE_BUILD_TESTS)
@@ -92,6 +123,14 @@ if(WORSHIPCUE_BUILD_TESTS)
     qt_add_executable(WorshipCueRepositoryTests tests/library_repository_test.cpp ${WORSHIPCUE_DATA_SOURCES})
     target_link_libraries(WorshipCueRepositoryTests PRIVATE Qt6::Core Qt6::Sql Qt6::Test)
     add_test(NAME library_repository COMMAND WorshipCueRepositoryTests)
+
+    qt_add_executable(WorshipCueMcpTests tests/mcp_server_test.cpp
+        ${WORSHIPCUE_DATA_SOURCES} ${WORSHIPCUE_MCP_SOURCES})
+    target_link_libraries(WorshipCueMcpTests PRIVATE Qt6::Core Qt6::Sql Qt6::Network Qt6::Test)
+    target_compile_definitions(WorshipCueMcpTests PRIVATE
+        WORSHIPCUE_MCP_EXECUTABLE="$<TARGET_FILE:WorshipCueMcp>")
+    add_dependencies(WorshipCueMcpTests WorshipCueMcp)
+    add_test(NAME mcp_server COMMAND WorshipCueMcpTests)
 
     qt_add_executable(WorshipCueLyricsImportTests tests/lyrics_import_test.cpp
         src/core/LyricsImporter.h src/core/LyricsImporter.cpp

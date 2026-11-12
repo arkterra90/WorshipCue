@@ -404,6 +404,7 @@ set(CMAKE_MAKEFILE_OUTPUTS
 set(CMAKE_MAKEFILE_PRODUCTS
   ".qt/rcc/app_icons.qrc"
   ".qt/info_plist/WorshipCue/Info.plist"
+  "CMakeFiles/WorshipCueMcp_autogen.dir/AutogenInfo.json"
   "CMakeFiles/WorshipCue_autogen.dir/AutogenInfo.json"
   ".qt/QtDeploySupport.cmake"
   ".qt/QtDeployTargets.cmake"
@@ -415,7 +416,11 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
+  "CMakeFiles/WorshipCueMcp.dir/DependInfo.cmake"
   "CMakeFiles/WorshipCue.dir/DependInfo.cmake"
+  "CMakeFiles/WorshipCueMcpBundle.dir/DependInfo.cmake"
+  "CMakeFiles/WorshipCueMcp_autogen_timestamp_deps.dir/DependInfo.cmake"
+  "CMakeFiles/WorshipCueMcp_autogen.dir/DependInfo.cmake"
   "CMakeFiles/WorshipCue_autogen_timestamp_deps.dir/DependInfo.cmake"
   "CMakeFiles/WorshipCue_autogen.dir/DependInfo.cmake"
   )

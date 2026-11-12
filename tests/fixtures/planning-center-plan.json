@@ -1,0 +1,128 @@
+{
+  "plan": {
+    "data": {
+      "type": "Plan",
+      "id": "20",
+      "attributes": {
+        "title": "Sunday",
+        "dates": "November 15, 2026"
+      },
+      "relationships": {
+        "service_type": {
+          "data": {
+            "type": "ServiceType",
+            "id": "10"
+          }
+        }
+      }
+    }
+  },
+  "page1": {
+    "data": [
+      {
+        "type": "Item",
+        "id": "3",
+        "attributes": {
+          "title": "Source Song",
+          "item_type": "song",
+          "sequence": 1,
+          "service_position": "during",
+          "custom_arrangement_sequence": [
+            "Chorus",
+            "Verse 1",
+            "Chorus"
+          ]
+        },
+        "relationships": {
+          "song": {
+            "data": {
+              "id": "50"
+            }
+          },
+          "arrangement": {
+            "data": {
+              "id": "60"
+            }
+          }
+        }
+      },
+      {
+        "type": "Item",
+        "id": "1",
+        "attributes": {
+          "title": "Welcome",
+          "item_type": "item",
+          "sequence": 100,
+          "service_position": "pre"
+        }
+      },
+      {
+        "type": "Item",
+        "id": "2",
+        "attributes": {
+          "title": "Worship",
+          "item_type": "header",
+          "sequence": 0,
+          "service_position": "during"
+        }
+      }
+    ],
+    "included": [
+      {
+        "type": "Song",
+        "id": "50",
+        "attributes": {
+          "title": "Source Song"
+        }
+      },
+      {
+        "type": "Arrangement",
+        "id": "60",
+        "attributes": {
+          "lyrics": "Verse 1\nVerse text\n\nChorus\nChorus text"
+        }
+      }
+    ],
+    "links": {
+      "next": "https://api.planningcenteronline.com/services/v2/service_types/10/plans/20/items?offset=3"
+    }
+  },
+  "page2": {
+    "data": [
+      {
+        "type": "Item",
+        "id": "6",
+        "attributes": {
+          "title": "Dismissal",
+          "item_type": "item",
+          "sequence": 0,
+          "service_position": "post"
+        }
+      },
+      {
+        "type": "Item",
+        "id": "4",
+        "attributes": {
+          "title": "Message",
+          "item_type": "item",
+          "sequence": 2,
+          "service_position": "during",
+          "html_details": "PRIVATE: operator notes"
+        }
+      },
+      {
+        "type": "Item",
+        "id": "5",
+        "attributes": {
+          "title": "Video",
+          "item_type": "media",
+          "sequence": 3,
+          "service_position": "during"
+        }
+      }
+    ],
+    "links": {
+      "next": null
+    }
+  }
+}

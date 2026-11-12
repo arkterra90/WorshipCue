@@ -1,3 +1,5 @@
-set(__QT_DEPLOY_TARGETS "WorshipCue")
+set(__QT_DEPLOY_TARGETS "WorshipCueMcp;WorshipCue")
+set(__QT_DEPLOY_TARGET_WorshipCueMcp_FILE /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCueMcp)
+set(__QT_DEPLOY_TARGET_WorshipCueMcp_TYPE EXECUTABLE)
 set(__QT_DEPLOY_TARGET_WorshipCue_FILE /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue.app/Contents/MacOS/WorshipCue)
 set(__QT_DEPLOY_TARGET_WorshipCue_TYPE EXECUTABLE)
