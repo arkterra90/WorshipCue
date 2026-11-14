@@ -1,0 +1,11 @@
+#pragma once
+#include <QString>
+namespace BuildInformation {
+inline QString version() { return QStringLiteral("@PROJECT_VERSION@"); }
+inline QString channel() { return QStringLiteral("@WORSHIPCUE_RELEASE_CHANNEL@"); }
+inline QString label() {
+    return channel() == QStringLiteral("release") ? QStringLiteral("Release")
+        : channel() == QStringLiteral("unsigned") ? QStringLiteral("Unsigned development build")
+        : QStringLiteral("Local development build");
+}
+}

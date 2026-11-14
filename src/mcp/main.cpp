@@ -1,8 +1,10 @@
 #include "McpServer.h"
+#include "BuildInformation.h"
 
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QDebug>
+#include <QDir>
 #include <cstdio>
 
 #ifdef Q_OS_WIN
@@ -12,9 +14,21 @@
 
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
+#ifdef Q_OS_MACOS
+    // This console companion is not CFBundleExecutable, so Qt may not infer
+    // the GUI bundle's plugin directory. Resolve only our enclosing .app;
+    // standalone development executables retain their usual Qt search paths.
+    QDir bundle(QCoreApplication::applicationDirPath());
+    if (bundle.dirName() == QStringLiteral("MacOS") && bundle.cdUp()
+        && bundle.dirName() == QStringLiteral("Contents")) {
+        const auto plugins = bundle.filePath(QStringLiteral("PlugIns"));
+        if (bundle.cdUp() && bundle.dirName().endsWith(QStringLiteral(".app")) && QDir(plugins).exists())
+            QCoreApplication::setLibraryPaths({plugins});
+    }
+#endif
     QCoreApplication::setOrganizationName(QStringLiteral("WorshipCue"));
     QCoreApplication::setApplicationName(QStringLiteral("WorshipCue"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("0.3.0"));
+    QCoreApplication::setApplicationVersion(BuildInformation::version());
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("WorshipCue local MCP server (newline-delimited JSON-RPC over stdio)."));
     parser.addHelpOption();

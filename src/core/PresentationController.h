@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <functional>
 #include <QString>
 #include <QStringList>
 #include <QTimer>
@@ -113,6 +114,9 @@ class PresentationController : public QObject {
     Q_OBJECT
 public:
     explicit PresentationController(QObject *parent = nullptr);
+    void setLiveAuthorizationCheck(std::function<bool()> check) { authorizationCheck_ = std::move(check); }
+    bool liveAuthorized() const { return !authorizationCheck_ || authorizationCheck_(); }
+    void revokeLiveAuthorization();
     const LivePresentation &state() const { return state_; }
     const QVector<PresentationItem> &snapshotItems() const { return serviceSnapshot_; }
     const PresentationItem *liveItem() const { return itemIndex_ >= 0 && itemIndex_ < serviceSnapshot_.size() ? &serviceSnapshot_.at(itemIndex_) : nullptr; }
@@ -145,6 +149,7 @@ signals:
     void autoAdvanceChanged();
 
 private:
+    std::function<bool()> authorizationCheck_;
     LivePresentation state_;
     QVector<PresentationItem> serviceSnapshot_;
     int itemIndex_ = -1;

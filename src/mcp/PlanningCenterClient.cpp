@@ -1,6 +1,8 @@
 #include "PlanningCenterClient.h"
+#include "BuildInformation.h"
 
 #include <QEventLoop>
+#include <QElapsedTimer>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QNetworkAccessManager>
@@ -34,23 +36,38 @@ bool PlanningCenterClient::trustedUrl(const QUrl &url) {
         && url.path().startsWith(QStringLiteral("/services/v2/"))
         && !url.path().contains(QStringLiteral(".."));
 }
-QJsonObject PlanningCenterClient::get(const QUrl &url, QString *error) const {
+QNetworkRequest PlanningCenterClient::requestFor(const QUrl &url, QString *error) {
+    error->clear();
     if (!trustedUrl(url)) { *error = QStringLiteral("Planning Center returned an untrusted API URL."); return {}; }
-    if (fetch_) return fetch_(url, error);
     const auto id = qgetenv("PLANNING_CENTER_APPLICATION_ID");
     const auto secret = qgetenv("PLANNING_CENTER_SECRET");
-    if (id.isEmpty() || secret.isEmpty()) {
-        *error = QStringLiteral("Configure PLANNING_CENTER_APPLICATION_ID and PLANNING_CENTER_SECRET in the MCP client's server environment using a Planning Center Personal Access Token.");
+    const auto token = qgetenv("PLANNING_CENTER_ACCESS_TOKEN");
+    const auto invalid = [](const QByteArray &value) {
+        return value.size() > 16384 || value.contains('\r') || value.contains('\n') || value.contains('\0');
+    };
+    if (invalid(id) || invalid(secret) || invalid(token) || (token.isEmpty() && id.contains(':'))) {
+        *error = QStringLiteral("Planning Center credentials have an invalid format. Check the server environment."); return {};
+    }
+    if (token.isEmpty() && (id.isEmpty() || secret.isEmpty())) {
+        *error = QStringLiteral("Configure PLANNING_CENTER_APPLICATION_ID and PLANNING_CENTER_SECRET for your church's Personal Access Token, or PLANNING_CENTER_ACCESS_TOKEN for OAuth, in the MCP client's server environment.");
         return {};
     }
-    QNetworkAccessManager network;
     QNetworkRequest request(url);
-    request.setRawHeader("Authorization", "Basic " + (id + ':' + secret).toBase64());
+    request.setRawHeader("Authorization", token.isEmpty() ? "Basic " + (id + ':' + secret).toBase64() : "Bearer " + token);
     request.setRawHeader("Accept", "application/json");
     request.setRawHeader("X-PCO-API-Version", "2018-11-01");
-    request.setRawHeader("User-Agent", "WorshipCue/0.3.0");
+    request.setRawHeader("User-Agent", QByteArray("WorshipCue/") + BuildInformation::version().toUtf8());
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
     request.setTransferTimeout(15000);
+    return request;
+}
+QJsonObject PlanningCenterClient::get(const QUrl &url, QString *error) const {
+    error->clear();
+    if (!trustedUrl(url)) { *error = QStringLiteral("Planning Center returned an untrusted API URL."); return {}; }
+    if (fetch_) return fetch_(url, error);
+    const auto request = requestFor(url, error);
+    if (!error->isEmpty()) return {};
+    QNetworkAccessManager network;
     auto *reply = network.get(request);
     QEventLoop loop;
     QTimer deadline;
@@ -68,7 +85,9 @@ QJsonObject PlanningCenterClient::get(const QUrl &url, QString *error) const {
     body += reply->readAll();
     const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (oversized || body.size() > 8 * 1024 * 1024) *error = QStringLiteral("Planning Center response exceeds 8 MiB.");
-    else if (status == 401 || status == 403) *error = QStringLiteral("Planning Center denied access. Check the Personal Access Token and Services permissions.");
+    else if (status == 401) *error = QStringLiteral("Planning Center denied authentication. Check the Personal Access Token, or renew the OAuth access token, then reconnect the MCP client.");
+    else if (status == 403) *error = QStringLiteral("Planning Center denied Services access. Check the user's plan/song permissions and the OAuth services scope.");
+    else if (status == 404) *error = QStringLiteral("Planning Center could not find this plan or service type. Check its IDs and your Services access.");
     else if (status == 429) *error = QStringLiteral("Planning Center rate limit reached. Retry later.");
     else if (status != 200 || reply->error() != QNetworkReply::NoError)
         *error = QStringLiteral("Planning Center request failed (HTTP %1). Check the connection and plan IDs, then retry.").arg(status);
@@ -92,16 +111,45 @@ QJsonObject PlanningCenterClient::plans(const QString &serviceType, int offset, 
 }
 QJsonObject PlanningCenterClient::plan(const QString &serviceType, const QString &planId, QString *error) const {
     QString resolvedType = serviceType;
-    QString path = resolvedType.isEmpty() ? QStringLiteral("plans/%1").arg(planId)
-        : QStringLiteral("service_types/%1/plans/%2").arg(resolvedType, planId);
+    if (!validId(planId) || (!resolvedType.isEmpty() && !validId(resolvedType))) {
+        *error = QStringLiteral("Use numeric Planning Center plan and service type IDs."); return {};
+    }
+    if (resolvedType.isEmpty()) {
+        // The documented Plan endpoints are scoped to a service type. Resolve
+        // ordinary browser links with filtered collections rather than an
+        // undocumented /services/v2/plans/<id> request.
+        const auto types = serviceTypes(0, 100, error);
+        if (!error->isEmpty()) return {};
+        if (!types["data"].isArray()) { *error = QStringLiteral("Planning Center service types are invalid."); return {}; }
+        QElapsedTimer resolutionClock;
+        resolutionClock.start();
+        const auto serviceTypes = types["data"].toArray();
+        for (int index = 0; index < qMin(100, int(serviceTypes.size())); ++index) {
+            const auto type = serviceTypes.at(index);
+            const auto id = type.toObject()["id"].toString();
+            if (!validId(id)) { *error = QStringLiteral("Planning Center service type IDs are invalid."); return {}; }
+            if (resolutionClock.elapsed() > 45000) break;
+            auto candidate = collection(QStringLiteral("service_types/%1/plans").arg(id), 0, 1);
+            auto query = QUrlQuery(candidate);
+            query.addQueryItem(QStringLiteral("where[id]"), planId);
+            candidate.setQuery(query);
+            const auto matches = get(candidate, error);
+            if (!error->isEmpty()) return {};
+            if (!matches["data"].isArray()) { *error = QStringLiteral("Planning Center plans are invalid."); return {}; }
+            for (const auto &match : matches["data"].toArray())
+                if (match.toObject()["id"].toString() == planId) { resolvedType = id; break; }
+            if (!resolvedType.isEmpty()) break;
+        }
+        if (resolvedType.isEmpty()) {
+            *error = QStringLiteral("Could not resolve this plan among the first 100 accessible service types. Use list_planning_center_service_types/list_planning_center_plans and supply service_type_id with plan_id."); return {};
+        }
+    }
+    const auto path = QStringLiteral("service_types/%1/plans/%2").arg(resolvedType, planId);
     const auto plan = get(QUrl(root + path), error);
     if (!error->isEmpty()) return {};
-    if (!plan.value(QStringLiteral("data")).isObject()) { *error = QStringLiteral("Planning Center plan data is missing."); return {}; }
-    if (resolvedType.isEmpty()) {
-        resolvedType = plan.value(QStringLiteral("data")).toObject().value(QStringLiteral("relationships")).toObject()
-            .value(QStringLiteral("service_type")).toObject().value(QStringLiteral("data")).toObject().value(QStringLiteral("id")).toString();
-        if (!validId(resolvedType)) { *error = QStringLiteral("Planning Center did not return this plan's service type. Supply service_type_id explicitly."); return {}; }
-        path = QStringLiteral("service_types/%1/plans/%2").arg(resolvedType, planId);
+    if (!plan["data"].isObject() || plan["data"].toObject()["id"].toString() != planId
+        || plan["data"].toObject()["type"].toString() != "Plan") {
+        *error = QStringLiteral("Planning Center returned missing or mismatched plan data."); return {};
     }
     auto url = collection(path + QStringLiteral("/items"), 0, 100);
     QUrlQuery query(url);

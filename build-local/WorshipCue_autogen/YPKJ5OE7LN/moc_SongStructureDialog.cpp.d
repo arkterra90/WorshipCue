@@ -808,11 +808,13 @@
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationSettings.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryCleanup.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QByteArray \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QJsonObject \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QMetaType \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QRectF \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QSet \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QString \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QStringList \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QVector \

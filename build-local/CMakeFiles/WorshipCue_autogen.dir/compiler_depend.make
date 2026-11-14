@@ -825,12 +825,14 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdint.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/CMakeLists.txt \
   CMakeFiles/4.4.5/CMakeCXXCompiler.cmake \
+  CMakeFiles/4.4.5/CMakeOBJCXXCompiler.cmake \
   CMakeFiles/4.4.5/CMakeSystem.cmake \
   WorshipCue_autogen/moc_predefs.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/BuiltInBackgrounds.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MidiTypes.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp \
@@ -838,25 +840,42 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationSettings.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/StageTimer.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryCleanup.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryCleanup.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/main.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpConnectionProbe.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpConnectionProbe.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/BatchRenamer.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/BatchRenamer.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/MediaManager.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/MediaManager.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/MediaPlayback.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/MediaPlayback.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/midi/MidiBackend.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/midi/MidiEngine.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/BackgroundLibraryDialog.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/BackgroundLibraryDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/DisplayWindow.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/DisplayWindow.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/HelpDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/HelpDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/LibraryCleanupDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/LibraryCleanupDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MainWindow.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MainWindow.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MidiDialogs.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MidiDialogs.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/NativeDisplayModes.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputConfiguration.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputSettingsDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputSettingsDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationSettingsDialog.cpp \
@@ -877,17 +896,28 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongEditorDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayout.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayoutDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayoutDialog.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QByteArray \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QCache \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QDateTime \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QElapsedTimer \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QFutureWatcher \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QHash \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QJsonObject \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QMetaType \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QMutex \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QObject \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QPointer \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QProcess \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QRectF \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QSet \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QSize \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QString \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QStringList \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QTimer \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QUrl \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QVector \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QKeySequence \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QPainter \
@@ -927,6 +957,9 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qbytearraylist.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qbytearrayview.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcache.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcalendar.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcborcommon.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcborvalue.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qchar.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcheckedint_impl.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcompare.h \
@@ -941,6 +974,7 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcontiguouscache.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdarwinhelpers.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdatastream.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdatetime.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdeadlinetimer.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdebug.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qelapsedtimer.h \
@@ -962,10 +996,15 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qglobalstatic.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qhash.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qhashfunctions.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qiodevice.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qiodevicebase.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qitemselectionmodel.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qiterable.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qiterator.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsondocument.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsonobject.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsonparseerror.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsonvalue.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qlatin1stringview.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qline.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qlist.h \
@@ -990,6 +1029,7 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qpair.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qpoint.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qpointer.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qprocess.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qprocessordetection.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qpromise.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qrect.h \
@@ -1048,6 +1088,7 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qtypes.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qurl.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qutf8stringview.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/quuid.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qvariant.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qvarlengtharray.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qvector.h \
@@ -1469,6 +1510,7 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/share/cmake/Modules/CMakeGenericSystem.cmake \
   /opt/homebrew/share/cmake/Modules/CMakeInitializeConfigs.cmake \
   /opt/homebrew/share/cmake/Modules/CMakeLanguageInformation.cmake \
+  /opt/homebrew/share/cmake/Modules/CMakeOBJCXXInformation.cmake \
   /opt/homebrew/share/cmake/Modules/CMakeSystemSpecificInformation.cmake \
   /opt/homebrew/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake \
   /opt/homebrew/share/cmake/Modules/CheckCXXCompilerFlag.cmake \
@@ -1476,7 +1518,9 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/share/cmake/Modules/CheckIncludeFileCXX.cmake \
   /opt/homebrew/share/cmake/Modules/CheckLibraryExists.cmake \
   /opt/homebrew/share/cmake/Modules/Compiler/AppleClang-CXX.cmake \
+  /opt/homebrew/share/cmake/Modules/Compiler/AppleClang-OBJCXX.cmake \
   /opt/homebrew/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake \
+  /opt/homebrew/share/cmake/Modules/Compiler/Clang-OBJCXX.cmake \
   /opt/homebrew/share/cmake/Modules/Compiler/Clang.cmake \
   /opt/homebrew/share/cmake/Modules/Compiler/GNU.cmake \
   /opt/homebrew/share/cmake/Modules/FindOpenGL.cmake \
@@ -1487,18 +1531,23 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/share/cmake/Modules/GNUInstallDirs.cmake \
   /opt/homebrew/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake \
   /opt/homebrew/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake \
+  /opt/homebrew/share/cmake/Modules/Internal/CMakeOBJCXXLinkerInformation.cmake \
   /opt/homebrew/share/cmake/Modules/Internal/CheckCommon.cmake \
   /opt/homebrew/share/cmake/Modules/Internal/CheckCompilerFlag.cmake \
   /opt/homebrew/share/cmake/Modules/Internal/CheckFlagCommonConfig.cmake \
   /opt/homebrew/share/cmake/Modules/Internal/CheckSourceCompiles.cmake \
+  /opt/homebrew/share/cmake/Modules/Linker/AppleClang-C.cmake \
   /opt/homebrew/share/cmake/Modules/Linker/AppleClang-CXX.cmake \
   /opt/homebrew/share/cmake/Modules/Linker/AppleClang.cmake \
   /opt/homebrew/share/cmake/Modules/MacroAddFileDependencies.cmake \
   /opt/homebrew/share/cmake/Modules/Platform/Apple-AppleClang-CXX.cmake \
+  /opt/homebrew/share/cmake/Modules/Platform/Apple-AppleClang-OBJCXX.cmake \
   /opt/homebrew/share/cmake/Modules/Platform/Apple-Clang-CXX.cmake \
+  /opt/homebrew/share/cmake/Modules/Platform/Apple-Clang-OBJCXX.cmake \
   /opt/homebrew/share/cmake/Modules/Platform/Apple-Clang.cmake \
   /opt/homebrew/share/cmake/Modules/Platform/Darwin-Initialize.cmake \
   /opt/homebrew/share/cmake/Modules/Platform/Darwin.cmake \
+  /opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang-C.cmake \
   /opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang-CXX.cmake \
   /opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang.cmake \
   /opt/homebrew/share/cmake/Modules/Platform/UnixPaths.cmake
@@ -1507,6 +1556,8 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /opt/homebrew/share/cmake/Modules/Platform/UnixPaths.cmake:
 
 /opt/homebrew/share/cmake/Modules/Platform/Apple-Clang.cmake:
+
+/opt/homebrew/share/cmake/Modules/Platform/Apple-Clang-OBJCXX.cmake:
 
 /opt/homebrew/share/cmake/Modules/MacroAddFileDependencies.cmake:
 
@@ -1517,6 +1568,8 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /opt/homebrew/share/cmake/Modules/Internal/CheckCompilerFlag.cmake:
 
 /opt/homebrew/share/cmake/Modules/Internal/CheckCommon.cmake:
+
+/opt/homebrew/share/cmake/Modules/Internal/CMakeOBJCXXLinkerInformation.cmake:
 
 /opt/homebrew/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake:
 
@@ -1732,8 +1785,6 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiPlugins.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiDependencies.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiConfigVersionImpl.cmake:
@@ -1761,8 +1812,6 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsVersionlessTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsTargetsPrecheck.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsAdditionalTargetInfo.cmake:
 
@@ -1886,10 +1935,6 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/lib/cmake/Qt6/QtPublicPluginHelpers_v2.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfigVersionImpl.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicJsonHelpers.cmake:
-
 /opt/homebrew/lib/cmake/Qt6/QtPublicExternalProjectHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsDependencies.cmake:
@@ -1972,8 +2017,6 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qicon.h:
 
-/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qfontinfo.h:
-
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qfont.h:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qcursor.h:
@@ -1997,6 +2040,10 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qversiontagging.h:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qvector.h:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qfontinfo.h:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/quuid.h:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qutf8stringview.h:
 
@@ -2138,9 +2185,11 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdeadlinetimer.h:
 
-/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdatastream.h:
+/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsTargets.cmake:
 
-/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdarwinhelpers.h:
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdatetime.h:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdatastream.h:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qmutex.h:
 
@@ -2157,6 +2206,8 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBus/Qt6DBusConfigVersionImpl.cmake:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcompare.h:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcborcommon.h:
 
 /opt/homebrew/share/cmake/Modules/CMakeGenericSystem.cmake:
 
@@ -2198,6 +2249,8 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/q20type_traits.h:
 
+/opt/homebrew/share/cmake/Modules/CMakeOBJCXXInformation.cmake:
+
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/q17memory.h:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtWidgets/QMainWindow:
@@ -2216,13 +2269,27 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QVector:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QUrl:
+
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QTimer:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QString:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfigVersionImpl.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/QtPublicJsonHelpers.cmake:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QSize:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QProcess:
+
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QPointer:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QMetaType:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QJsonObject:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QHash:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QSvgPluginTargets-release.cmake:
 
@@ -2231,6 +2298,12 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QElapsedTimer:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QCache:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QDateTime:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QByteArray:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayout.h:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.h:
 
@@ -2264,6 +2337,12 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.cpp:
 
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputConfiguration.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MidiDialogs.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MidiDialogs.cpp:
+
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qfunctionaltools_impl.h:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.h:
@@ -2274,9 +2353,17 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MainWindow.cpp:
 
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/LibraryCleanupDialog.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/LibraryCleanupDialog.cpp:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/HelpDialog.h:
+
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/DisplayWindow.cpp:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/BackgroundLibraryDialog.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/midi/MidiEngine.h:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCalendarPermissionPluginTargetsPrecheck.cmake:
 
@@ -2290,11 +2377,21 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/BatchRenamer.h:
 
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/midi/MidiBackend.h:
+
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/BatchRenamer.cpp:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpConnectionProbe.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpConnectionProbe.cpp:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdarwinhelpers.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryCleanup.cpp:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp:
 
@@ -2304,11 +2401,17 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiDependencies.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MidiTypes.h:
+
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginConfig.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/HelpDialog.cpp:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp:
 
@@ -2664,6 +2767,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/errno.h:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsondocument.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/cstdlib:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsTargets.cmake:
@@ -2878,6 +2983,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /opt/homebrew/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qiodevice.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/xlocale/_wctype.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_volatile.h:
@@ -2929,6 +3036,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/char_traits.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_swappable.h:
+
+/opt/homebrew/share/cmake/Modules/Compiler/Clang-OBJCXX.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint32_t.h:
 
@@ -3044,6 +3153,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_always_bitcastable.h:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcborvalue.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_allocator.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/signal.h:
@@ -3053,6 +3164,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcontainerinfo.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/integral_constant.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputSettingsDialog.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/has_unique_object_representation.h:
 
@@ -3094,6 +3207,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/aligned_storage.h:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsonparseerror.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__bit/blsr.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/binary_search.h:
@@ -3101,6 +3216,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/add_rvalue_reference.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/add_pointer.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayoutDialog.cpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/add_lvalue_reference.h:
 
@@ -3129,6 +3246,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_rwlock_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QMutex:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/thread.h:
 
@@ -3228,6 +3347,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/enable_view.h:
 
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayoutDialog.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_reduce.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/unique.h:
@@ -3326,6 +3447,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/remove_copy_if.h:
 
+/opt/homebrew/share/cmake/Modules/Compiler/AppleClang-OBJCXX.cmake:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/pointer_traits.h:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreVersionlessAliasTargets.cmake:
@@ -3341,6 +3464,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/stdint.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/poll_with_backoff.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputSettingsDialog.cpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_string.h:
 
@@ -3514,6 +3639,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/unwrap_range.h:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qprocess.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/clamp.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/half_positive.h:
@@ -3539,6 +3666,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/libkern/arm/_OSByteOrder.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_destructible.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/StageTimer.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__fwd/queue.h:
 
@@ -3746,6 +3875,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__variant/monostate.h:
 
+/opt/homebrew/share/cmake/Modules/Platform/Apple-AppleClang-OBJCXX.cmake:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__concepts/predicate.h:
@@ -3814,6 +3945,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__concepts/assignable.h:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsonvalue.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__compare/compare_three_way_result.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__compare/common_comparison_category.h:
@@ -3843,6 +3976,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__utility/as_const.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/convert_to_timespec.h:
+
+CMakeFiles/4.4.5/CMakeOBJCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_pod.h:
 
@@ -4066,6 +4201,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qspan.h:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcalendar.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/ios:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/container_compatible_range.h:
@@ -4180,6 +4317,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaTargets.cmake:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsonobject.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/includes.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_locale_t.h:
@@ -4191,6 +4330,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/is_heap.h:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentTargets.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryCleanup.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/stable_sort.h:
 
@@ -4291,6 +4432,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QGlibNetworkInformationPluginTargets.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/partition_copy.h:
+
+/opt/homebrew/share/cmake/Modules/Linker/AppleClang-C.cmake:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtSql.framework/Versions/A/Headers/qsqldatabase.h:
 
@@ -4421,6 +4564,10 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_locale_posix2008.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__math/error_functions.h:
+
+/opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang-C.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/NativeDisplayModes.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/equal.h:
 

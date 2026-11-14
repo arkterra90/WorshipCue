@@ -968,6 +968,10 @@ CMakeFiles/WorshipCue.dir/src/ui/OutputManager.cpp.o: \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputConfiguration.h \
   /opt/homebrew/opt/qt/include/QtCore/QSize \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayout.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/StageTimer.h \
+  /opt/homebrew/opt/qt/include/QtCore/QDateTime \
+  /opt/homebrew/opt/qt/include/QtCore/QElapsedTimer \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qelapsedtimer.h \
   /opt/homebrew/opt/qt/include/QtGui/QPainter \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainter.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiglobal.h \
@@ -995,8 +999,6 @@ CMakeFiles/WorshipCue.dir/src/ui/OutputManager.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontvariableaxis.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontmetrics.h \
-  /opt/homebrew/opt/qt/include/QtCore/QElapsedTimer \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qelapsedtimer.h \
   /opt/homebrew/opt/qt/include/QtGui/QPixmap \
   /opt/homebrew/opt/qt/include/QtCore/QPointer \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpointer.h \

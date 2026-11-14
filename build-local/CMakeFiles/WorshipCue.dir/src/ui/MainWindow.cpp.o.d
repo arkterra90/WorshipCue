@@ -966,6 +966,8 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/PresentationSettings.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/LibraryRepository.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/../core/MediaSlide.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/LibraryCleanup.h \
+  /opt/homebrew/opt/qt/include/QtCore/QSet \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/../core/MidiTypes.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/../core/PresentationLook.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/../core/SongStructure.h \
@@ -981,6 +983,10 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputConfiguration.h \
   /opt/homebrew/opt/qt/include/QtCore/QSize \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayout.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/StageTimer.h \
+  /opt/homebrew/opt/qt/include/QtCore/QDateTime \
+  /opt/homebrew/opt/qt/include/QtCore/QElapsedTimer \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qelapsedtimer.h \
   /opt/homebrew/opt/qt/include/QtGui/QPainter \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainter.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiglobal.h \
@@ -1008,8 +1014,6 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontvariableaxis.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontmetrics.h \
-  /opt/homebrew/opt/qt/include/QtCore/QElapsedTimer \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qelapsedtimer.h \
   /opt/homebrew/opt/qt/include/QtGui/QPixmap \
   /opt/homebrew/opt/qt/include/QtCore/QPointer \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpointer.h \
@@ -1026,7 +1030,40 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcursor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbitmap.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/NativeDisplayModes.h \
-  /opt/homebrew/opt/qt/include/QtCore/QSet \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../licensing/LicenseManager.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../licensing/LicenseStore.h \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonArray \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonarray.h \
+  /opt/homebrew/opt/qt/include/QtNetwork/QNetworkAccessManager \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qtnetworkglobal.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qtnetwork-config.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qtnetworkexports.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qnetworkrequest.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qhttpheaders.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSharedDataPointer \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QString \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QUrl \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QVariant \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q26numeric.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QList \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QObject \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/QSslConfiguration \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qsslconfiguration.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qsslsocket.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qtcpsocket.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qabstractsocket.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiodevice.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qhostaddress.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qsslerror.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qsslcertificate.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcryptographichash.h \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qssl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QFlags \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/QSslPreSharedKeyAuthenticator \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qsslpresharedkeyauthenticator.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QMetaType \
+  /opt/homebrew/opt/qt/include/QtCore/QUrl \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../midi/MidiEngine.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../midi/MidiBackend.h \
   /opt/homebrew/opt/qt/include/QtCore/QMutex \
@@ -1052,12 +1089,19 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/include/QtWidgets/QMainWindow \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qmainwindow.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtabwidget.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/HelpDialog.h \
+  /opt/homebrew/opt/qt/include/QtWidgets/QDialog \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qdialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/LicenseDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../mcp/McpConnectionProbe.h \
+  /opt/homebrew/opt/qt/include/QtCore/QProcess \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qprocess.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MidiDialogs.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/LibraryCleanupDialog.h \
+  /opt/homebrew/opt/qt/include/QtCore/QUuid \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.h \
   /opt/homebrew/opt/qt/include/QtCore/QRect \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.h \
-  /opt/homebrew/opt/qt/include/QtWidgets/QDialog \
-  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qdialog.h \
   /opt/homebrew/opt/qt/include/QtGui/QUndoStack \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qundostack.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.h \
@@ -1153,15 +1197,12 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qclipboard.h \
   /opt/homebrew/opt/qt/include/QtGui/QCloseEvent \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qevent.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiodevice.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qeventpoint.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvector2d.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvectornd.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpointingdevice.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qinputdevice.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qscreen.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QList \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QObject \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QRect \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSize \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QSizeF \
@@ -1173,7 +1214,6 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qdialogbuttonbox.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QDoubleSpinBox \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qspinbox.h \
-  /opt/homebrew/opt/qt/include/QtCore/QDateTime \
   /opt/homebrew/opt/qt/include/QtWidgets/QFileDialog \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qfiledialog.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdir.h \
@@ -1223,8 +1263,6 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextcursor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextdocument.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextformat.h \
-  /opt/homebrew/opt/qt/include/QtCore/QJsonArray \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonarray.h \
   /opt/homebrew/opt/qt/include/QtCore/QJsonDocument \
   /opt/homebrew/opt/qt/include/QtGui/QKeyEvent \
   /opt/homebrew/opt/qt/include/QtWidgets/QKeySequenceEdit \
@@ -1266,4 +1304,6 @@ CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o: \
   /opt/homebrew/opt/qt/include/QtWidgets/QStatusBar \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qstatusbar.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QTextEdit \
+  /opt/homebrew/opt/qt/include/QtWidgets/QToolButton \
+  /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtoolbutton.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QVBoxLayout

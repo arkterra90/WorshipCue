@@ -3,6 +3,7 @@
 #include "../core/PresentationController.h"
 #include "OutputConfiguration.h"
 #include "StageLayout.h"
+#include "../core/StageTimer.h"
 
 #include <QPainter>
 #include <QElapsedTimer>
@@ -20,6 +21,7 @@ class DisplayWindow : public QWidget {
 public:
     enum class Kind { Audience, Stage };
     DisplayWindow(Kind kind, PresentationController *controller, QWidget *parent = nullptr, DisplayWindow *sharedAudience = nullptr);
+    void setLiveAuthorizationCheck(std::function<bool()> check) { authorizationCheck_ = std::move(check); }
     void showPreview();
     void showFullscreenOn(QScreen *screen);
     void setBackgroundImage(const QString &path);
@@ -39,7 +41,14 @@ public:
     void resumeCountdown();
     void resetCountdown();
     StageRuntime stageRuntime() const;
-    int countdownSeconds() const { return countdownSeconds_; }
+    int countdownSeconds() const { return stageTimer_.configuration().durationSeconds; }
+    const StageTimerConfiguration &stageTimerConfiguration() const { return stageTimer_.configuration(); }
+    StageTimerReading stageTimerReading() const { return stageTimer_.reading(); }
+    bool configureStageTimer(const StageTimerConfiguration &, QString *error = nullptr);
+    void setStageTimerVisible(bool visible, bool overlay = true);
+    bool stageTimerVisible() const;
+    bool stageTimerOverlayEnabled() const { return timerOverlay_; }
+    bool stageTimerElementsVisible() const { return timerVisible_; }
     const LivePresentation &presentationState() const { return controller_->state(); }
     bool sharesAudienceWith(const DisplayWindow *window) const { return sharedAudience_ == window; }
 
@@ -54,15 +63,16 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
+    std::function<bool()> authorizationCheck_;
+    bool canShowLive() const { return authorizationCheck_ && authorizationCheck_(); }
     Kind kind_;
     OutputConfiguration configuration_;
     StageLayout stageLayout_ = StageLayout::standard();
     QPointer<DisplayWindow> sharedAudience_;
     QString stageMessage_;
-    int countdownSeconds_ = 300;
-    qint64 countdownRemainingMs_ = 300000;
-    bool countdownRunning_ = false;
-    QElapsedTimer countdownClock_;
+    StageTimer stageTimer_;
+    bool timerVisible_ = true;
+    bool timerOverlay_ = false;
     PresentationController *controller_;
     QPixmap background_;
     QPixmap activeBackground_;

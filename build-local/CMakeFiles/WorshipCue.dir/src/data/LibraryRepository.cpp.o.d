@@ -901,6 +901,18 @@ CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/map \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
   /opt/homebrew/opt/qt/include/QtCore/QString \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryCleanup.h \
+  /opt/homebrew/opt/qt/include/QtCore/QSet \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qset.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qhash.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiterator.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlist.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbytearraylist.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstringlist.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstringmatcher.h \
+  /opt/homebrew/opt/qt/include/QtCore/QStringList \
+  /opt/homebrew/opt/qt/include/QtCore/QVector \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/../core/MidiTypes.h \
   /opt/homebrew/opt/qt/include/QtCore/QByteArray \
   /opt/homebrew/opt/qt/include/QtCore/QJsonObject \
@@ -923,15 +935,8 @@ CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/forward_list \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/set \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/unordered_set \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlist.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiterator.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbytearraylist.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstringlist.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstringmatcher.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmap.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata_impl.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qset.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qhash.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvarlengtharray.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qalloc.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q23utility.h \
@@ -945,8 +950,6 @@ CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
-  /opt/homebrew/opt/qt/include/QtCore/QVector \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/../core/PresentationLook.h \
   /opt/homebrew/opt/qt/include/QtCore/QRectF \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrect.h \
@@ -955,7 +958,6 @@ CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsize.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpoint.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/../core/SongStructure.h \
-  /opt/homebrew/opt/qt/include/QtCore/QStringList \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/../core/PresentationSettings.h \
   /opt/homebrew/opt/qt/include/QtSql/QSqlDatabase \
   /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qsqldatabase.h \
@@ -1015,7 +1017,6 @@ CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.o: \
   /opt/homebrew/opt/qt/include/QtCore/QJsonDocument \
   /opt/homebrew/opt/qt/include/QtCore/QJsonParseError \
   /opt/homebrew/opt/qt/include/QtCore/QHash \
-  /opt/homebrew/opt/qt/include/QtCore/QSet \
   /opt/homebrew/opt/qt/include/QtSql/QSqlError \
   /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qsqlerror.h \
   /opt/homebrew/opt/qt/include/QtSql/QSqlQuery \

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QNetworkRequest>
 #include <QUrl>
 #include <functional>
 
@@ -14,6 +15,8 @@ public:
     QJsonObject plan(const QString &serviceType, const QString &planId, QString *error) const;
     static bool validId(const QString &id);
     static bool trustedUrl(const QUrl &url);
+    // Builds the credential-bearing request only for the Services API origin.
+    static QNetworkRequest requestFor(const QUrl &url, QString *error);
 private:
     Fetch fetch_;
     QJsonObject get(const QUrl &url, QString *error) const;

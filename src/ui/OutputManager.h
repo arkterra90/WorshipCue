@@ -33,7 +33,12 @@ public:
     StageLayout stageLayout(const QString &id) const;
     bool saveStageLayout(StageLayout layout, QString *error = nullptr);
     bool deleteStageLayout(const QString &id, QString *error = nullptr);
+    bool configureStageTimer(OutputId, const StageTimerConfiguration &, QString *error = nullptr);
+    bool showStageTimer(OutputId, bool visible, QString *error = nullptr);
     bool ownsWindow(const QWidget *window) const;
+    void setLiveAuthorizationCheck(std::function<bool()> check);
+    void refreshAuthorization();
+    bool liveAuthorized() const { return authorizationCheck_ && authorizationCheck_(); }
     void restoreTargets();
     void shutdown();
     // Compatibility for existing operator shortcuts and the first pair of outputs.
@@ -52,6 +57,7 @@ protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
+    std::function<bool()> authorizationCheck_;
     DisplayWindow audience_;
     DisplayWindow audience2_;
     DisplayWindow stage_;
@@ -77,6 +83,7 @@ private:
     bool releaseMode(ModeLease &lease, QString *error = nullptr);
     void persist(OutputId id);
     void persistLayouts();
+    void persistStageTimer(OutputId);
     void watchScreen(QScreen *screen);
     void scheduleRefresh();
     void scheduleStatusRefresh();

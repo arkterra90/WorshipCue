@@ -5,6 +5,8 @@
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
+#include <QDateTimeEdit>
+#include <QTabWidget>
 #include <QFontComboBox>
 #include <QFormLayout>
 #include <QLabel>
@@ -177,43 +179,217 @@ StageLayoutDialog::StageLayoutDialog(OutputManager *outputs, QWidget *parent) : 
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 StageControlsDialog::StageControlsDialog(OutputManager *outputs, QWidget *parent) : QDialog(parent) {
-    setObjectName("stageControlsDialog"); setWindowTitle("Stage Messages / Timers"); resize(520,420);
+    setObjectName("stageControlsDialog");
+    setWindowTitle("Timers / Confidence Monitor");
+    setModal(false);
+    resize(920, 650);
     auto *root = new QVBoxLayout(this);
-    auto *stage = new QComboBox(this); stage->setObjectName("stageControlOutput");
-    stage->addItem(outputName(OutputId::Stage1), int(OutputId::Stage1)); stage->addItem(outputName(OutputId::Stage2), int(OutputId::Stage2)); root->addWidget(stage);
-    auto *message = new QPlainTextEdit(this); message->setObjectName("stageMessage"); message->setPlaceholderText("Message for this stage screen"); root->addWidget(message);
-    auto *messages = new QHBoxLayout; root->addLayout(messages);
-    auto *send = new QPushButton("Send Message", this); send->setObjectName("sendStageMessage"); messages->addWidget(send);
-    auto *clear = new QPushButton("Clear Message", this); clear->setObjectName("clearStageMessage"); messages->addWidget(clear);
-    auto *seconds = new QSpinBox(this); seconds->setObjectName("stageCountdownSeconds"); seconds->setRange(1,86400); seconds->setSuffix(" seconds"); root->addWidget(seconds);
-    auto *remaining = new QLabel(this); remaining->setObjectName("stageCountdownRemaining"); root->addWidget(remaining);
-    auto *timers = new QHBoxLayout; root->addLayout(timers);
-    const auto selected = [outputs, stage]() -> DisplayWindow & { return outputs->output(OutputId(stage->currentData().toInt())); };
-    const auto update = [selected, remaining] {
-        const auto runtime = selected().stageRuntime(); StageElement element; element.kind = StageElement::Kind::Countdown;
-        remaining->setText(stageElementText(element, {}, runtime) + (runtime.running ? " · running" : " · paused/stopped"));
+    auto *outputRow = new QHBoxLayout;
+    root->addLayout(outputRow);
+    auto *stage = new QComboBox(this);
+    stage->setObjectName("stageControlOutput");
+    stage->addItem(outputName(OutputId::Stage1), int(OutputId::Stage1));
+    stage->addItem(outputName(OutputId::Stage2), int(OutputId::Stage2));
+    stage->setAccessibleName("Confidence monitor");
+    outputRow->addWidget(stage);
+    auto *route = new QLabel(this);
+    route->setObjectName("stageTimerRoute");
+    route->setWordWrap(true);
+    outputRow->addWidget(route, 1);
+    auto *tabs = new QTabWidget(this);
+    root->addWidget(tabs, 1);
+    auto *timerPage = new QWidget(tabs);
+    tabs->addTab(timerPage, "Timer");
+    auto *body = new QHBoxLayout(timerPage);
+    auto *controls = new QVBoxLayout;
+    body->addLayout(controls, 1);
+    auto *form = new QFormLayout;
+    controls->addLayout(form);
+    auto *name = new QLineEdit(this);
+    name->setObjectName("stageTimerName");
+    name->setMaxLength(100);
+    form->addRow("Timer name", name);
+    auto *mode = new QComboBox(this);
+    mode->setObjectName("stageTimerMode");
+    mode->addItems({"Countdown", "Countdown to Time", "Elapsed Time"});
+    form->addRow("Type", mode);
+    auto *duration = new QWidget(this);
+    auto *durationRow = new QHBoxLayout(duration);
+    durationRow->setContentsMargins(0, 0, 0, 0);
+    auto *hours = new QSpinBox(this);
+    hours->setObjectName("stageCountdownHours"); hours->setRange(0, 99); hours->setSuffix(" h");
+    auto *minutes = new QSpinBox(this);
+    minutes->setObjectName("stageCountdownMinutes"); minutes->setRange(0, 59); minutes->setSuffix(" m");
+    auto *seconds = new QSpinBox(this);
+    seconds->setObjectName("stageCountdownSeconds"); seconds->setRange(0, 59); seconds->setSuffix(" s");
+    durationRow->addWidget(hours); durationRow->addWidget(minutes); durationRow->addWidget(seconds);
+    auto *durationLabel = new QLabel("Duration", this);
+    form->addRow(durationLabel, duration);
+    auto *target = new QDateTimeEdit(this);
+    target->setObjectName("stageTimerTarget");
+    target->setDisplayFormat("yyyy-MM-dd HH:mm:ss");
+    target->setCalendarPopup(true);
+    auto *targetLabel = new QLabel("Target (local time)", this);
+    form->addRow(targetLabel, target);
+    auto *limited = new QCheckBox("Use an elapsed limit", this);
+    limited->setObjectName("stageTimerElapsedLimit");
+    form->addRow(limited);
+    auto *overrun = new QCheckBox("Continue past the end (overrun)", this);
+    overrun->setObjectName("stageTimerOverrun");
+    form->addRow(overrun);
+    auto *warning = new QSpinBox(this);
+    warning->setObjectName("stageTimerWarningSeconds");
+    warning->setRange(0, 359999); warning->setSuffix(" s");
+    form->addRow("Warn when time left is", warning);
+    auto *visible = new QCheckBox("Show on confidence monitor", this);
+    visible->setObjectName("stageTimerVisible");
+    controls->addWidget(visible);
+    auto *remaining = new QLabel(this);
+    remaining->setObjectName("stageCountdownRemaining");
+    remaining->setAlignment(Qt::AlignCenter);
+    controls->addWidget(remaining);
+    auto *state = new QLabel(this);
+    state->setObjectName("stageTimerState");
+    state->setAlignment(Qt::AlignCenter);
+    controls->addWidget(state);
+    auto *start = new QPushButton("Start && Show", this);
+    start->setObjectName("stageCountdownStart");
+    controls->addWidget(start);
+    auto *buttonsRow = new QHBoxLayout;
+    controls->addLayout(buttonsRow);
+    auto *pause = new QPushButton("Pause", this);
+    pause->setObjectName("stageCountdownPause"); buttonsRow->addWidget(pause);
+    auto *resume = new QPushButton("Resume", this);
+    resume->setObjectName("stageCountdownResume"); buttonsRow->addWidget(resume);
+    auto *reset = new QPushButton("Reset", this);
+    reset->setObjectName("stageCountdownReset"); buttonsRow->addWidget(reset);
+    auto *hint = new QLabel(this);
+    hint->setWordWrap(true);
+    controls->addWidget(hint);
+    controls->addStretch();
+    auto *previewColumn = new QVBoxLayout;
+    body->addLayout(previewColumn, 1);
+    previewColumn->addWidget(new QLabel("Confidence monitor preview", this));
+    auto *preview = new QLabel(this);
+    preview->setObjectName("stageTimerPreview");
+    preview->setMinimumSize(360, 210);
+    preview->setAlignment(Qt::AlignCenter);
+    previewColumn->addWidget(preview, 1);
+    auto *previewHint = new QLabel("The timer uses an existing Timer element in a custom layout, or a footer beneath the slide content. Assign a physical display in Screens / Output Settings.", this);
+    previewHint->setWordWrap(true);
+    previewColumn->addWidget(previewHint);
+    auto *messagePage = new QWidget(tabs);
+    tabs->addTab(messagePage, "Stage Message");
+    auto *messageLayout = new QVBoxLayout(messagePage);
+    auto *message = new QPlainTextEdit(this);
+    message->setObjectName("stageMessage");
+    message->setPlaceholderText("Message for this stage screen");
+    messageLayout->addWidget(message);
+    auto *messages = new QHBoxLayout;
+    messageLayout->addLayout(messages);
+    auto *send = new QPushButton("Send Message", this);
+    send->setObjectName("sendStageMessage"); messages->addWidget(send);
+    auto *clear = new QPushButton("Clear Message", this);
+    clear->setObjectName("clearStageMessage"); messages->addWidget(clear);
+    auto *messageHint = new QLabel("Include a Stage Message element in a custom layout to show messages on the selected screen.", this);
+    messageHint->setWordWrap(true); messageLayout->addWidget(messageHint);
+    auto *status = new QLabel(this);
+    status->setObjectName("stageTimerStatus");
+    status->setWordWrap(true);
+    root->addWidget(status);
+    const auto selectedId = [stage] { return OutputId(stage->currentData().toInt()); };
+    const auto selected = [outputs, selectedId]() -> DisplayWindow & { return outputs->output(selectedId()); };
+    const auto updateMode = [=] {
+        const bool absolute = mode->currentIndex() == int(StageTimerConfiguration::Mode::CountdownToTime);
+        const bool elapsed = mode->currentIndex() == int(StageTimerConfiguration::Mode::Elapsed);
+        duration->setVisible(!absolute); durationLabel->setVisible(!absolute);
+        durationLabel->setText(elapsed ? "Elapsed limit" : "Duration");
+        limited->setVisible(elapsed);
+        duration->setEnabled(!elapsed || limited->isChecked());
+        target->setVisible(absolute); targetLabel->setVisible(absolute);
+        overrun->setEnabled(!elapsed || limited->isChecked());
+        warning->setEnabled(!elapsed || limited->isChecked());
+        hint->setText(absolute
+            ? "Uses the selected local date/time. Resume catches up to that scheduled time. Edits apply with Start & Show or Reset."
+            : "Start restarts from the configured value. Resume continues a paused timer. Edits apply with Start & Show or Reset.");
     };
-    const auto load = [selected, message, seconds, update] { message->setPlainText(selected().stageRuntime().message); seconds->setValue(selected().countdownSeconds()); update(); };
+    const auto update = [=] {
+        const auto reading = selected().stageTimerReading();
+        const QString color = reading.atEnd ? "#ff6b6b"
+            : reading.warning ? "#f5c252" : "#eaf0f8";
+        remaining->setText(reading.text);
+        remaining->setStyleSheet("font-size: 36px; font-weight: 700; color: " + color + ";");
+        const QStringList states{"Ready", "Running", "Paused", "Finished"};
+        state->setText(states.at(int(reading.state)) + (reading.overrun ? " · Over time" : QString()));
+        pause->setEnabled(reading.state == StageTimerReading::State::Running);
+        resume->setEnabled(reading.state == StageTimerReading::State::Paused);
+        start->setText(reading.state == StageTimerReading::State::Ready ? "Start && Show" : "Restart && Show");
+        route->setText(outputs->status(selectedId()));
+        QPixmap image(640, 360);
+        image.fill(Qt::black);
+        { QPainter painter(&image); selected().paintOutput(painter, image.rect()); }
+        preview->setPixmap(image.scaled(preview->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    };
+    const auto load = [=] {
+        const auto configuration = selected().stageTimerConfiguration();
+        name->setText(configuration.name);
+        mode->setCurrentIndex(int(configuration.mode));
+        const int total = configuration.mode == StageTimerConfiguration::Mode::Elapsed && configuration.elapsedLimitSeconds > 0
+            ? configuration.elapsedLimitSeconds : configuration.durationSeconds;
+        hours->setValue(total / 3600); minutes->setValue((total / 60) % 60); seconds->setValue(total % 60);
+        target->setDateTime(configuration.target.toLocalTime());
+        limited->setChecked(configuration.elapsedLimitSeconds > 0);
+        overrun->setChecked(configuration.allowOverrun);
+        warning->setValue(configuration.warningSeconds);
+        { const QSignalBlocker block(visible); visible->setChecked(selected().stageTimerVisible()); }
+        message->setPlainText(selected().stageRuntime().message);
+        status->clear(); updateMode(); update();
+    };
+    const auto apply = [=](bool run) {
+        StageTimerConfiguration configuration;
+        configuration.name = name->text().trimmed();
+        configuration.mode = StageTimerConfiguration::Mode(mode->currentIndex());
+        const int total = hours->value() * 3600 + minutes->value() * 60 + seconds->value();
+        const bool needsDuration = configuration.mode == StageTimerConfiguration::Mode::Countdown
+            || (configuration.mode == StageTimerConfiguration::Mode::Elapsed && limited->isChecked());
+        if (needsDuration && total == 0) { status->setText("Enter a duration greater than zero."); return; }
+        configuration.durationSeconds = qMax(1, total);
+        configuration.elapsedLimitSeconds = configuration.mode == StageTimerConfiguration::Mode::Elapsed && limited->isChecked() ? total : 0;
+        configuration.target = target->dateTime();
+        configuration.allowOverrun = overrun->isChecked();
+        configuration.warningSeconds = warning->value();
+        QString error;
+        if (!outputs->configureStageTimer(selectedId(), configuration, &error)) { status->setText(error); return; }
+        if (run) {
+            outputs->showStageTimer(selectedId(), true);
+            { const QSignalBlocker block(visible); visible->setChecked(true); }
+            selected().startCountdown();
+        }
+        status->setText(run ? QString() : QStringLiteral("Timer settings saved and reset."));
+        update();
+    };
     connect(stage, QOverload<int>::of(&QComboBox::currentIndexChanged), this, load);
-    auto *messageStatus = new QLabel(this); messageStatus->setWordWrap(true); root->addWidget(messageStatus);
-    connect(send, &QPushButton::clicked, this, [selected, message, messageStatus] {
-        if (!selected().setStageMessage(message->toPlainText())) messageStatus->setText("Use a message of at most 4000 characters.");
-        else messageStatus->setText("Message sent to the selected stage screen.");
+    connect(mode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, updateMode);
+    connect(limited, &QCheckBox::toggled, this, updateMode);
+    connect(start, &QPushButton::clicked, this, [=] { apply(true); });
+    connect(reset, &QPushButton::clicked, this, [=] { apply(false); });
+    connect(pause, &QPushButton::clicked, this, [=] { selected().pauseCountdown(); update(); });
+    connect(resume, &QPushButton::clicked, this, [=] { selected().resumeCountdown(); update(); });
+    connect(visible, &QCheckBox::toggled, this, [=](bool show) { outputs->showStageTimer(selectedId(), show); update(); });
+    connect(send, &QPushButton::clicked, this, [=] {
+        status->setText(selected().setStageMessage(message->toPlainText())
+            ? "Message sent to the selected stage screen." : "Use a message of at most 4000 characters.");
     });
-    connect(clear, &QPushButton::clicked, this, [selected, message] { selected().setStageMessage({}); message->clear(); });
-    for (const auto &label : {QStringLiteral("Start"), QStringLiteral("Pause"), QStringLiteral("Resume"), QStringLiteral("Reset")}) {
-        auto *button = new QPushButton(label, this); button->setObjectName("stageCountdown" + label); timers->addWidget(button);
-        connect(button, &QPushButton::clicked, this, [selected, seconds, update, label] {
-            if (label == "Start") { selected().setCountdownSeconds(seconds->value()); selected().startCountdown(); }
-            if (label == "Pause") selected().pauseCountdown();
-            if (label == "Resume") selected().resumeCountdown();
-            if (label == "Reset") selected().setCountdownSeconds(seconds->value());
-            update();
-        });
-    }
-    auto *hint = new QLabel("Messages and timers are independent for each stage screen. Add Stage Message and Countdown elements to its assigned custom layout to show them. These controls never alter audience output or the live cue.", this);
-    hint->setWordWrap(true); root->addWidget(hint);
-    auto *tick = new QTimer(this); connect(tick, &QTimer::timeout, this, update); tick->start(200);
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, this); root->addWidget(buttons);
-    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject); load();
+    connect(clear, &QPushButton::clicked, this, [=] { selected().setStageMessage({}); message->clear(); });
+    connect(outputs, &OutputManager::statusChanged, this, update);
+    connect(outputs, &OutputManager::layoutsChanged, this, [=] {
+        const QSignalBlocker block(visible); visible->setChecked(selected().stageTimerVisible()); update();
+    });
+    auto *tick = new QTimer(this);
+    connect(tick, &QTimer::timeout, this, update);
+    tick->start(200);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, this);
+    root->addWidget(buttons);
+    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::close);
+    load();
 }

@@ -12,6 +12,7 @@
 #include <QScreen>
 #include <QTimer>
 #include <QWindow>
+#include <algorithm>
 
 DisplayWindow::DisplayWindow(Kind kind, PresentationController *controller, QWidget *parent, DisplayWindow *sharedAudience)
     : QWidget(parent), kind_(kind), sharedAudience_(sharedAudience), controller_(controller) {
@@ -45,12 +46,21 @@ DisplayWindow::DisplayWindow(Kind kind, PresentationController *controller, QWid
     }
     if (kind_ == Kind::Stage) {
         auto *timer = new QTimer(this);
-        connect(timer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
-        timer->start(1000);
+        connect(timer, &QTimer::timeout, this, [this, lastText = QString(), lastSecond = qint64(0)]() mutable {
+            const auto text = stageTimer_.reading().text;
+            const auto second = QDateTime::currentSecsSinceEpoch();
+            if (text != lastText || second != lastSecond) {
+                lastText = text;
+                lastSecond = second;
+                update();
+            }
+        });
+        timer->start(100);
     }
 }
 
 void DisplayWindow::showPreview() {
+    if (!canShowLive()) return;
     if (isFullScreen()) showNormal();
     resize(960, 540);
     show();
@@ -58,7 +68,7 @@ void DisplayWindow::showPreview() {
 }
 
 void DisplayWindow::showFullscreenOn(QScreen *screen) {
-    if (!screen) return;
+    if (!screen || !canShowLive()) return;
     if (isFullScreen()) showNormal();
     winId(); // Ensure there is a native QWindow to assign to the display.
     if (windowHandle()) windowHandle()->setScreen(screen);
@@ -239,15 +249,40 @@ bool DisplayWindow::setStageMessage(const QString &text) {
 }
 void DisplayWindow::setCountdownSeconds(int seconds) {
     if (seconds < 1 || seconds > 86400) return;
-    countdownSeconds_ = seconds; resetCountdown();
+    auto configuration = stageTimer_.configuration();
+    configuration.mode = StageTimerConfiguration::Mode::Countdown;
+    configuration.durationSeconds = seconds;
+    configureStageTimer(configuration);
 }
-void DisplayWindow::startCountdown() { countdownRemainingMs_ = qint64(countdownSeconds_) * 1000; countdownClock_.start(); countdownRunning_ = true; update(); }
-void DisplayWindow::pauseCountdown() { countdownRemainingMs_ = stageRuntime().remainingMs; countdownRunning_ = false; update(); }
-void DisplayWindow::resumeCountdown() { if (countdownRemainingMs_ > 0) { countdownClock_.start(); countdownRunning_ = true; update(); } }
-void DisplayWindow::resetCountdown() { countdownRemainingMs_ = qint64(countdownSeconds_) * 1000; countdownRunning_ = false; update(); }
+void DisplayWindow::startCountdown() { stageTimer_.start(); update(); }
+void DisplayWindow::pauseCountdown() { stageTimer_.pause(); update(); }
+void DisplayWindow::resumeCountdown() { stageTimer_.resume(); update(); }
+void DisplayWindow::resetCountdown() { stageTimer_.reset(); update(); }
+bool DisplayWindow::configureStageTimer(const StageTimerConfiguration &configuration, QString *error) {
+    if (!stageTimer_.configure(configuration, error)) return false;
+    update();
+    return true;
+}
+void DisplayWindow::setStageTimerVisible(bool visible, bool overlay) {
+    timerVisible_ = visible;
+    timerOverlay_ = visible && overlay;
+    update();
+}
+bool DisplayWindow::stageTimerVisible() const {
+    const bool hasTimer = stageLayout_.id != "standard" && std::any_of(stageLayout_.elements.cbegin(), stageLayout_.elements.cend(),
+        [](const StageElement &element) { return element.kind == StageElement::Kind::Countdown; });
+    return timerVisible_ && (timerOverlay_ || hasTimer);
+}
 StageRuntime DisplayWindow::stageRuntime() const {
-    const qint64 remaining = qMax<qint64>(0, countdownRemainingMs_ - (countdownRunning_ ? countdownClock_.elapsed() : 0));
-    return {stageMessage_, remaining, countdownRunning_ && remaining > 0};
+    const auto reading = stageTimer_.reading();
+    StageRuntime runtime{stageMessage_, reading.valueMs, reading.state == StageTimerReading::State::Running};
+    runtime.timerVisible = timerVisible_;
+    runtime.timerWarning = reading.warning;
+    runtime.timerOverrun = reading.overrun;
+    runtime.timerFinished = reading.atEnd;
+    runtime.timerName = stageTimer_.configuration().name;
+    runtime.timerText = reading.text;
+    return runtime;
 }
 
 void DisplayWindow::paintOutput(QPainter &p, const QRect &destination, const OutputConfiguration *preview, const StageLayout *layoutPreview) {
@@ -271,10 +306,23 @@ void DisplayWindow::paintOutput(QPainter &p, const QRect &destination, const Out
         // output maps that canvas independently without restarting playback.
         p.scale(content.width() / 1920., content.height() / 1080.);
         paintAudience(p, QRect(0, 0, 1920, 1080));
-    } else if (layout.id == QStringLiteral("standard")) {
-        paintStage(p, QRect(0, 0, qRound(content.width()), qRound(content.height())));
     } else {
-        paintStageLayout(p, QRectF(0, 0, content.width(), content.height()), layout, controller_->state(), stageRuntime());
+        const auto runtime = stageRuntime();
+        const bool hasTimer = layout.id != "standard" && std::any_of(layout.elements.cbegin(), layout.elements.cend(),
+            [](const StageElement &element) { return element.kind == StageElement::Kind::Countdown; });
+        const bool overlay = timerVisible_ && timerOverlay_ && !hasTimer;
+        const qreal height = overlay ? content.height() * .78 : content.height();
+        if (layout.id == "standard") paintStage(p, QRect(0, 0, qRound(content.width()), qRound(height)));
+        else paintStageLayout(p, QRectF(0, 0, content.width(), height), layout, controller_->state(), runtime);
+        if (overlay) {
+            p.fillRect(QRectF(0, height, content.width(), content.height() - height), QColor("#0c0f15"));
+            const QColor color = runtime.timerOverrun || runtime.timerFinished ? QColor("#ff6b6b")
+                : runtime.timerWarning ? QColor("#f5c252") : QColor("#ffffff");
+            drawFittedText(p, QRect(0, qRound(height), qRound(content.width()), qRound(content.height() * .055)),
+                runtime.timerName, qMax(8, qRound(content.height() * .04)), 6, QColor("#9ba5b4"));
+            drawFittedText(p, QRect(0, qRound(height + content.height() * .055), qRound(content.width()), qRound(content.height() * .16)),
+                runtime.timerText, qMax(12, qRound(content.height() * .14)), 8, color, true);
+        }
     }
     p.restore();
 }
@@ -313,6 +361,7 @@ void DisplayWindow::drawFittedText(QPainter &p, const QRect &rect, const QString
 
 void DisplayWindow::paintEvent(QPaintEvent *) {
     QPainter p(this);
+    if (!canShowLive()) { p.fillRect(rect(), Qt::black); return; }
     p.setRenderHint(QPainter::Antialiasing);
     p.setRenderHint(QPainter::TextAntialiasing);
     p.setRenderHint(QPainter::SmoothPixmapTransform);

@@ -162,6 +162,32 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named WorshipCueLicensing
+
+# Build rule for target.
+WorshipCueLicensing: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueLicensing
+.PHONY : WorshipCueLicensing
+
+# fast build rule for target.
+WorshipCueLicensing/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/build
+.PHONY : WorshipCueLicensing/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueLicenseCheck
+
+# Build rule for target.
+WorshipCueLicenseCheck: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueLicenseCheck
+.PHONY : WorshipCueLicenseCheck
+
+# fast build rule for target.
+WorshipCueLicenseCheck/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicenseCheck.dir/build.make CMakeFiles/WorshipCueLicenseCheck.dir/build
+.PHONY : WorshipCueLicenseCheck/fast
+
+#=============================================================================
 # Target rules for targets named WorshipCueMidiModel
 
 # Build rule for target.
@@ -238,6 +264,58 @@ WorshipCueMcpBundle: cmake_check_build_system
 WorshipCueMcpBundle/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcpBundle.dir/build.make CMakeFiles/WorshipCueMcpBundle.dir/build
 .PHONY : WorshipCueMcpBundle/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueLicensing_autogen_timestamp_deps
+
+# Build rule for target.
+WorshipCueLicensing_autogen_timestamp_deps: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueLicensing_autogen_timestamp_deps
+.PHONY : WorshipCueLicensing_autogen_timestamp_deps
+
+# fast build rule for target.
+WorshipCueLicensing_autogen_timestamp_deps/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing_autogen_timestamp_deps.dir/build.make CMakeFiles/WorshipCueLicensing_autogen_timestamp_deps.dir/build
+.PHONY : WorshipCueLicensing_autogen_timestamp_deps/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueLicensing_autogen
+
+# Build rule for target.
+WorshipCueLicensing_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueLicensing_autogen
+.PHONY : WorshipCueLicensing_autogen
+
+# fast build rule for target.
+WorshipCueLicensing_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing_autogen.dir/build.make CMakeFiles/WorshipCueLicensing_autogen.dir/build
+.PHONY : WorshipCueLicensing_autogen/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueLicenseCheck_autogen_timestamp_deps
+
+# Build rule for target.
+WorshipCueLicenseCheck_autogen_timestamp_deps: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueLicenseCheck_autogen_timestamp_deps
+.PHONY : WorshipCueLicenseCheck_autogen_timestamp_deps
+
+# fast build rule for target.
+WorshipCueLicenseCheck_autogen_timestamp_deps/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicenseCheck_autogen_timestamp_deps.dir/build.make CMakeFiles/WorshipCueLicenseCheck_autogen_timestamp_deps.dir/build
+.PHONY : WorshipCueLicenseCheck_autogen_timestamp_deps/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueLicenseCheck_autogen
+
+# Build rule for target.
+WorshipCueLicenseCheck_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueLicenseCheck_autogen
+.PHONY : WorshipCueLicenseCheck_autogen
+
+# fast build rule for target.
+WorshipCueLicenseCheck_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicenseCheck_autogen.dir/build.make CMakeFiles/WorshipCueLicenseCheck_autogen.dir/build
+.PHONY : WorshipCueLicenseCheck_autogen/fast
 
 #=============================================================================
 # Target rules for targets named WorshipCueMidiModel_autogen_timestamp_deps
@@ -368,6 +446,54 @@ WorshipCue_autogen: cmake_check_build_system
 WorshipCue_autogen/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue_autogen.dir/build.make CMakeFiles/WorshipCue_autogen.dir/build
 .PHONY : WorshipCue_autogen/fast
+
+WorshipCueLicenseCheck_autogen/mocs_compilation.o: WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueLicenseCheck_autogen/mocs_compilation.o
+
+# target to build an object file
+WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicenseCheck.dir/build.make CMakeFiles/WorshipCueLicenseCheck.dir/WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.o
+
+WorshipCueLicenseCheck_autogen/mocs_compilation.i: WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueLicenseCheck_autogen/mocs_compilation.i
+
+# target to preprocess a source file
+WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicenseCheck.dir/build.make CMakeFiles/WorshipCueLicenseCheck.dir/WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.i
+
+WorshipCueLicenseCheck_autogen/mocs_compilation.s: WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueLicenseCheck_autogen/mocs_compilation.s
+
+# target to generate assembly for a file
+WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicenseCheck.dir/build.make CMakeFiles/WorshipCueLicenseCheck.dir/WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueLicenseCheck_autogen/mocs_compilation.cpp.s
+
+WorshipCueLicensing_autogen/mocs_compilation.o: WorshipCueLicensing_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueLicensing_autogen/mocs_compilation.o
+
+# target to build an object file
+WorshipCueLicensing_autogen/mocs_compilation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/WorshipCueLicensing_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueLicensing_autogen/mocs_compilation.cpp.o
+
+WorshipCueLicensing_autogen/mocs_compilation.i: WorshipCueLicensing_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueLicensing_autogen/mocs_compilation.i
+
+# target to preprocess a source file
+WorshipCueLicensing_autogen/mocs_compilation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/WorshipCueLicensing_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueLicensing_autogen/mocs_compilation.cpp.i
+
+WorshipCueLicensing_autogen/mocs_compilation.s: WorshipCueLicensing_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueLicensing_autogen/mocs_compilation.s
+
+# target to generate assembly for a file
+WorshipCueLicensing_autogen/mocs_compilation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/WorshipCueLicensing_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueLicensing_autogen/mocs_compilation.cpp.s
 
 WorshipCueMcp_autogen/mocs_compilation.o: WorshipCueMcp_autogen/mocs_compilation.cpp.o
 .PHONY : WorshipCueMcp_autogen/mocs_compilation.o
@@ -512,6 +638,30 @@ build-local/.qt/rcc/qrc_WorshipCue_backgrounds.s: build-local/.qt/rcc/qrc_Worshi
 build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.s
 .PHONY : build-local/.qt/rcc/qrc_WorshipCue_backgrounds.cpp.s
+
+build-local/.qt/rcc/qrc_WorshipCue_help.o: build-local/.qt/rcc/qrc_WorshipCue_help.cpp.o
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_help.o
+
+# target to build an object file
+build-local/.qt/rcc/qrc_WorshipCue_help.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_help.cpp.o
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_help.cpp.o
+
+build-local/.qt/rcc/qrc_WorshipCue_help.i: build-local/.qt/rcc/qrc_WorshipCue_help.cpp.i
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_help.i
+
+# target to preprocess a source file
+build-local/.qt/rcc/qrc_WorshipCue_help.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_help.cpp.i
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_help.cpp.i
+
+build-local/.qt/rcc/qrc_WorshipCue_help.s: build-local/.qt/rcc/qrc_WorshipCue_help.cpp.s
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_help.s
+
+# target to generate assembly for a file
+build-local/.qt/rcc/qrc_WorshipCue_help.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_WorshipCue_help.cpp.s
+.PHONY : build-local/.qt/rcc/qrc_WorshipCue_help.cpp.s
 
 build-local/.qt/rcc/qrc_app_icons.o: build-local/.qt/rcc/qrc_app_icons.cpp.o
 .PHONY : build-local/.qt/rcc/qrc_app_icons.o
@@ -666,6 +816,57 @@ src/core/SongStructure.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/SongStructure.cpp.s
 .PHONY : src/core/SongStructure.cpp.s
 
+src/core/StageTimer.o: src/core/StageTimer.cpp.o
+.PHONY : src/core/StageTimer.o
+
+# target to build an object file
+src/core/StageTimer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o
+.PHONY : src/core/StageTimer.cpp.o
+
+src/core/StageTimer.i: src/core/StageTimer.cpp.i
+.PHONY : src/core/StageTimer.i
+
+# target to preprocess a source file
+src/core/StageTimer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.i
+.PHONY : src/core/StageTimer.cpp.i
+
+src/core/StageTimer.s: src/core/StageTimer.cpp.s
+.PHONY : src/core/StageTimer.s
+
+# target to generate assembly for a file
+src/core/StageTimer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.s
+.PHONY : src/core/StageTimer.cpp.s
+
+src/data/LibraryCleanup.o: src/data/LibraryCleanup.cpp.o
+.PHONY : src/data/LibraryCleanup.o
+
+# target to build an object file
+src/data/LibraryCleanup.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/data/LibraryCleanup.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/data/LibraryCleanup.cpp.o
+.PHONY : src/data/LibraryCleanup.cpp.o
+
+src/data/LibraryCleanup.i: src/data/LibraryCleanup.cpp.i
+.PHONY : src/data/LibraryCleanup.i
+
+# target to preprocess a source file
+src/data/LibraryCleanup.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/data/LibraryCleanup.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/data/LibraryCleanup.cpp.i
+.PHONY : src/data/LibraryCleanup.cpp.i
+
+src/data/LibraryCleanup.s: src/data/LibraryCleanup.cpp.s
+.PHONY : src/data/LibraryCleanup.s
+
+# target to generate assembly for a file
+src/data/LibraryCleanup.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/data/LibraryCleanup.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/data/LibraryCleanup.cpp.s
+.PHONY : src/data/LibraryCleanup.cpp.s
+
 src/data/LibraryRepository.o: src/data/LibraryRepository.cpp.o
 .PHONY : src/data/LibraryRepository.o
 
@@ -693,6 +894,78 @@ src/data/LibraryRepository.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.s
 .PHONY : src/data/LibraryRepository.cpp.s
 
+src/licensing/LicenseCrypto.o: src/licensing/LicenseCrypto.cpp.o
+.PHONY : src/licensing/LicenseCrypto.o
+
+# target to build an object file
+src/licensing/LicenseCrypto.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseCrypto.cpp.o
+.PHONY : src/licensing/LicenseCrypto.cpp.o
+
+src/licensing/LicenseCrypto.i: src/licensing/LicenseCrypto.cpp.i
+.PHONY : src/licensing/LicenseCrypto.i
+
+# target to preprocess a source file
+src/licensing/LicenseCrypto.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseCrypto.cpp.i
+.PHONY : src/licensing/LicenseCrypto.cpp.i
+
+src/licensing/LicenseCrypto.s: src/licensing/LicenseCrypto.cpp.s
+.PHONY : src/licensing/LicenseCrypto.s
+
+# target to generate assembly for a file
+src/licensing/LicenseCrypto.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseCrypto.cpp.s
+.PHONY : src/licensing/LicenseCrypto.cpp.s
+
+src/licensing/LicenseManager.o: src/licensing/LicenseManager.cpp.o
+.PHONY : src/licensing/LicenseManager.o
+
+# target to build an object file
+src/licensing/LicenseManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseManager.cpp.o
+.PHONY : src/licensing/LicenseManager.cpp.o
+
+src/licensing/LicenseManager.i: src/licensing/LicenseManager.cpp.i
+.PHONY : src/licensing/LicenseManager.i
+
+# target to preprocess a source file
+src/licensing/LicenseManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseManager.cpp.i
+.PHONY : src/licensing/LicenseManager.cpp.i
+
+src/licensing/LicenseManager.s: src/licensing/LicenseManager.cpp.s
+.PHONY : src/licensing/LicenseManager.s
+
+# target to generate assembly for a file
+src/licensing/LicenseManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseManager.cpp.s
+.PHONY : src/licensing/LicenseManager.cpp.s
+
+src/licensing/LicenseStore.o: src/licensing/LicenseStore.cpp.o
+.PHONY : src/licensing/LicenseStore.o
+
+# target to build an object file
+src/licensing/LicenseStore.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseStore.cpp.o
+.PHONY : src/licensing/LicenseStore.cpp.o
+
+src/licensing/LicenseStore.i: src/licensing/LicenseStore.cpp.i
+.PHONY : src/licensing/LicenseStore.i
+
+# target to preprocess a source file
+src/licensing/LicenseStore.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseStore.cpp.i
+.PHONY : src/licensing/LicenseStore.cpp.i
+
+src/licensing/LicenseStore.s: src/licensing/LicenseStore.cpp.s
+.PHONY : src/licensing/LicenseStore.s
+
+# target to generate assembly for a file
+src/licensing/LicenseStore.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicensing.dir/build.make CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseStore.cpp.s
+.PHONY : src/licensing/LicenseStore.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -717,6 +990,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/mcp/McpConnectionProbe.o: src/mcp/McpConnectionProbe.cpp.o
+.PHONY : src/mcp/McpConnectionProbe.o
+
+# target to build an object file
+src/mcp/McpConnectionProbe.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/mcp/McpConnectionProbe.cpp.o
+.PHONY : src/mcp/McpConnectionProbe.cpp.o
+
+src/mcp/McpConnectionProbe.i: src/mcp/McpConnectionProbe.cpp.i
+.PHONY : src/mcp/McpConnectionProbe.i
+
+# target to preprocess a source file
+src/mcp/McpConnectionProbe.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/mcp/McpConnectionProbe.cpp.i
+.PHONY : src/mcp/McpConnectionProbe.cpp.i
+
+src/mcp/McpConnectionProbe.s: src/mcp/McpConnectionProbe.cpp.s
+.PHONY : src/mcp/McpConnectionProbe.s
+
+# target to generate assembly for a file
+src/mcp/McpConnectionProbe.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/mcp/McpConnectionProbe.cpp.s
+.PHONY : src/mcp/McpConnectionProbe.cpp.s
+
 src/mcp/McpCreationTools.o: src/mcp/McpCreationTools.cpp.o
 .PHONY : src/mcp/McpCreationTools.o
 
@@ -740,6 +1037,30 @@ src/mcp/McpCreationTools.s: src/mcp/McpCreationTools.cpp.s
 src/mcp/McpCreationTools.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.s
 .PHONY : src/mcp/McpCreationTools.cpp.s
+
+src/mcp/McpLibraryTools.o: src/mcp/McpLibraryTools.cpp.o
+.PHONY : src/mcp/McpLibraryTools.o
+
+# target to build an object file
+src/mcp/McpLibraryTools.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpLibraryTools.cpp.o
+.PHONY : src/mcp/McpLibraryTools.cpp.o
+
+src/mcp/McpLibraryTools.i: src/mcp/McpLibraryTools.cpp.i
+.PHONY : src/mcp/McpLibraryTools.i
+
+# target to preprocess a source file
+src/mcp/McpLibraryTools.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpLibraryTools.cpp.i
+.PHONY : src/mcp/McpLibraryTools.cpp.i
+
+src/mcp/McpLibraryTools.s: src/mcp/McpLibraryTools.cpp.s
+.PHONY : src/mcp/McpLibraryTools.s
+
+# target to generate assembly for a file
+src/mcp/McpLibraryTools.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/mcp/McpLibraryTools.cpp.s
+.PHONY : src/mcp/McpLibraryTools.cpp.s
 
 src/mcp/McpServer.o: src/mcp/McpServer.cpp.o
 .PHONY : src/mcp/McpServer.o
@@ -988,6 +1309,78 @@ src/ui/DisplayWindow.s: src/ui/DisplayWindow.cpp.s
 src/ui/DisplayWindow.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/DisplayWindow.cpp.s
 .PHONY : src/ui/DisplayWindow.cpp.s
+
+src/ui/HelpDialog.o: src/ui/HelpDialog.cpp.o
+.PHONY : src/ui/HelpDialog.o
+
+# target to build an object file
+src/ui/HelpDialog.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/HelpDialog.cpp.o
+.PHONY : src/ui/HelpDialog.cpp.o
+
+src/ui/HelpDialog.i: src/ui/HelpDialog.cpp.i
+.PHONY : src/ui/HelpDialog.i
+
+# target to preprocess a source file
+src/ui/HelpDialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/HelpDialog.cpp.i
+.PHONY : src/ui/HelpDialog.cpp.i
+
+src/ui/HelpDialog.s: src/ui/HelpDialog.cpp.s
+.PHONY : src/ui/HelpDialog.s
+
+# target to generate assembly for a file
+src/ui/HelpDialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/HelpDialog.cpp.s
+.PHONY : src/ui/HelpDialog.cpp.s
+
+src/ui/LibraryCleanupDialog.o: src/ui/LibraryCleanupDialog.cpp.o
+.PHONY : src/ui/LibraryCleanupDialog.o
+
+# target to build an object file
+src/ui/LibraryCleanupDialog.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/LibraryCleanupDialog.cpp.o
+.PHONY : src/ui/LibraryCleanupDialog.cpp.o
+
+src/ui/LibraryCleanupDialog.i: src/ui/LibraryCleanupDialog.cpp.i
+.PHONY : src/ui/LibraryCleanupDialog.i
+
+# target to preprocess a source file
+src/ui/LibraryCleanupDialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/LibraryCleanupDialog.cpp.i
+.PHONY : src/ui/LibraryCleanupDialog.cpp.i
+
+src/ui/LibraryCleanupDialog.s: src/ui/LibraryCleanupDialog.cpp.s
+.PHONY : src/ui/LibraryCleanupDialog.s
+
+# target to generate assembly for a file
+src/ui/LibraryCleanupDialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/LibraryCleanupDialog.cpp.s
+.PHONY : src/ui/LibraryCleanupDialog.cpp.s
+
+src/ui/LicenseDialog.o: src/ui/LicenseDialog.cpp.o
+.PHONY : src/ui/LicenseDialog.o
+
+# target to build an object file
+src/ui/LicenseDialog.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/LicenseDialog.cpp.o
+.PHONY : src/ui/LicenseDialog.cpp.o
+
+src/ui/LicenseDialog.i: src/ui/LicenseDialog.cpp.i
+.PHONY : src/ui/LicenseDialog.i
+
+# target to preprocess a source file
+src/ui/LicenseDialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/LicenseDialog.cpp.i
+.PHONY : src/ui/LicenseDialog.cpp.i
+
+src/ui/LicenseDialog.s: src/ui/LicenseDialog.cpp.s
+.PHONY : src/ui/LicenseDialog.s
+
+# target to generate assembly for a file
+src/ui/LicenseDialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/LicenseDialog.cpp.s
+.PHONY : src/ui/LicenseDialog.cpp.s
 
 src/ui/MainWindow.o: src/ui/MainWindow.cpp.o
 .PHONY : src/ui/MainWindow.o
@@ -1453,6 +1846,30 @@ src/ui/StageLayoutDialog.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/StageLayoutDialog.cpp.s
 .PHONY : src/ui/StageLayoutDialog.cpp.s
 
+tools/check-license.o: tools/check-license.cpp.o
+.PHONY : tools/check-license.o
+
+# target to build an object file
+tools/check-license.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicenseCheck.dir/build.make CMakeFiles/WorshipCueLicenseCheck.dir/tools/check-license.cpp.o
+.PHONY : tools/check-license.cpp.o
+
+tools/check-license.i: tools/check-license.cpp.i
+.PHONY : tools/check-license.i
+
+# target to preprocess a source file
+tools/check-license.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicenseCheck.dir/build.make CMakeFiles/WorshipCueLicenseCheck.dir/tools/check-license.cpp.i
+.PHONY : tools/check-license.cpp.i
+
+tools/check-license.s: tools/check-license.cpp.s
+.PHONY : tools/check-license.s
+
+# target to generate assembly for a file
+tools/check-license.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueLicenseCheck.dir/build.make CMakeFiles/WorshipCueLicenseCheck.dir/tools/check-license.cpp.s
+.PHONY : tools/check-license.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -1465,6 +1882,10 @@ help:
 	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
+	@echo "... WorshipCueLicenseCheck_autogen"
+	@echo "... WorshipCueLicenseCheck_autogen_timestamp_deps"
+	@echo "... WorshipCueLicensing_autogen"
+	@echo "... WorshipCueLicensing_autogen_timestamp_deps"
 	@echo "... WorshipCueMcpBundle"
 	@echo "... WorshipCueMcp_autogen"
 	@echo "... WorshipCueMcp_autogen_timestamp_deps"
@@ -1477,10 +1898,18 @@ help:
 	@echo "... WorshipCue_autogen"
 	@echo "... WorshipCue_autogen_timestamp_deps"
 	@echo "... WorshipCue"
+	@echo "... WorshipCueLicenseCheck"
+	@echo "... WorshipCueLicensing"
 	@echo "... WorshipCueMcp"
 	@echo "... WorshipCueMidi"
 	@echo "... WorshipCueMidiModel"
 	@echo "... WorshipCueOutputSupport"
+	@echo "... WorshipCueLicenseCheck_autogen/mocs_compilation.o"
+	@echo "... WorshipCueLicenseCheck_autogen/mocs_compilation.i"
+	@echo "... WorshipCueLicenseCheck_autogen/mocs_compilation.s"
+	@echo "... WorshipCueLicensing_autogen/mocs_compilation.o"
+	@echo "... WorshipCueLicensing_autogen/mocs_compilation.i"
+	@echo "... WorshipCueLicensing_autogen/mocs_compilation.s"
 	@echo "... WorshipCueMcp_autogen/mocs_compilation.o"
 	@echo "... WorshipCueMcp_autogen/mocs_compilation.i"
 	@echo "... WorshipCueMcp_autogen/mocs_compilation.s"
@@ -1499,6 +1928,9 @@ help:
 	@echo "... build-local/.qt/rcc/qrc_WorshipCue_backgrounds.o"
 	@echo "... build-local/.qt/rcc/qrc_WorshipCue_backgrounds.i"
 	@echo "... build-local/.qt/rcc/qrc_WorshipCue_backgrounds.s"
+	@echo "... build-local/.qt/rcc/qrc_WorshipCue_help.o"
+	@echo "... build-local/.qt/rcc/qrc_WorshipCue_help.i"
+	@echo "... build-local/.qt/rcc/qrc_WorshipCue_help.s"
 	@echo "... build-local/.qt/rcc/qrc_app_icons.o"
 	@echo "... build-local/.qt/rcc/qrc_app_icons.i"
 	@echo "... build-local/.qt/rcc/qrc_app_icons.s"
@@ -1517,15 +1949,36 @@ help:
 	@echo "... src/core/SongStructure.o"
 	@echo "... src/core/SongStructure.i"
 	@echo "... src/core/SongStructure.s"
+	@echo "... src/core/StageTimer.o"
+	@echo "... src/core/StageTimer.i"
+	@echo "... src/core/StageTimer.s"
+	@echo "... src/data/LibraryCleanup.o"
+	@echo "... src/data/LibraryCleanup.i"
+	@echo "... src/data/LibraryCleanup.s"
 	@echo "... src/data/LibraryRepository.o"
 	@echo "... src/data/LibraryRepository.i"
 	@echo "... src/data/LibraryRepository.s"
+	@echo "... src/licensing/LicenseCrypto.o"
+	@echo "... src/licensing/LicenseCrypto.i"
+	@echo "... src/licensing/LicenseCrypto.s"
+	@echo "... src/licensing/LicenseManager.o"
+	@echo "... src/licensing/LicenseManager.i"
+	@echo "... src/licensing/LicenseManager.s"
+	@echo "... src/licensing/LicenseStore.o"
+	@echo "... src/licensing/LicenseStore.i"
+	@echo "... src/licensing/LicenseStore.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/mcp/McpConnectionProbe.o"
+	@echo "... src/mcp/McpConnectionProbe.i"
+	@echo "... src/mcp/McpConnectionProbe.s"
 	@echo "... src/mcp/McpCreationTools.o"
 	@echo "... src/mcp/McpCreationTools.i"
 	@echo "... src/mcp/McpCreationTools.s"
+	@echo "... src/mcp/McpLibraryTools.o"
+	@echo "... src/mcp/McpLibraryTools.i"
+	@echo "... src/mcp/McpLibraryTools.s"
 	@echo "... src/mcp/McpServer.o"
 	@echo "... src/mcp/McpServer.i"
 	@echo "... src/mcp/McpServer.s"
@@ -1557,6 +2010,15 @@ help:
 	@echo "... src/ui/DisplayWindow.o"
 	@echo "... src/ui/DisplayWindow.i"
 	@echo "... src/ui/DisplayWindow.s"
+	@echo "... src/ui/HelpDialog.o"
+	@echo "... src/ui/HelpDialog.i"
+	@echo "... src/ui/HelpDialog.s"
+	@echo "... src/ui/LibraryCleanupDialog.o"
+	@echo "... src/ui/LibraryCleanupDialog.i"
+	@echo "... src/ui/LibraryCleanupDialog.s"
+	@echo "... src/ui/LicenseDialog.o"
+	@echo "... src/ui/LicenseDialog.i"
+	@echo "... src/ui/LicenseDialog.s"
 	@echo "... src/ui/MainWindow.o"
 	@echo "... src/ui/MainWindow.i"
 	@echo "... src/ui/MainWindow.s"
@@ -1615,6 +2077,9 @@ help:
 	@echo "... src/ui/StageLayoutDialog.o"
 	@echo "... src/ui/StageLayoutDialog.i"
 	@echo "... src/ui/StageLayoutDialog.s"
+	@echo "... tools/check-license.o"
+	@echo "... tools/check-license.i"
+	@echo "... tools/check-license.s"
 .PHONY : help
 
 

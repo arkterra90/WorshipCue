@@ -1488,16 +1488,21 @@ int LibraryRepository::createServiceOrder(const QString &name, const QVector<Ser
     qsizetype totalSlides = 0;
     qsizetype totalOrder = 0;
     for (const auto &item : items) {
-        if (item.songId < 0)
-            return reject(QStringLiteral("An existing presentation ID must be a positive integer."));
-        if (item.songId > 0) {
-            if (!item.title.isEmpty() || !item.slides.isEmpty())
+        if (item.songId < 0 || item.mediaAssetId < 0 || (item.songId && item.mediaAssetId))
+            return reject(QStringLiteral("Use one positive presentation or media asset ID."));
+        if (item.mediaAssetId > 0) {
+            if (!item.title.isEmpty() || !item.slides.isEmpty() || !item.slideOrder.isEmpty() || !item.structure.isEmpty())
+                return reject(QStringLiteral("A media item uses only mediaAssetId and has one cue."));
+        } else if (item.songId > 0) {
+            if (!item.title.isEmpty() || !item.slides.isEmpty() || !item.structure.isEmpty())
                 return reject(QStringLiteral("Use an existing presentation ID or a new title and slides, not both."));
         } else {
             if (item.title.trimmed().isEmpty() || item.title.size() > 256 || item.title.contains(QChar::Null))
                 return reject(QStringLiteral("A new presentation needs a title of 1 to 256 characters without null characters."));
             if (item.slides.isEmpty() || item.slides.size() > 1000)
                 return reject(QStringLiteral("A new presentation must contain 1 to 1000 text slides."));
+            QString structureError;
+            if (!item.structure.validate(int(item.slides.size()), &structureError)) return reject(structureError);
             totalSlides += item.slides.size();
             if (totalSlides > 5000)
                 return reject(QStringLiteral("A service order can create at most 5000 text slides."));
@@ -1520,9 +1525,15 @@ int LibraryRepository::createServiceOrder(const QString &name, const QVector<Ser
     // before creating the service or any new library presentations.
     QSqlQuery query(db_);
     query.prepare(QStringLiteral("SELECT COUNT(slides.id) FROM songs LEFT JOIN slides ON slides.song_id=songs.id "
-                                 "WHERE songs.id=? GROUP BY songs.id"));
+                                 "WHERE songs.id=? AND NOT EXISTS(SELECT 1 FROM content_usage u WHERE u.song_id=songs.id AND u.archived_batch IS NOT NULL) GROUP BY songs.id"));
     for (const auto &item : items) {
         int count = int(item.slides.size());
+        if (item.mediaAssetId > 0) {
+            const auto asset = mediaAsset(item.mediaAssetId);
+            if (!lastError_.isEmpty()) return reject(lastError_);
+            if (!asset.id) return reject(QStringLiteral("Media asset %1 no longer exists.").arg(item.mediaAssetId));
+            continue;
+        }
         if (item.songId > 0) {
             query.bindValue(0, item.songId);
             if (!query.exec()) return reject(query.lastError().text());
@@ -1542,18 +1553,20 @@ int LibraryRepository::createServiceOrder(const QString &name, const QVector<Ser
     for (int position = 0; position < items.size(); ++position) {
         const auto &item = items.at(position);
         int songId = item.songId;
-        if (songId == 0) {
-            query.prepare(QStringLiteral("INSERT INTO songs(title) VALUES(?)"));
+        if (songId == 0 && item.mediaAssetId == 0) {
+            query.prepare(QStringLiteral("INSERT INTO songs(title,song_structure) VALUES(?,?)"));
             query.addBindValue(item.title.trimmed());
+            query.addBindValue(item.structure.toJson());
             if (!query.exec()) return reject(query.lastError().text());
             songId = query.lastInsertId().toInt();
             if (!storeSlides(songId, item.slides, error)) return 0;
         }
-        query.prepare(QStringLiteral("INSERT INTO service_entries(service_id,song_id,position,slide_order) VALUES(?,?,?,?)"));
+        query.prepare(QStringLiteral("INSERT INTO service_entries(service_id,song_id,position,slide_order,media_asset_id) VALUES(?,?,?,?,?)"));
         query.addBindValue(serviceId);
-        query.addBindValue(songId);
+        query.addBindValue(songId ? QVariant(songId) : QVariant());
         query.addBindValue(position);
         query.addBindValue(item.slideOrder.isEmpty() ? QVariant() : QVariant(encodedOrder(item.slideOrder)));
+        query.addBindValue(item.mediaAssetId ? QVariant(item.mediaAssetId) : QVariant());
         if (!query.exec()) return reject(query.lastError().text());
     }
     if (!transaction.commit()) return reject(db_.lastError().text());

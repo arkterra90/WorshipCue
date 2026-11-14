@@ -15,6 +15,7 @@ OutputManager::OutputManager(PresentationController *controller, QObject *parent
       modes_(modes ? std::move(modes) : nativeDisplayModeProvider()) {
     for (const auto id : outputIds) {
         auto &window = output(id);
+        window.setLiveAuthorizationCheck([this] { return liveAuthorized(); });
         window.setWindowTitle(QStringLiteral("WorshipCue — %1").arg(outputName(id)));
         window.installEventFilter(this);
         connect(&window, &DisplayWindow::operatorFocusRequested, this, &OutputManager::operatorFocusRequested);
@@ -151,7 +152,7 @@ bool OutputManager::setConfiguration(OutputId id, const OutputConfiguration &con
     if (isStageOutput(id) && stageLayout(config.stageLayout).id != config.stageLayout) {
         if (error) *error = "Choose an existing stage layout."; return false;
     }
-    if (!applySignal(id, config, error)) return false;
+    if (liveAuthorized() && !applySignal(id, config, error)) return false;
     configurations_[int(id)] = config; errors_[int(id)].clear(); shuttingDown_ = false;
     output(id).setConfiguration(config);
     if (isStageOutput(id)) output(id).setStageLayout(stageLayout(config.stageLayout));
@@ -204,6 +205,19 @@ void OutputManager::restoreTargets() {
         if (isDisplayTarget(config.target)) { assigned.insert(config.target); if (screen) assignedScreens.insert(screen); }
         output(id).setConfiguration(config);
         if (isStageOutput(id)) output(id).setStageLayout(stageLayout(config.stageLayout));
+        if (isStageOutput(id)) {
+            const auto timerData = settings.value(QStringLiteral("outputs/stageTimer%1").arg(int(id))).toByteArray();
+            if (!timerData.isEmpty()) {
+                const auto timer = timerData.size() <= 16384 ? QJsonDocument::fromJson(timerData).object() : QJsonObject{};
+                StageTimerConfiguration timerConfiguration;
+                QString error;
+                if (timer["visible"].isBool() && timer["overlay"].isBool()
+                    && StageTimerConfiguration::fromJson(timer["configuration"].toObject(), &timerConfiguration, &error)) {
+                    output(id).configureStageTimer(timerConfiguration);
+                    output(id).setStageTimerVisible(timer["visible"].toBool(), timer["overlay"].toBool());
+                } else qWarning() << "Ignoring invalid saved stage timer" << int(id);
+            }
+        }
         persist(id); applyTarget(id);
     }
     emit layoutsChanged(); emit targetsChanged(); emit statusChanged();
@@ -211,6 +225,7 @@ void OutputManager::restoreTargets() {
 void OutputManager::applyTarget(OutputId id) {
     if (shuttingDown_) return;
     auto &window = output(id); const auto config = configuration(id); auto &active = activeScreens_[int(id)];
+    if (!liveAuthorized()) { window.hide(); active.clear(); releaseMode(modeLeases_[int(id)]); return; }
     if (config.target == "off") { window.hide(); active.clear(); return; }
     if (config.target == "preview") { active.clear(); if (!window.isVisible() || window.isFullScreen()) window.showPreview(); return; }
     auto *screen = findScreen(config.target);
@@ -225,6 +240,7 @@ void OutputManager::applyTarget(OutputId id) {
     active = screen; window.showFullscreenOn(screen);
 }
 QString OutputManager::status(OutputId id) const {
+    if (!liveAuthorized()) return "Editing only — license required";
     if (!errors_[int(id)].isEmpty()) return (target(id) == "off" ? QStringLiteral("Off — %1") : QStringLiteral("Mode unavailable: %1")).arg(errors_[int(id)]);
     const auto desired = target(id);
     if (desired == "off") return "Off";
@@ -243,6 +259,28 @@ StageLayout OutputManager::stageLayout(const QString &id) const {
 void OutputManager::persistLayouts() {
     QJsonArray saved; for (const auto &layout : layouts_) if (layout.id != "standard") saved.append(layout.toJson());
     QSettings settings; settings.setValue("outputs/stageLayouts", QJsonDocument(saved).toJson(QJsonDocument::Compact)); settings.sync();
+}
+void OutputManager::persistStageTimer(OutputId id) {
+    const auto &window = output(id);
+    const QJsonObject timer{{"configuration", window.stageTimerConfiguration().toJson()},
+        {"visible", window.stageTimerElementsVisible()}, {"overlay", window.stageTimerOverlayEnabled()}};
+    QSettings settings;
+    settings.setValue(QStringLiteral("outputs/stageTimer%1").arg(int(id)), QJsonDocument(timer).toJson(QJsonDocument::Compact));
+    settings.sync();
+}
+bool OutputManager::configureStageTimer(OutputId id, const StageTimerConfiguration &configuration, QString *error) {
+    if (error) error->clear();
+    if (!isStageOutput(id)) { if (error) *error = QStringLiteral("Choose a stage screen for this timer."); return false; }
+    if (!output(id).configureStageTimer(configuration, error)) return false;
+    persistStageTimer(id);
+    return true;
+}
+bool OutputManager::showStageTimer(OutputId id, bool visible, QString *error) {
+    if (error) error->clear();
+    if (!isStageOutput(id)) { if (error) *error = QStringLiteral("Choose a stage screen for this timer."); return false; }
+    output(id).setStageTimerVisible(visible);
+    persistStageTimer(id);
+    return true;
 }
 bool OutputManager::saveStageLayout(StageLayout layout, QString *error) {
     if (!layout.validate(error)) return false;
@@ -294,4 +332,12 @@ void OutputManager::watchScreen(QScreen *screen) {
 void OutputManager::scheduleRefresh() {
     if (refreshPending_ || shuttingDown_) return; refreshPending_ = true;
     QTimer::singleShot(0, this, [this] { refreshPending_ = false; for (auto id : outputIds) applyTarget(id); emit targetsChanged(); emit statusChanged(); });
+}
+
+void OutputManager::setLiveAuthorizationCheck(std::function<bool()> check) {
+    authorizationCheck_ = std::move(check); refreshAuthorization();
+}
+void OutputManager::refreshAuthorization() {
+    for (auto id : outputIds) applyTarget(id);
+    emit statusChanged();
 }

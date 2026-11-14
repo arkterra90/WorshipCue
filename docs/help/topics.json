@@ -1,0 +1,18 @@
+[
+  {"id": "getting-started", "title": "Getting started"},
+  {"id": "creating-presentations", "title": "Creating presentations"},
+  {"id": "content-library", "title": "Content Library"},
+  {"id": "media-library", "title": "Media Library"},
+  {"id": "service-playlists", "title": "Service playlists"},
+  {"id": "songs-arrangements", "title": "Songs and arrangements"},
+  {"id": "formatting-looks", "title": "Slide formatting and Looks"},
+  {"id": "navigation", "title": "Presentation navigation"},
+  {"id": "outputs-stage", "title": "Audience and stage displays"},
+  {"id": "transitions", "title": "Transitions and fades"},
+  {"id": "midi", "title": "MIDI configuration"},
+  {"id": "mcp", "title": "MCP configuration and usage"},
+  {"id": "licensing", "title": "License activation and devices"},
+  {"id": "storage", "title": "Storage management and Recovery"},
+  {"id": "troubleshooting", "title": "Troubleshooting"},
+  {"id": "shortcuts", "title": "Keyboard reference"}
+]

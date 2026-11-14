@@ -1,4 +1,8 @@
 #include "MainWindow.h"
+#include "BuildInformation.h"
+#include "HelpDialog.h"
+#include "LicenseDialog.h"
+#include "../mcp/McpConnectionProbe.h"
 #include "MidiDialogs.h"
 #include "LibraryCleanupDialog.h"
 #include <QUuid>
@@ -64,6 +68,7 @@
 #include <QTabBar>
 #include <QStatusBar>
 #include <QTextEdit>
+#include <QToolButton>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <algorithm>
@@ -161,10 +166,10 @@ QString transitionName(SlideTransitionType type) {
 }
 }
 
-MainWindow::MainWindow(QWidget *parent, std::unique_ptr<MidiBackend> midiBackend)
-    : QMainWindow(parent), controller_(this), outputs_(&controller_, this), playback_(&controller_, this), midi_(this, std::move(midiBackend)) {
+MainWindow::MainWindow(QWidget *parent, std::unique_ptr<MidiBackend> midiBackend, std::unique_ptr<LicenseManager> license)
+    : QMainWindow(parent), license_(license ? std::move(license) : std::make_unique<LicenseManager>()), controller_(this), outputs_(&controller_, this), playback_(&controller_, this), midi_(this, std::move(midiBackend)) {
     cleanupLeaseOwner_ = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    setWindowTitle(QStringLiteral("WorshipCue | Service Control"));
+    setWindowTitle(QStringLiteral("WorshipCue | Service Control") + (BuildInformation::channel() == "release" ? QString{} : QStringLiteral(" — %1").arg(BuildInformation::label())));
     resize(1440, 860);
     setMinimumSize(1080, 680);
     controller_.setObjectName(QStringLiteral("presentationController"));
@@ -178,8 +183,16 @@ MainWindow::MainWindow(QWidget *parent, std::unique_ptr<MidiBackend> midiBackend
     if (!programSettings_.isValid()) programSettings_ = {};
     controller_.setGlobalTransitionDefaults(programSettings_);
     buildUi();
+    license_->setParent(this);
+    controller_.setLiveAuthorizationCheck([this] { return license_->liveAllowed(); });
+    midi_.setLiveAuthorizationCheck([this] { return license_->liveAllowed(); });
+    outputs_.setLiveAuthorizationCheck([this] { return license_->liveAllowed(); });
+    connect(license_.get(), &LicenseManager::changed, this, &MainWindow::updateLicense);
+    license_->start();
+    if (!license_->liveAllowed()) mode_->setCurrentIndex(1);
+    updateLicense();
     midi_.setObjectName(QStringLiteral("midiEngine"));
-    midi_.setDispatchGate([this] { return mode_->currentIndex() == 0 && !QApplication::activeModalWidget() && !QApplication::activePopupWidget(); });
+    midi_.setDispatchGate([this] { return license_->liveAllowed() && mode_->currentIndex() == 0 && !QApplication::activeModalWidget() && !QApplication::activePopupWidget(); });
     connect(&midi_, &MidiEngine::commandRequested, this, &MainWindow::dispatchMidi);
     connect(&controller_, &PresentationController::stateChanged, this, [this] {
         const auto &state = controller_.state();
@@ -342,6 +355,18 @@ void MainWindow::buildUi() {
         QPushButton:disabled { color: #768394; }
         QPushButton#takeLive { background: #237651; border-color: #4ac28c; }
         QPushButton:checked { background: #913c3c; border-color: #e58d82; }
+        QToolButton#presentationTools { background: transparent; color: #b8c9e0;
+            border: 1px solid transparent; border-radius: 4px;
+            padding: 4px 18px 4px 8px; font-size: 12px; }
+        QToolButton#presentationTools::menu-indicator { width: 8px; height: 8px;
+            subcontrol-position: right center; right: 5px; }
+        QToolButton#presentationTools:hover, QToolButton#presentationTools:pressed {
+            background: #263347; color: #eaf0f8; border-color: #455976; }
+        QToolButton#stageTimersButton { background: transparent; color: #b8c9e0;
+            border: 1px solid transparent; border-radius: 4px; padding: 4px 8px; font-size: 12px; }
+        QToolButton#stageTimersButton:hover, QToolButton#stageTimersButton:pressed {
+            background: #263347; color: #eaf0f8; border-color: #455976; }
+        QLabel#selectedTimingInfo { color: #a5b2c5; font-size: 11px; }
         QMenuBar, QMenu, QStatusBar { background: #202a3a; }
         QTabWidget::pane { border: 0; }
         QTabBar::tab { background: #202a3a; color: #b8c9e0; padding: 5px 10px;
@@ -375,6 +400,14 @@ void MainWindow::buildUi() {
     programTransitionAction->setObjectName(QStringLiteral("programTransitionsAction"));
     connect(programTransitionAction, &QAction::triggered, this, &MainWindow::configureProgramTransitions);
     auto *settingsMenu = menuBar()->addMenu(QStringLiteral("&Settings"));
+    auto *licenseAction = settingsMenu->addAction(QStringLiteral("License Activation && Devices…"));
+    licenseAction->setObjectName("licenseAction");
+    connect(licenseAction, &QAction::triggered, this, &MainWindow::showLicense);
+    licenseStatus_ = new QLabel(this); licenseStatus_->setObjectName("licenseModeStatus");
+    statusBar()->addPermanentWidget(licenseStatus_);
+    auto *activateLicense = new QPushButton(QStringLiteral("License…"), this);
+    connect(activateLicense, &QPushButton::clicked, this, &MainWindow::showLicense);
+    statusBar()->addPermanentWidget(activateLicense);
     settingsMenu->addAction(programTransitionAction);
     auto *screensAction = settingsMenu->addAction(QStringLiteral("Screens / Output Settings…"));
     screensAction->setObjectName(QStringLiteral("outputSettingsAction"));
@@ -384,7 +417,7 @@ void MainWindow::buildUi() {
     connect(stageLayoutAction, &QAction::triggered, this, [this] { StageLayoutDialog dialog(&outputs_, this); dialog.exec(); });
     auto *stageControlsAction = settingsMenu->addAction(QStringLiteral("Stage Messages / Timers…"));
     stageControlsAction->setObjectName(QStringLiteral("stageControlsAction"));
-    connect(stageControlsAction, &QAction::triggered, this, [this] { StageControlsDialog dialog(&outputs_, this); dialog.exec(); });
+    connect(stageControlsAction, &QAction::triggered, this, &MainWindow::showStageControls);
     auto *cleanupAction = settingsMenu->addAction(QStringLiteral("Library Cleanup / Storage…"));
     cleanupAction->setObjectName(QStringLiteral("libraryCleanupAction"));
     connect(cleanupAction, &QAction::triggered, this, &MainWindow::configureCleanup);
@@ -406,6 +439,15 @@ void MainWindow::buildUi() {
     });
     connect(fileMenu->addAction(QStringLiteral("Keyboard Shortcuts…")), &QAction::triggered, this, &MainWindow::configureShortcuts);
     connect(fileMenu->addAction(QStringLiteral("Quit")), &QAction::triggered, this, &QWidget::close);
+    auto *helpMenu = menuBar()->addMenu(QStringLiteral("&Help"));
+    helpMenu->setObjectName(QStringLiteral("helpMenu"));
+    auto *helpAction = helpMenu->addAction(QStringLiteral("WorshipCue Help…"));
+    helpAction->setObjectName(QStringLiteral("helpAction"));
+    helpAction->setShortcuts(QKeySequence::HelpContents);
+    connect(helpAction, &QAction::triggered, this, [this] { showHelp(); });
+    auto *keyboardReference = helpMenu->addAction(QStringLiteral("Keyboard Reference…"));
+    keyboardReference->setObjectName(QStringLiteral("keyboardReferenceAction"));
+    connect(keyboardReference, &QAction::triggered, this, [this] { showHelp(QStringLiteral("shortcuts")); });
 
     auto *root = new QWidget(this);
     auto *layout = new QVBoxLayout(root);
@@ -436,6 +478,15 @@ void MainWindow::buildUi() {
     stageTarget_->setMinimumWidth(155);
     stageTarget_->setMaximumWidth(230);
     toolbar->addWidget(stageTarget_);
+    auto *timersButton = new QToolButton(root);
+    timersButton->setObjectName(QStringLiteral("stageTimersButton"));
+    timersButton->setText(QStringLiteral("Timers…"));
+    timersButton->setAccessibleName(QStringLiteral("Confidence monitor timers"));
+    timersButton->setToolTip(QStringLiteral("Set, start, and display a timer on a confidence monitor."));
+    timersButton->setAutoRaise(true);
+    timersButton->setCursor(Qt::PointingHandCursor);
+    toolbar->addWidget(timersButton);
+    connect(timersButton, &QToolButton::clicked, stageControlsAction, &QAction::trigger);
     auto *screensButton = button(QStringLiteral("Screens…"), root, QStringLiteral("outputSettingsButton"));
     toolbar->addWidget(screensButton);
     connect(screensButton, &QPushButton::clicked, screensAction, &QAction::trigger);
@@ -701,32 +752,38 @@ void MainWindow::buildUi() {
     auto *workspace = column(split, &center);
     selectedInfo_ = header(QStringLiteral("SLIDES"), workspace);
     selectedInfo_->setObjectName(QStringLiteral("selectedInfo"));
-    center->addWidget(selectedInfo_);
-    auto *hint = new QLabel(QStringLiteral("Show: click to go live • Edit: double-click to edit text, drag to arrange"), workspace);
-    hint->setObjectName(QStringLiteral("hint"));
-    hint->setWordWrap(true);
-    center->addWidget(hint);
-    auto *sectionTools = new QHBoxLayout;
-    auto *sections = button(QStringLiteral("Song Sections / Arrangements…"), workspace, QStringLiteral("editSongStructure"));
-    songSections_ = sections;
-    sectionTools->addWidget(sections);
-    auto *looks = button(QStringLiteral("Looks / Reflow…"), workspace, QStringLiteral("configureLooks"));
-    looksButton_ = looks;
-    sectionTools->addWidget(looks);
-    connect(looks, &QPushButton::clicked, this, &MainWindow::configureLooks);
-    auto *midiSlide = button(QStringLiteral("Slide MIDI…"), workspace, QStringLiteral("configureSlideMidi"));
-    sectionTools->addWidget(midiSlide);
-    connect(midiSlide, &QPushButton::clicked, this, &MainWindow::configureMidiSlide);
-    center->addLayout(sectionTools);
-    connect(sections, &QPushButton::clicked, this, &MainWindow::editSongStructure);
-    auto *presentationTools = new QHBoxLayout;
-    editSlide_ = button(QStringLiteral("Edit Slide Text…"), workspace, QStringLiteral("editSlideText"));
+    auto *workspaceHeader = new QHBoxLayout;
+    workspaceHeader->addWidget(selectedInfo_, 1);
+    auto *tools = new QToolButton(workspace);
+    tools->setObjectName(QStringLiteral("presentationTools"));
+    tools->setText(QStringLiteral("Presentation"));
+    tools->setAccessibleName(QStringLiteral("Presentation tools"));
+    tools->setToolTip(QStringLiteral("Edit the selected slide, song arrangement, appearance, timing, or MIDI actions."));
+    tools->setAutoRaise(true);
+    tools->setCursor(Qt::PointingHandCursor);
+    tools->setFocusPolicy(Qt::StrongFocus);
+    tools->setPopupMode(QToolButton::InstantPopup);
+    auto *toolsMenu = new QMenu(tools);
+    toolsMenu->setObjectName(QStringLiteral("presentationToolsMenu"));
+    tools->setMenu(toolsMenu);
+    toolsMenu->addSection(QStringLiteral("Selected slide"));
+    editSlide_ = toolsMenu->addAction(QStringLiteral("Edit Slide Text…"), this, &MainWindow::editSelectedSlide);
+    editSlide_->setObjectName(QStringLiteral("editSlideText"));
     editSlide_->setEnabled(false);
-    presentationTools->addWidget(editSlide_);
-    auto *timingButton = button(QStringLiteral("Timing && Transitions…"), workspace, QStringLiteral("presentationSettings"));
-    presentationSettings_ = timingButton;
-    presentationTools->addWidget(timingButton);
-    center->addLayout(presentationTools);
+    slideMidi_ = toolsMenu->addAction(QStringLiteral("MIDI Actions / Input Trigger…"), this, &MainWindow::configureMidiSlide);
+    slideMidi_->setObjectName(QStringLiteral("configureSlideMidi"));
+    slideMidi_->setEnabled(false);
+    toolsMenu->addSection(QStringLiteral("Presentation"));
+    songSections_ = toolsMenu->addAction(QStringLiteral("Song Sections / Arrangements…"), this, &MainWindow::editSongStructure);
+    songSections_->setObjectName(QStringLiteral("editSongStructure"));
+    looksAction_ = toolsMenu->addAction(QStringLiteral("Looks / Reflow…"), this, &MainWindow::configureLooks);
+    looksAction_->setObjectName(QStringLiteral("configureLooks"));
+    presentationSettings_ = toolsMenu->addAction(QStringLiteral("Timing && Transitions…"), this, [this] {
+        configurePresentation(workspaceSongId());
+    });
+    presentationSettings_->setObjectName(QStringLiteral("presentationSettings"));
+    workspaceHeader->addWidget(tools);
+    center->addLayout(workspaceHeader);
     auto *viewTools = new QHBoxLayout;
     slideViewMode_ = new QComboBox(workspace);
     slideViewMode_->setObjectName(QStringLiteral("slideViewMode"));
@@ -743,18 +800,14 @@ void MainWindow::buildUi() {
     slideSize_->setToolTip(QStringLiteral("Adjust thumbnail size in Grid view or lyric size in Text view."));
     viewTools->addWidget(slideSize_, 1);
     center->addLayout(viewTools);
-    connect(editSlide_, &QPushButton::clicked, this, &MainWindow::editSelectedSlide);
-    connect(timingButton, &QPushButton::clicked, this, [this] {
-        configurePresentation(workspaceSongId());
-    });
     selectedTimingInfo_ = new QLabel(workspace);
     selectedTimingInfo_->setObjectName(QStringLiteral("selectedTimingInfo"));
     selectedTimingInfo_->setToolTip(QStringLiteral("Saved presentation settings. Take a slide live to apply changes."));
     selectedTimingInfo_->setWordWrap(true);
-    center->addWidget(selectedTimingInfo_);
     auto *slideOrder = new ReorderListWidget(workspace);
     slides_ = slideOrder;
     slides_->setObjectName(QStringLiteral("slideWorkspace"));
+    slides_->setToolTip(QStringLiteral("Show: click to go live. Edit: double-click to edit text or drag to arrange. Right-click for slide actions."));
     gridDelegate_ = new SlideGridDelegate(slides_);
     textDelegate_ = new SlideTextDelegate(slides_);
     slides_->setViewMode(QListView::IconMode);
@@ -779,9 +832,9 @@ void MainWindow::buildUi() {
     connect(slides_, &QListWidget::customContextMenuRequested, this, [this](const QPoint &point) {
         if (auto *item = slides_->itemAt(point)) slides_->setCurrentItem(item); else return;
         QMenu menu(this);
-        menu.addAction(QStringLiteral("Edit Slide Text…"), this, &MainWindow::editSelectedSlide);
-        menu.addAction(QStringLiteral("Looks / Reflow…"), this, &MainWindow::configureLooks);
-        menu.addAction(QStringLiteral("MIDI Actions / Input Trigger…"), this, &MainWindow::configureMidiSlide);
+        menu.addAction(editSlide_);
+        menu.addAction(looksAction_);
+        menu.addAction(slideMidi_);
         menu.addAction(QStringLiteral("Take Live"), this, &MainWindow::goLive);
         menu.addAction(QStringLiteral("Move Earlier in Service Arrangement"), this, [this] { moveSlide(-1); })->setEnabled(!browsingLibrary_);
         menu.addAction(QStringLiteral("Move Later in Service Arrangement"), this, [this] { moveSlide(1); })->setEnabled(!browsingLibrary_);
@@ -791,6 +844,7 @@ void MainWindow::buildUi() {
         });
         menu.exec(slides_->viewport()->mapToGlobal(point));
     });
+    center->addWidget(selectedTimingInfo_);
     auto *globalTransitions = new QWidget(workspace);
     globalTransitions->setObjectName(QStringLiteral("globalTransitionsBar"));
     auto *globalRow = new QHBoxLayout(globalTransitions);
@@ -823,13 +877,6 @@ void MainWindow::buildUi() {
         saveProgramTransitions();
     });
     center->addWidget(globalTransitions);
-    auto *take = button(QStringLiteral("TAKE SELECTED SLIDE LIVE"), workspace, QStringLiteral("takeLive"));
-    center->addWidget(take);
-    connect(take, &QPushButton::clicked, this, &MainWindow::goLive);
-    auto *navigationHint = new QLabel(QStringLiteral("↑ / ← Previous   •   ↓ / → / Space Next   •   Esc Operator focus"), workspace);
-    navigationHint->setObjectName(QStringLiteral("hint"));
-    navigationHint->setWordWrap(true);
-    center->addWidget(navigationHint);
 
     QVBoxLayout *right;
     auto *monitor = column(split, &right);
@@ -869,11 +916,18 @@ void MainWindow::buildUi() {
     right->addWidget(previewTabs_, 2);
     auto *transport = new QHBoxLayout;
     auto *previous = button(QStringLiteral("◀ Previous"), monitor, QStringLiteral("previousSlide"));
+    previous->setToolTip(QStringLiteral("Previous live slide (Left / Up / Page Up)."));
+    auto *take = button(QStringLiteral("Take Live"), monitor, QStringLiteral("takeLive"));
+    take->setAccessibleName(QStringLiteral("Take selected slide live"));
+    take->setToolTip(QStringLiteral("Take the selected slide live and capture its saved service order."));
     auto *next = button(QStringLiteral("Next ▶"), monitor, QStringLiteral("nextSlide"));
+    next->setToolTip(QStringLiteral("Next live slide (Space / Right / Down / Page Down)."));
     transport->addWidget(previous);
+    transport->addWidget(take);
     transport->addWidget(next);
     right->addLayout(transport);
     connect(previous, &QPushButton::clicked, this, &MainWindow::rewind);
+    connect(take, &QPushButton::clicked, this, &MainWindow::goLive);
     connect(next, &QPushButton::clicked, this, &MainWindow::advance);
     mediaStatus_ = new QLabel(monitor);
     mediaStatus_->setObjectName(QStringLiteral("mediaStatus"));
@@ -1363,7 +1417,7 @@ bool MainWindow::showSelectedPresentation(int selectSlide, bool reportFailure) {
     songSections_->setEnabled(song.id > 0 && std::all_of(song.media.cbegin(), song.media.cend(),
         [](const SlideMedia &media) { return media.kind == MediaKind::None; }));
     presentationSettings_->setEnabled(song.id > 0);
-    looksButton_->setEnabled(song.id > 0);
+    looksAction_->setEnabled(song.id > 0);
     selectedBackgroundPath_ = resolveBackground(song.backgroundPath);
     selectedBackground_ = backgroundPixmap(selectedBackgroundPath_);
     const auto settings = song.settings.resolvedWithDefaults(programSettings_);
@@ -1416,6 +1470,7 @@ bool MainWindow::showSelectedPresentation(int selectSlide, bool reportFailure) {
 void MainWindow::showSelectedSlide() {
     const auto *item = slides_->currentItem();
     editSlide_->setEnabled(item && workspaceSongId());
+    slideMidi_->setEnabled(item != nullptr);
     const SlideMedia media = item ? item->data(Qt::UserRole + 3).value<SlideMedia>() : SlideMedia{};
     const auto style = item ? item->data(Qt::UserRole + 6).value<SlideLook>() : SlideLook{};
     const QString text = item ? item->data(Qt::UserRole + 1).toString() : QString();
@@ -1777,6 +1832,7 @@ PresentationItem MainWindow::midiSnapshot(const Song &song, const QVector<int> &
     return item;
 }
 bool MainWindow::takeSavedService(int serviceId, int entryId, int row, QString *error) {
+    if (!license_->liveAllowed()) { if (error) *error = "Activate a license to present live."; return false; }
     QVector<PresentationItem> items;
     const auto entries = library_.service(serviceId);
     if (!library_.lastError().isEmpty()) { *error = library_.lastError(); return false; }
@@ -1795,6 +1851,7 @@ bool MainWindow::takeSavedService(int serviceId, int entryId, int row, QString *
     return true;
 }
 void MainWindow::goLive() {
+    if (!license_->liveAllowed()) { showLicense(); return; }
     if (slides_->currentRow() < 0) return;
     if (browsingLibrary_) {
         const auto song = workspaceSource();
@@ -1831,6 +1888,7 @@ void MainWindow::configureMidiSlide() {
     reloadMidiBindings();
 }
 void MainWindow::dispatchMidi(const MidiBinding &binding) {
+    if (!license_->liveAllowed()) return;
     if (mode_->currentIndex() != 0 || QApplication::activeModalWidget() || QApplication::activePopupWidget()) return;
     const auto current = library_.midiBinding(binding.id);
     if (!current.id || !current.enabled || current.toJson() != binding.toJson()) {
@@ -2301,10 +2359,34 @@ void MainWindow::configureShortcuts() {
         QSettings settings;
         settings.setValue(QStringLiteral("shortcuts/blackout"), a.toString(QKeySequence::PortableText));
         settings.setValue(QStringLiteral("shortcuts/clear"), b.toString(QKeySequence::PortableText));
+        if (helpDialog_) helpDialog_->refreshAudienceShortcuts(a, b);
         dialog.accept();
     });
     dialog.exec();
 }
+void MainWindow::showStageControls() {
+    if (!stageControlsDialog_) {
+        stageControlsDialog_ = new StageControlsDialog(&outputs_, this);
+        stageControlsDialog_->setAttribute(Qt::WA_DeleteOnClose);
+        connect(stageControlsDialog_, &QDialog::finished, this, [this] { stageControlsDialog_.clear(); });
+    }
+    stageControlsDialog_->show();
+    stageControlsDialog_->raise();
+    stageControlsDialog_->activateWindow();
+}
+
+void MainWindow::showHelp(const QString &topic) {
+    if (!helpDialog_) {
+        helpDialog_ = new HelpDialog(blackoutShortcut_, clearShortcut_, this);
+        helpDialog_->setAttribute(Qt::WA_DeleteOnClose);
+        connect(helpDialog_, &QDialog::finished, this, [this] { helpDialog_.clear(); });
+    }
+    if (!topic.isEmpty()) helpDialog_->openTopic(topic);
+    helpDialog_->show();
+    helpDialog_->raise();
+    helpDialog_->activateWindow();
+}
+
 void MainWindow::configureMcp() {
     QDialog dialog(this);
     dialog.setObjectName(QStringLiteral("mcpSetupDialog"));
@@ -2313,15 +2395,16 @@ void MainWindow::configureMcp() {
     auto *layout = new QVBoxLayout(&dialog);
     auto *intro = new QLabel(QStringLiteral(
         "Connect a desktop AI client that supports local stdio MCP to create saved service orders. "
-        "The AI can create song and sermon presentations, search the library, and import Planning Center plans into saved services. Your AI client receives the library content it requests "
+        "The AI can create presentations and mixed media services, edit shared song sections and arrangements, and import Planning Center plans. Your AI client receives the library content it requests "
         "and provides the model; WorshipCue does not need an API key."), &dialog);
     intro->setWordWrap(true);
     layout->addWidget(intro);
     auto *planningCenterHelp = new QLabel(QStringLiteral(
-        "For Planning Center, add PLANNING_CENTER_APPLICATION_ID and PLANNING_CENTER_SECRET "
-        "to this server's environment in your AI client. Get a "
+        "For your church's Planning Center connection, get a "
         "<a style=\"color: #8dc6ff;\" href=\"https://api.planningcenteronline.com/personal_access_tokens\">Personal Access Token</a> "
-        "for an account with Services access. Other MCP tools work without these credentials."), &dialog);
+        "for an account with Services access. Import SongSelect Lyrics into the selected arrangement's Lyrics &amp; Chords editor in Planning Center first. "
+        "Then ask your AI client to list Planning Center service types to test access, and preview your plan before saving. "
+        "<a style=\"color: #8dc6ff;\" href=\"https://help.planningcenter.com/en/139448-set-up-the-songselect--by-ccli-integration.html\">SongSelect setup instructions</a>."), &dialog);
     planningCenterHelp->setObjectName(QStringLiteral("planningCenterSetupHelp"));
     planningCenterHelp->setWordWrap(true);
     planningCenterHelp->setOpenExternalLinks(true);
@@ -2356,14 +2439,40 @@ void MainWindow::configureMcp() {
     editor->setReadOnly(true);
     editor->setPlainText(configuration);
     layout->addWidget(editor, 1);
+    auto *planningConfiguration = new QCheckBox(QStringLiteral("Include Planning Center credential placeholders"), &dialog);
+    planningConfiguration->setObjectName(QStringLiteral("includePlanningCenterConfiguration"));
+    planningConfiguration->setToolTip(QStringLiteral("Replace both placeholders in your AI client's configuration with your church's Personal Access Token values. WorshipCue does not save credentials."));
+    layout->addWidget(planningConfiguration);
+    connect(planningConfiguration, &QCheckBox::toggled, &dialog, [editor, server](bool include) {
+        auto configured = server;
+        if (include) configured.insert(QStringLiteral("env"), QJsonObject{
+            {QStringLiteral("PLANNING_CENTER_APPLICATION_ID"), QStringLiteral("YOUR_PERSONAL_ACCESS_TOKEN_APPLICATION_ID")},
+            {QStringLiteral("PLANNING_CENTER_SECRET"), QStringLiteral("YOUR_PERSONAL_ACCESS_TOKEN_SECRET")}});
+        editor->setPlainText(QString::fromUtf8(QJsonDocument(QJsonObject{{QStringLiteral("mcpServers"),
+            QJsonObject{{QStringLiteral("worshipcue"), configured}}}}).toJson(QJsonDocument::Indented)));
+    });
     auto *copy = new QPushButton(QStringLiteral("Copy Configuration"), &dialog);
     copy->setObjectName(QStringLiteral("copyMcpConfiguration"));
     copy->setEnabled(persistent && available);
-    connect(copy, &QPushButton::clicked, &dialog, [configuration, copy] {
-        QApplication::clipboard()->setText(configuration);
+    connect(copy, &QPushButton::clicked, &dialog, [editor, copy] {
+        QApplication::clipboard()->setText(editor->toPlainText());
         copy->setText(QStringLiteral("Copied"));
     });
     layout->addWidget(copy);
+    auto *test = new QPushButton(QStringLiteral("Test Connection"), &dialog);
+    test->setObjectName(QStringLiteral("testMcpConnection"));
+    test->setEnabled(persistent && available);
+    layout->addWidget(test);
+    McpConnectionProbe probe;
+    connect(test, &QPushButton::clicked, &dialog, [&] {
+        test->setEnabled(false);
+        status->setText(QStringLiteral("Testing companion startup, MCP handshake, tool discovery, and library access…"));
+        probe.start(executable, databasePath_);
+    });
+    connect(&probe, &McpConnectionProbe::finished, &dialog, [status, test](bool, const QString &report) {
+        status->setText(report);
+        test->setEnabled(true);
+    });
     auto *example = new QLabel(QStringLiteral(
         "Try: “Create a service named Sunday Morning with a welcome slide, two songs from my library, "
         "a message title slide, and a closing song. Show me a preview before saving.”\n\n"
@@ -2437,4 +2546,22 @@ void MainWindow::configureCleanup() {
     if(mediaManager_&&mediaManager_->busy()){statusBar()->showMessage(QStringLiteral("Wait for the current import to finish before cleaning up the library."),5000);return;}
     editLibraryCleanup(this,library_,[this]{return cleanupProtection(controller_.snapshotItems());});
     reloadSongs();reloadMedia();reloadServices(currentServiceId_,selectedEntryId(),slides_->currentRow());reloadMidiBindings();
+}
+
+void MainWindow::showLicense() {
+    if (!licenseDialog_) {
+        licenseDialog_ = new LicenseDialog(license_.get(), this);
+        licenseDialog_->setAttribute(Qt::WA_DeleteOnClose);
+    }
+    licenseDialog_->show(); licenseDialog_->raise(); licenseDialog_->activateWindow();
+}
+void MainWindow::updateLicense() {
+    const bool allowed = license_->liveAllowed();
+    licenseStatus_->setText(allowed ? QStringLiteral("Licensed") : QStringLiteral("Editing only — activate to present"));
+    licenseStatus_->setToolTip(license_->status());
+    if (!allowed && controller_.state().index >= 0) {
+        mode_->setCurrentIndex(1);
+        midi_.releaseNotes(); controller_.revokeLiveAuthorization();
+    }
+    outputs_.refreshAuthorization();
 }

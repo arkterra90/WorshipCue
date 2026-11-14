@@ -62,13 +62,15 @@ struct ServiceEntry {
     int mediaAssetId = 0;
 };
 
-// One occurrence in a new service. Use an existing songId, or leave it zero
-// and provide title/slides to create a reusable text presentation.
+// One occurrence in a new service. Use one existing songId or mediaAssetId,
+// or leave both zero and provide title/slides for a reusable text presentation.
 struct ServiceOrderItem {
     int songId = 0;
     QString title;
     QStringList slides;
     QVector<int> slideOrder;
+    int mediaAssetId = 0;
+    SongStructure structure;
 };
 
 enum class MidiOwnerType { Slide, Entry, Asset };

@@ -11,6 +11,48 @@ class StageLayoutTest : public QObject {
         QPainter painter(&image); window.paintOutput(painter, image.rect()); return image;
     }
 private slots:
+    void timersRenderOnStandardAndCustomConfidenceLayouts() {
+        PresentationController controller;
+        controller.takeLive("Sermon", {"Current point", "Next point"});
+        const auto revision = controller.state().cueRevision;
+        DisplayWindow stage(DisplayWindow::Kind::Stage, &controller);
+        QVERIFY(!stage.stageTimerVisible());
+        StageTimerConfiguration timer;
+        timer.name = "Sermon"; timer.durationSeconds = 120; timer.warningSeconds = 60;
+        QVERIFY(stage.configureStageTimer(timer)); stage.setStageTimerVisible(true);
+        QVERIFY(stage.stageTimerVisible());
+        const auto standard = render(stage, {960, 540});
+        int footerWhite = 0;
+        for (int y = 450; y < standard.height(); ++y) for (int x = 0; x < standard.width(); ++x) {
+            const auto pixel = standard.pixelColor(x,y);
+            if (pixel.red() > 220 && pixel.green() > 220 && pixel.blue() > 220) ++footerWhite;
+        }
+        QVERIFY(footerWhite > 100);
+        auto layout = StageLayout::standard(); layout.id = "timer-only"; layout.background = "#000000";
+        layout.elements = {{StageElement::Kind::Countdown, {.1,.2,.8,.6}, {}, {}, 180, "#ffffff", true, 1}};
+        stage.setStageLayout(layout);
+        timer.durationSeconds = 30;
+        QVERIFY(stage.configureStageTimer(timer));
+        auto custom = render(stage, {960,540});
+        int amber = 0;
+        for (int y = 0; y < custom.height(); ++y) for (int x = 0; x < custom.width(); ++x)
+            if (custom.pixelColor(x,y) == QColor("#f5c252")) ++amber;
+        QVERIFY(amber > 100);
+        timer.mode = StageTimerConfiguration::Mode::CountdownToTime;
+        timer.target = QDateTime::currentDateTimeUtc().addSecs(-2); timer.allowOverrun = true;
+        QVERIFY(stage.configureStageTimer(timer)); stage.startCountdown();
+        custom = render(stage, {960,540});
+        int red = 0;
+        for (int y = 0; y < custom.height(); ++y) for (int x = 0; x < custom.width(); ++x)
+            if (custom.pixelColor(x,y) == QColor("#ff6b6b")) ++red;
+        QVERIFY(red > 100);
+        stage.setStageTimerVisible(false);
+        const auto hidden = render(stage, {960,540});
+        QCOMPARE(hidden.pixelColor(480,270), QColor(Qt::black));
+        StageElement element; element.kind = StageElement::Kind::Countdown;
+        QVERIFY(stageElementText(element, controller.state(), stage.stageRuntime()).isEmpty());
+        QCOMPARE(controller.state().cueRevision, revision);
+    }
     void formatRoundTripAndBounds() {
         OutputConfiguration config; config.target = "preview"; config.canvas = {1080,1920}; config.aspectWidth = 9; config.aspectHeight = 16;
         config.rotation = 270; config.scaling = OutputConfiguration::Scaling::Fill;

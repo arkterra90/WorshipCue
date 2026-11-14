@@ -25,6 +25,7 @@ void PresentationController::takeLive(const QString &title, const QStringList &s
 }
 
 void PresentationController::takeLive(const PresentationItem &item, int slideIndex) {
+    if (!liveAuthorized()) return;
     const PresentationItem snapshot = item;
     serviceSnapshot_ = {snapshot};
     itemIndex_ = 0;
@@ -84,6 +85,7 @@ bool PresentationController::refreshSongText(int songId, const QStringList &keys
 
 void PresentationController::takeServiceLive(int serviceId, const QVector<PresentationItem> &items,
                                               int entryId, int slideIndex) {
+    if (!liveAuthorized()) return;
     if (serviceId <= 0 || entryId <= 0) return;
     for (int i = 0; i < items.size(); ++i) {
         if (items.at(i).entryId != entryId || items.at(i).slides.isEmpty()) continue;
@@ -140,6 +142,7 @@ void PresentationController::updateUpcoming() {
 }
 
 bool PresentationController::setSlide(int index) {
+    if (!liveAuthorized()) return false;
     if (index < 0 || index >= state_.slides.size()) return false;
     state_.settings = effectiveSettings(state_.settings);
     state_.index = index;
@@ -152,6 +155,7 @@ bool PresentationController::setSlide(int index) {
 }
 
 bool PresentationController::next() {
+    if (!liveAuthorized()) return false;
     if (setSlide(state_.index + 1)) return true;
     for (int i = itemIndex_ + 1; i < serviceSnapshot_.size(); ++i) {
         if (serviceSnapshot_.at(i).slides.isEmpty()) continue;
@@ -162,6 +166,7 @@ bool PresentationController::next() {
 }
 
 bool PresentationController::previous() {
+    if (!liveAuthorized()) return false;
     if (setSlide(state_.index - 1)) return true;
     for (int i = itemIndex_ - 1; i >= 0; --i) {
         const auto &item = serviceSnapshot_.at(i);
@@ -173,6 +178,7 @@ bool PresentationController::previous() {
 }
 
 void PresentationController::toggleBlackout() {
+    if (!liveAuthorized()) return;
     state_.settings = effectiveSettings(state_.settings);
     state_.blackout = !state_.blackout;
     if (state_.blackout) state_.clear = false;
@@ -181,6 +187,7 @@ void PresentationController::toggleBlackout() {
 }
 
 void PresentationController::toggleClear() {
+    if (!liveAuthorized()) return;
     state_.settings = effectiveSettings(state_.settings);
     state_.clear = !state_.clear;
     if (state_.clear) state_.blackout = false;
@@ -189,6 +196,7 @@ void PresentationController::toggleClear() {
 }
 
 void PresentationController::restoreOutput() {
+    if (!liveAuthorized()) return;
     if (!state_.blackout && !state_.clear) return;
     state_.settings = effectiveSettings(state_.settings);
     state_.blackout = false;
@@ -241,6 +249,7 @@ void PresentationController::toggleAutoAdvancePaused() {
 }
 
 void PresentationController::advanceAutomatically() {
+    if (!liveAuthorized()) return;
     if (!autoAdvancePending_ || autoAdvancePaused()) return;
     if (state_.index + 1 < state_.slides.size()) {
         setSlide(state_.index + 1);
@@ -253,4 +262,11 @@ void PresentationController::advanceAutomatically() {
         autoAdvanceRemainingMs_ = 0;
         emit autoAdvanceChanged();
     }
+}
+
+void PresentationController::revokeLiveAuthorization() {
+    autoAdvanceTimer_.stop(); autoAdvancePending_ = false;
+    serviceSnapshot_.clear(); itemIndex_ = -1; state_ = {};
+    state_.cueRevision = ++cueSerial_;
+    emit autoAdvanceChanged(); emit stateChanged();
 }

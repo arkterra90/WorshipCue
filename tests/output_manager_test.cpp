@@ -33,6 +33,18 @@ public:
     }
 };
 
+#include "fixtures/LicenseFixture.h"
+class LicensedOutputManager : public OutputManager {
+    std::unique_ptr<LicenseManager> license_ = fixtureLicense();
+public:
+    explicit LicensedOutputManager(PresentationController *controller, QObject *parent=nullptr,
+                                  std::shared_ptr<DisplayModeProvider> modes={})
+        : OutputManager(controller,parent,std::move(modes)) {
+        setLiveAuthorizationCheck([this] { return license_->liveAllowed(); });
+    }
+    ~LicensedOutputManager() override { shutdown(); setLiveAuthorizationCheck({}); }
+};
+
 class OutputManagerTest : public QObject {
     Q_OBJECT
 private:
@@ -49,10 +61,59 @@ private slots:
 
     void init() { QSettings().clear(); }
 
+    void noAuthorityNeverRestoresOrPaintsLiveOutputs() {
+        PresentationController controller;
+        controller.takeLive("Unit renderer content", {"Must not be projected"});
+        OutputManager denied(&controller);
+        QString error;
+        for (auto id : outputIds) {
+            QVERIFY(denied.setTarget(id, "preview", &error));
+            QVERIFY(!denied.output(id).isVisible());
+            denied.output(id).showPreview();
+            QVERIFY(!denied.output(id).isVisible());
+            auto image = denied.output(id).grab().toImage();
+            QCOMPARE(image.pixelColor(image.width()/2, image.height()/2), QColor(Qt::black));
+        }
+        denied.restoreTargets();
+        for (auto id : outputIds) QVERIFY(!denied.output(id).isVisible());
+    }
+    void stageTimerSettingsAndVisibilitySurviveRestartWithoutStartingPlayback() {
+        PresentationController controller;
+        controller.takeLive("Sermon", {"Point one"});
+        const auto revision = controller.state().cueRevision;
+        StageTimerConfiguration first;
+        first.name = "Sermon budget"; first.durationSeconds = 1800;
+        StageTimerConfiguration second;
+        second.name = "Service start";
+        second.mode = StageTimerConfiguration::Mode::CountdownToTime;
+        second.target = QDateTime::currentDateTimeUtc().addSecs(3600);
+        second.allowOverrun = true;
+        {
+            LicensedOutputManager outputs(&controller);
+            outputs.restoreTargets();
+            QVERIFY(outputs.configureStageTimer(OutputId::Stage1, first));
+            QVERIFY(outputs.configureStageTimer(OutputId::Stage2, second));
+            QVERIFY(outputs.showStageTimer(OutputId::Stage1, true));
+            QVERIFY(outputs.showStageTimer(OutputId::Stage2, false));
+            outputs.stage().startCountdown();
+            QVERIFY(outputs.stage().stageRuntime().running);
+            QVERIFY(!outputs.configureStageTimer(OutputId::Audience1, first));
+            QVERIFY(!outputs.showStageTimer(OutputId::Audience2, true));
+        }
+        LicensedOutputManager reopened(&controller);
+        reopened.restoreTargets();
+        QCOMPARE(reopened.stage().stageTimerConfiguration().toJson(), first.toJson());
+        QCOMPARE(reopened.output(OutputId::Stage2).stageTimerConfiguration().toJson(), second.toJson());
+        QVERIFY(reopened.stage().stageTimerVisible());
+        QVERIFY(!reopened.output(OutputId::Stage2).stageTimerVisible());
+        QCOMPARE(reopened.stage().stageTimerReading().state, StageTimerReading::State::Ready);
+        QCOMPARE(controller.state().cueRevision, revision);
+    }
+
     void fourOutputsRouteIndependentlyAndShareAudienceCompositor() {
         PresentationController controller;
         {
-            OutputManager outputs(&controller);
+            LicensedOutputManager outputs(&controller);
             outputs.restoreTargets();
             for (auto id : outputIds) {
                 QVERIFY(outputs.setTarget(id, "preview"));
@@ -67,7 +128,7 @@ private slots:
             for (auto id : {OutputId::Audience1, OutputId::Stage1, OutputId::Stage2}) QVERIFY(outputs.output(id).isVisible());
             QCOMPARE(controller.state().cueRevision, revision);
         }
-        OutputManager restored(&controller);
+        LicensedOutputManager restored(&controller);
         restored.restoreTargets();
         QCOMPARE(restored.target(OutputId::Audience2), QStringLiteral("off"));
         for (auto id : {OutputId::Audience1, OutputId::Stage1, OutputId::Stage2}) QCOMPARE(restored.target(id), QStringLiteral("preview"));
@@ -77,7 +138,7 @@ private slots:
 
     void fullscreenConflictsAreCheckedAcrossAllFourRoutes() {
         PresentationController controller;
-        OutputManager outputs(&controller);
+        LicensedOutputManager outputs(&controller);
         QString display;
         for (const auto &target : outputs.availableTargets()) if (target.id.startsWith("screen:")) { display = target.id; break; }
         if (display.isEmpty()) QSKIP("No display reported by this backend.");
@@ -96,7 +157,7 @@ private slots:
         format.target = "preview"; format.canvas = {1080,1920}; format.aspectWidth = 9; format.aspectHeight = 16;
         format.rotation = 90; format.scaling = OutputConfiguration::Scaling::Fill;
         {
-            OutputManager outputs(&controller);
+            LicensedOutputManager outputs(&controller);
             controller.takeLive("Live", {"Unchanged"});
             const auto revision = controller.state().cueRevision;
             QVERIFY(outputs.setConfiguration(OutputId::Audience2, format));
@@ -108,7 +169,7 @@ private slots:
             QCOMPARE(controller.state().cueRevision, revision);
             QCOMPARE(outputs.configuration(OutputId::Audience1).canvas, QSize(1920,1080));
         }
-        OutputManager reopened(&controller); reopened.restoreTargets();
+        LicensedOutputManager reopened(&controller); reopened.restoreTargets();
         QCOMPARE(reopened.configuration(OutputId::Audience2).toJson(), format.toJson());
     }
 
@@ -116,7 +177,7 @@ private slots:
         if (QGuiApplication::screens().isEmpty()) QSKIP("No screen reported.");
         auto modes = std::make_shared<FakeDisplayModes>();
         PresentationController controller;
-        OutputManager outputs(&controller, nullptr, modes);
+        LicensedOutputManager outputs(&controller, nullptr, modes);
         OutputConfiguration config;
         config.target = OutputManager::screenId(QGuiApplication::screens().first());
         config.signalMode = "not-supported";
@@ -155,7 +216,7 @@ private slots:
         auto modes = std::make_shared<FakeDisplayModes>(); modes->available = false;
         OutputConfiguration config; config.target = OutputManager::screenId(screen); config.signalMode = "interlaced";
         QSettings().setValue("outputs/1/configuration", QJsonDocument(config.toJson()).toJson());
-        PresentationController controller; OutputManager outputs(&controller, nullptr, modes);
+        PresentationController controller; LicensedOutputManager outputs(&controller, nullptr, modes);
         outputs.restoreTargets();
         QCOMPARE(outputs.target(OutputId::Audience2), config.target);
         QVERIFY(!outputs.output(OutputId::Audience2).isVisible());
@@ -167,7 +228,7 @@ private slots:
     }
 
     void stageLayoutsAssignIndependentlyAndProtectAssignedDefinitions() {
-        PresentationController controller; OutputManager outputs(&controller);
+        PresentationController controller; LicensedOutputManager outputs(&controller);
         auto layout = StageLayout::standard(); layout.id = "custom"; layout.name = "Custom stage";
         layout.elements.append({StageElement::Kind::Message, {.05,.1,.9,.1}, {}, {}, 64, "#00ff00", true, 1});
         QString error;
@@ -183,7 +244,7 @@ private slots:
         auto duplicate = layout; duplicate.id = "duplicate";
         QVERIFY(!outputs.saveStageLayout(duplicate, &error));
         QVERIFY(!outputs.saveStageLayout(StageLayout::standard(), &error));
-        OutputManager reopened(&controller); reopened.restoreTargets();
+        LicensedOutputManager reopened(&controller); reopened.restoreTargets();
         QCOMPARE(reopened.configuration(OutputId::Stage2).stageLayout, layout.id);
         QCOMPARE(reopened.output(OutputId::Stage2).stageLayout().background, layout.background);
         stage2.stageLayout = "standard"; QVERIFY(reopened.setConfiguration(OutputId::Stage2, stage2));
@@ -203,7 +264,7 @@ private slots:
         auto modes = std::make_shared<FakeDisplayModes>();
         PresentationController controller; controller.takeLive("Song", {"Unchanged"});
         const auto revision = controller.state().cueRevision;
-        OutputManager outputs(&controller, nullptr, modes);
+        LicensedOutputManager outputs(&controller, nullptr, modes);
         OutputSettingsDialog dialog(&outputs);
         const auto screen = OutputManager::screenId(QGuiApplication::screens().first());
         auto *display = dialog.findChild<QComboBox *>("outputDisplay0");
@@ -233,7 +294,7 @@ private slots:
 
     void nativeCapabilitiesExposeOnlyReportedModes() {
         if (QGuiApplication::screens().isEmpty()) QSKIP("No screen reported.");
-        PresentationController controller; OutputManager outputs(&controller);
+        PresentationController controller; LicensedOutputManager outputs(&controller);
         const auto caps = outputs.capabilities(OutputManager::screenId(QGuiApplication::screens().first()));
         qInfo() << "OS-reported display modes:" << caps.modes.size() << "; native mode changes available:" << caps.canSetMode;
         if (qEnvironmentVariableIsSet("WORSHIPCUE_PRINT_DISPLAY_CAPABILITIES")) {
@@ -259,7 +320,7 @@ private slots:
     void previewsAreIndependentAndClosingPersistsOff() {
         PresentationController controller;
         {
-            OutputManager outputs(&controller);
+            LicensedOutputManager outputs(&controller);
             outputs.restoreTargets();
             QCOMPARE(outputs.status(DisplayWindow::Kind::Audience), QStringLiteral("Off"));
             QVERIFY(outputs.setTarget(DisplayWindow::Kind::Audience, QStringLiteral("preview")));
@@ -271,7 +332,7 @@ private slots:
             QCOMPARE(outputs.target(DisplayWindow::Kind::Audience), QStringLiteral("off"));
             QVERIFY(outputs.stage().isVisible());
         }
-        OutputManager reopened(&controller);
+        LicensedOutputManager reopened(&controller);
         reopened.restoreTargets();
         QCOMPARE(reopened.target(DisplayWindow::Kind::Audience), QStringLiteral("off"));
         QCOMPARE(reopened.target(DisplayWindow::Kind::Stage), QStringLiteral("preview"));
@@ -282,7 +343,7 @@ private slots:
         const QString missing = QStringLiteral("screen:Missing projector|Maker|Model|12345");
         QSettings().setValue(QStringLiteral("outputs/audienceTarget"), missing);
         PresentationController controller;
-        OutputManager outputs(&controller);
+        LicensedOutputManager outputs(&controller);
         outputs.restoreTargets();
         QCOMPARE(outputs.target(DisplayWindow::Kind::Audience), missing);
         QCOMPARE(outputs.status(DisplayWindow::Kind::Audience), QStringLiteral("Disconnected"));
@@ -302,7 +363,7 @@ private slots:
 
     void sameFullscreenDisplayIsRejected() {
         PresentationController controller;
-        OutputManager outputs(&controller);
+        LicensedOutputManager outputs(&controller);
         QString display;
         for (const auto &target : outputs.availableTargets())
             if (target.id.startsWith(QStringLiteral("screen:"))) { display = target.id; break; }
@@ -319,7 +380,7 @@ private slots:
 
     void invalidTargetsDoNotChangeRouting() {
         PresentationController controller;
-        OutputManager outputs(&controller);
+        LicensedOutputManager outputs(&controller);
         QVERIFY(outputs.setTarget(DisplayWindow::Kind::Audience, QStringLiteral("preview")));
         QString error;
         QVERIFY(!outputs.setTarget(DisplayWindow::Kind::Audience, QStringLiteral("screen:unknown"), &error));
@@ -333,7 +394,7 @@ private slots:
 
     void nativeVisibilityChangesReportActualStatusWithoutRestoringOutput() {
         PresentationController controller;
-        OutputManager outputs(&controller);
+        LicensedOutputManager outputs(&controller);
         QVERIFY(outputs.setTarget(DisplayWindow::Kind::Audience, QStringLiteral("preview")));
         QCoreApplication::processEvents();
         QSignalSpy changed(&outputs, &OutputManager::statusChanged);
@@ -355,7 +416,7 @@ private slots:
 
     void escapeFocusesOperatorAndKeepsOutput() {
         PresentationController controller;
-        OutputManager outputs(&controller);
+        LicensedOutputManager outputs(&controller);
         QVERIFY(outputs.setTarget(DisplayWindow::Kind::Audience, QStringLiteral("preview")));
         QSignalSpy focus(&outputs, &OutputManager::operatorFocusRequested);
         QTest::keyClick(&outputs.audience(), Qt::Key_Escape);

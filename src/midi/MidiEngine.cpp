@@ -152,6 +152,9 @@ void MidiEngine::receive(const QString &source, const QByteArray &data, quint64 
     }
 }
 bool MidiEngine::sendAction(const MidiOutputAction &action, QString *error) {
+    if (authorizationCheck_ && !authorizationCheck_() && !releasingNotes_) {
+        if (error) *error = "A valid license is required for live MIDI output."; return false;
+    }
     if(error)error->clear();
     if(!settings_.enabled||!action.enabled||!action.valid()||!activeOutputs_.contains(action.destination)) {
         if(error)*error="MIDI output is disabled, disconnected, or the action is invalid."; return false;
@@ -176,9 +179,11 @@ void MidiEngine::activateCue(quint64 revision, const QVector<MidiOutputAction> &
     if(recentOutput_.size()>8192)recentOutput_.clear();
 }
 void MidiEngine::releaseDestination(const QString &id) {
+    releasingNotes_ = true;
     const auto notes=heldOutputNotes_.values();
     for(auto action:notes)if(action.destination==id){action.message.type=MidiMessageType::NoteOff;action.message.value=0;QString error;sendAction(action,&error);}
     for(auto it=heldOutputNotes_.begin();it!=heldOutputNotes_.end();)if(it.value().destination==id)it=heldOutputNotes_.erase(it);else++it;
+    releasingNotes_ = false;
 }
 void MidiEngine::releaseNotes(){for(const auto &id:activeOutputs_.values())releaseDestination(id);}
 void MidiEngine::closeConnections(){for(const auto &id:activeInputs_.keys())backend_->closeInput(id);activeInputs_.clear();for(const auto &id:activeOutputs_)backend_->closeOutput(id);activeOutputs_.clear();decoders_.clear();edgeStates_.clear();}

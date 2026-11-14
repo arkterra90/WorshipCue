@@ -171,6 +171,7 @@ QString MediaPlayback::status() const {
 }
 
 void MediaPlayback::togglePause() {
+    if (!controller_->liveAuthorized()) return;
     if (!isPlayable() || !error_.isEmpty()) return;
     if (player_.playbackState() == QMediaPlayer::PlayingState) player_.pause();
     else {
@@ -180,6 +181,7 @@ void MediaPlayback::togglePause() {
 }
 
 void MediaPlayback::restart() {
+    if (!controller_->liveAuthorized()) return;
     if (!isPlayable() || !error_.isEmpty()) return;
     finished_ = false;
     player_.setPosition(0);

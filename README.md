@@ -2,26 +2,42 @@
 
 WorshipCue is a native C++17 / Qt 6 Widgets church presentation application with an offline SQLite library, structured songs, reusable arrangements, standalone media assets, batch naming, automatic slide advancement, slide transitions, and MIDI control.
 
+## Offline Help
+
+Open **Help → WorshipCue Help…** for the built-in guide. Search article titles and text, follow related-topic links, or use Back, Forward, and Home. All 16 topics are embedded in the application, including content/media management, services, song arrangements, Looks, outputs, transitions, MIDI, MCP, storage, troubleshooting, and keyboard controls. The licensing topic covers activation, offline authorization, device limits, and transfers.
+
+**Help → Keyboard Reference…** shows the configured audience shortcuts and updates when you save changes through **File → Keyboard Shortcuts…**. Help stays open alongside the operator window while presentation timers continue. Click the operator window to resume live keyboard control. Documentation sources live in [docs/help](docs/help).
+
 ## Create service orders with AI
 
 Open **Settings → AI / MCP Setup…** to connect an AI client to WorshipCue's local MCP server. The client can create song and sermon presentations, search your library, inspect past services, and preview/save new service orders. With Planning Center credentials configured, it can read a Services plan and import its order, matching library songs or creating slides from available arrangement lyrics. New services appear in the app automatically while live output continues unchanged. The normal app build includes the `WorshipCueMcp` companion; no model API key is required in WorshipCue.
 
+For SongSelect through Planning Center, import **Lyrics** into the selected arrangement's **Lyrics & Chords** editor first. In WorshipCue's setup dialog, include the credential placeholders, replace them in your AI client's configuration with your church's Personal Access Token, and reconnect. Ask the AI to list service types, then preview your plan link before saving. The import preserves named lyric sections and repeated sequences. See [Planning Center setup and the read-only readiness checker](docs/MCP.md#connect-planning-center-services).
+
 See [MCP setup, example prompts, and tool details](docs/MCP.md).
+
+**Test Connection** in that dialog checks companion startup, protocol negotiation, tool discovery, and library access. MCP also discovers standalone media for mixed service orders and previews/edits shared song sections and named arrangements. Edits require the current presentation revision and default to a dry run; live output stays under operator control. See the MCP guide for limits and the installed-package verification command.
+
+## Licensing
+
+Editing, libraries, and service preparation remain available without a license. Open **Settings → License Activation & Devices…** (or **License…** in the status bar) to enable live audience/stage output, live media, and MIDI control. Each license supports five installations and signed seven-day offline authorization. Deactivate devices there to transfer a slot. See [licensing architecture, deployment, and development checks](docs/LICENSING.md).
 
 ## Run a service
 
-1. Use **+ New** to create a song with reusable sections and arrangements, or **Import Song Lyrics…** for text/ChordPro import. Use **Edit** in the library or **Edit Slide Text…** above the slide workspace to edit an existing presentation. Save commits the draft; Cancel discards it.
+1. Use **+ New** to create a song with reusable sections and arrangements, or **Import Song Lyrics…** for text/ChordPro import. Use **Edit** in the library or **Presentation → Edit Slide Text…** at the upper-right of the slide workspace to edit an existing presentation. Save commits the draft; Cancel discards it.
 2. Choose a saved service, or use **New** to create one. **Rename** changes its name; **Copy** makes a new plan from a previous service, including its order and slide arrangements.
 3. Search the library by title or lyric text. Double-click a library song or press **Add →** to add it to the selected service. Repeated songs are separate service entries.
 4. Drag service items into order. The arrow buttons and right-click menu also move items. **Remove** removes only that service entry; **Duplicate** inserts another occurrence after it. Library deletion requires confirmation and removes the song from every saved service.
 5. Select a service item to preview its slides. In **Edit** mode, drag slide cards to arrange that occurrence of the song. The right-click menu also moves slides or resets the song order. Changes save immediately; reopening the app restores the selected service and its saved order.
 6. Open **Screens…** to configure **Audience Screen 1/2** and **Stage Screen 1/2** independently. Assign a display or **Windowed Preview** and save each output. The toolbar retains quick routes for the first audience/stage pair. Fullscreen outputs cannot share one physical display.
-7. In **Show** mode, click a slide to take it live. A green border and LIVE marker identify the live slide. Double-clicking a service item takes its selected/first slide live. In **Edit**, selecting a slide previews it and double-clicking opens its rich text editor. **TAKE SELECTED SLIDE LIVE** presents it explicitly.
+7. In **Show** mode, click a slide to take it live. A green border and LIVE marker identify the live slide. Double-clicking a service item takes its selected/first slide live. In **Edit**, selecting a slide previews it and double-clicking opens its rich text editor. **Take Live**, between Previous and Next below the live monitor, presents the selected slide explicitly.
 8. Use Next/Previous or keyboard navigation to run the service. The right side shows rendered audience content, with **Up Next / Selected** tabs underneath. Up Next includes slides across song boundaries, or the first slide when looping.
 
 Switching modes, browsing another service, and changing saved order preserve the running service snapshot. Shared text edits to structured songs repaint every live occurrence immediately. Taking a slide live captures a new **copy of the entire service**. Next/Previous continue through that copy until you explicitly take another slide live. This also protects the running service when library songs are removed. At the beginning/end, navigation holds the first/last slide.
 
 The live monitor follows Audience Screen 1’s output format. Both audience outputs share presentation content and transitions while applying their own canvas, aspect, rotation, and scaling. It shows audience content even when the physical output is Off; check the separate routing status to see whether a window is active.
+
+The **Presentation** dropdown at the upper-right of the slide workspace provides editing, arrangements, Looks, timing, and slide MIDI. Slide right-click actions provide quick access to text, Looks, and MIDI. **Take Live** sits with Previous/Next beneath the live monitor. See the [workspace controls audit](docs/WORKSPACE_CONTROLS_UI_AUDIT.md) for the layout review.
 
 Choose **Grid** for audience thumbnails or **Text** for readable, wrapped lyrics. **Slide size** adjusts the thumbnails or text size for the operator. Choose **Content Library**, **Service Playlist**, or **Media Library** at the top of the left sidebar; the selected view uses its full height. The library shows which saved service receives added items. Drag the dividers between the three columns to allocate space. View, size, column widths, sidebar choice, and preview tab are remembered when you close the app.
 
@@ -35,7 +51,7 @@ Open **Settings → MIDI Devices / Mappings…**. MIDI starts disabled. In **Dev
 
 In **Input Mappings**, add a named mapping for Note On, Note Off, or Control Change, with source, channel, number, and an exact or **Any** value. **Learn next input message** fills those fields from an enabled input. Choose Next/Previous, Blackout, Clear Text, Restore, select/take a presentation, take a source page, pause/resume auto-advance or media, restart/mute media, or release WorshipCue's notes. Select preview changes no live cue; take presentation starts at the first page of its saved arrangement. For repeated pages, **Occurrence** selects that page's first, second, or later appearance in the chosen library/service arrangement. Service targets belong to that specific saved service item. Overlapping enabled triggers are rejected; disabled mappings may overlap. Mapping changes save immediately in the mapping editor.
 
-Right-click a slide and choose **MIDI Actions / Input Trigger…**, or use **Slide MIDI…** above the workspace. Add multiple ordered output commands, each with an enabled flag, destination, channel 1–16, type, number 0–127, and velocity/value 0–127 (Note On requires 1–127). **Assign Input Trigger…** opens a mapping prefilled for that source page and its selected service occurrence. Slide output commands save together with **Save**. An input mapping saved in its own editor remains saved if the output editor is canceled.
+Right-click a slide and choose **MIDI Actions / Input Trigger…**, or choose **Presentation → MIDI Actions / Input Trigger…** at the upper-right of the slide workspace. Add multiple ordered output commands, each with an enabled flag, destination, channel 1–16, type, number 0–127, and velocity/value 0–127 (Note On requires 1–127). **Assign Input Trigger…** opens a mapping prefilled for that source page and its selected service occurrence. Slide output commands save together with **Save**. An input mapping saved in its own editor remains saved if the output editor is canceled.
 
 Output commands fire once on each explicit take or actual navigation/timed advance. Retaking a page fires them again. Repainting, text edits, Blackout, Clear, Restore, and opening settings do not resend them. Live navigation retains the captured command lists until the next take. Disconnected/disabled commands are skipped without later replay. Source-page assignments survive reordering and repeated arrangements; after reflow only the first fragment retains them. New/duplicated source pages and copied presentations start without MIDI assignments. Direct media service items run the asset's default commands followed by that item's commands; copying those service items preserves their extra output commands. Input mappings remain attached to their original targets. Deleted target mappings are removed automatically.
 
@@ -71,7 +87,7 @@ See [the editor research and implementation notes](docs/SLIDE_EDITOR_AND_GLOBAL_
 
 ## Looks and text reflow
 
-Select a presentation slide and open **Looks / Reflow…** above the workspace or in the slide context menu. The left list contains unique source pages. Repeated song sections share those pages and their formatting. Ctrl/Command-click or Shift-click to select multiple source pages.
+Select a presentation slide and choose **Presentation → Looks / Reflow…** or in the slide context menu. The left list contains unique source pages. Repeated song sections share those pages and their formatting. Ctrl/Command-click or Shift-click to select multiple source pages.
 
 **Capture Slide Formatting** starts from the selected source page's first visible text format. Configure the font, pixel size, weight, italic/underline/strike-out, text color, horizontal and vertical alignment, margins, and padding. The **Layout / Background** tab offers the presentation background, a solid color, or an image from the Background Library. Margins position the text box within the 1920×1080 canvas. **Keep slide text formatting overrides** retains existing rich text styling with the Look's layout and background.
 
@@ -83,7 +99,7 @@ The preview uses the same text layout and renderer as audience output. When a Lo
 
 ## Song sections and arrangements
 
-**+ New** opens the section editor. For an existing text presentation, select it and choose **Song Sections / Arrangements…** above the workspace or in the Content Library context menu. Existing flat presentations become one named section per source slide when opened here. Saving commits the conversion.
+**+ New** opens the section editor. For an existing text presentation, select it and choose **Presentation → Song Sections / Arrangements…** or in the Content Library context menu. Existing flat presentations become one named section per source slide when opened here. Saving commits the conversion.
 
 The left list contains unique sections. **Add** creates a section. Select a suggested name such as Verse 1, Chorus, Pre-Chorus, Bridge, Intro, Outro, Tag, Refrain, or Instrumental, or type a custom name. The middle column lists its individual slides as **Verse 1 • Slide 1**, **Verse 1 • Slide 2**, etc. Select a slide to edit its lyrics. **Add Slide** inserts a blank slide after the selection; **Duplicate** copies it with its formatting. **Split at Cursor** (Option/Alt+Return) divides its lyrics into two slides. Drag slides or use ↑/↓ to change their order within the section. **Remove** confirms deletion of a selected slide; each section retains at least one slide. Blank slides are retained. Drag sections to reorder their source groups. Section names must be unique within the song.
 
@@ -113,7 +129,7 @@ The sidebar has **Content Library**, **Service Playlist**, and **Media Library**
 
 In **Media Library**, search names or folders and select an item to see its type, size, image dimensions, file modification date, import date, and managed path. Right-click or use **Rename / Organize…** to change its display name, folder label, or audio/video looping. Choose an existing folder label or type a new one. Display-name changes keep the stored path stable. Legacy media has an unknown import date.
 
-**Preview…** opens a local preview. Audio and video require **Play Preview**. Close the dialog to stop preview playback. Select an asset and use **TAKE SELECTED SLIDE LIVE**, or right-click **Take Live**, to trigger it directly. **Add to Service** and dragging an asset onto the **Service Playlist** tab create shared references. Drop on an item to insert before it, or below the list to append. Copies of services and media entries share the same asset and stored file.
+**Preview…** opens a local preview. Audio and video require **Play Preview**. Close the dialog to stop preview playback. Select an asset and use **Take Live**, or right-click **Take Live**, to trigger it directly. **Add to Service** and dragging an asset onto the **Service Playlist** tab create shared references. Drop on an item to insert before it, or below the list to append. Copies of services and media entries share the same asset and stored file.
 
 Right-click **Delete from Media Library…** to review and confirm removal. Presentations and saved services protect their referenced assets. Removal retains the managed file for recovery and does not reclaim disk space. Existing media presentations remain in Content Library and also expose their files in Media Library. Their slide labels remain presentation-specific.
 
@@ -125,7 +141,7 @@ Image support follows Qt's installed image readers. Video containers include MP4
 
 Use the always-visible **Global transition** controls below the slides, or **Settings → Global Slide Transitions…** (also available in File). Choose **Cut**, **Fade**, **Slide Left**, or **Slide Right**, with a duration from **0 to 10 seconds**. These defaults apply to every presentation that does not have an override; zero seconds gives an instant cut.
 
-Click **Timing & Transitions…** above the slides, or right-click a library presentation or service item and choose it, to configure its slide show. The dialog is also in the File menu for the selected library item. Settings save with the library presentation, apply to all its service entries, and are preserved when it is duplicated. New presentations default to manual advancement and inherit the global transition.
+Choose **Presentation → Timing & Transitions…**, or right-click a library presentation or service item and choose it, to configure its slide show. The dialog is also in the File menu for the selected library item. Settings save with the library presentation, apply to all its service entries, and are preserved when it is duplicated. New presentations default to manual advancement and inherit the global transition.
 
 - **Automatically advance slides:** choose an interval from **0.1 to 3600 seconds**. Interval and loop controls stay editable; changing the interval or enabling looping turns on auto-advance. Uncheck auto-advance to return to manual slides. The live monitor shows the remaining time and **Pause / Resume Auto-Advance**. Manual navigation restarts the interval; explicitly taking a slide live also resumes timing.
 - **Loop back to the first slide:** repeat only this presentation. Otherwise, hold its last slide when the final interval expires. Automatic playback never enters the next service item; manual Next still does.
@@ -146,12 +162,12 @@ Bulk edits change only transition type, duration, and inheritance. Shared librar
 | Right Arrow, Down Arrow, Space, Page Down | Next live slide in Show mode; starts the selected slide if nothing is live |
 | Left Arrow, Up Arrow, Page Up | Previous live slide in Show mode |
 | Escape | Return focus to operator slide controls; output stays fullscreen and live |
-| Ctrl+B (default) | Toggle audience blackout |
-| Ctrl+Shift+C (default) | Toggle audience clear text |
+| Command+B on macOS / Ctrl+B on Windows (default) | Toggle audience blackout |
+| Command+Shift+C on macOS / Ctrl+Shift+C on Windows (default) | Toggle audience clear text |
 | Restore Audience | Remove blackout/clear without changing the slide |
 | File → Keyboard Shortcuts | Configure the two audience shortcuts; preferences persist |
 
-Navigation and output shortcuts do not intercept text fields, open dialogs, or combo-box editing. In Edit mode, arrows remain available for slide selection. Defaults use the Control key on macOS; the shortcut dialog also accepts Command combinations.
+Navigation and output shortcuts do not intercept text fields, open dialogs, or combo-box editing. In Edit mode, arrows remain available for slide selection. The shortcut editor and Help keyboard reference display the native key symbols for the configured audience shortcuts.
 
 **Clear Text** hides audience text while keeping the background/picture/video and its audio. **Blackout** makes audience output fully black and mutes video audio while its playhead continues. **Restore Audience** restores normal audience content. These controls are mutually exclusive and affect **audience content only**; stage keeps current/next lyrics or media names and the clock. Taking or advancing a slide also restores normal audience content.
 
@@ -167,13 +183,17 @@ For fullscreen displays, the **Physical signal** selector lists OS-reported reso
 
 **Settings → Stage Display Layouts…** creates reusable stage layouts. **Copy** the preserved **Standard Stage** layout or choose **New**; name it, set a background color, then add/remove/order elements. Elements include current lyrics/media label, next lyrics/media label, presentation title, clock, countdown, stage message, and custom text. Set each element’s percentage-based position/size, font, size, weight, color, and alignment. **Save Layout** commits the definition. Assign it independently to either stage screen in Screens. Editing a saved layout updates outputs assigned to that layout; assigned layouts cannot be deleted until reassigned.
 
-**Settings → Stage Messages / Timers…** selects Stage Screen 1 or 2. Send/clear its message and start, pause, resume, or reset its countdown. These are independent runtime controls and do not change audience output or cue position. Add Message/Countdown elements to the assigned custom layout to display them. Messages and running timer state are session-local; saved layouts and output assignments persist. The standard stage display remains the default.
+**Timers…** beside the output controls, or **Settings → Stage Messages / Timers…**, opens a modeless confidence-monitor timer panel. Select Stage Screen 1 or 2, name its timer, choose Countdown, Countdown to Time, or Elapsed Time, and enter a duration or local target date/time. **Start & Show** starts the timer and displays it on that confidence monitor. Pause/Resume holds or continues it, Reset saves the edited settings and returns to Ready, and Restart & Show starts over. Edits apply on Start/Restart or Reset.
+
+The standard stage layout adds a timer footer beneath current/next content. Custom layouts use their existing **Timer** element or receive the footer when one is absent. **Show on confidence monitor** toggles visibility independently of playback. A configurable warning threshold turns the timer amber, and the endpoint turns it red. Optional overrun allows negative countdowns or continued elapsed time past a limit. Scheduled countdowns catch up to their original deadline when resumed.
+
+Each stage screen has independent saved timer settings and visibility. Closing the panel leaves timers running. After an application restart, timers open Ready. Use its **Stage Message** tab to send/clear a session-local message to a custom layout containing a Stage Message element. The live preview and route status help verify the selected confidence monitor. See the [timer workflow research and implementation](docs/CONFIDENCE_MONITOR_TIMERS.md).
 
 Windows runtime and physical multi-projector mode switching/hot-plug still require hardware validation. Automated tests use a mode-provider test double for signal changes; native macOS capability discovery is exercised read-only.
 
 ## Build
 
-Install Qt **6.4 or newer**, including Widgets, SQL, the SQLite driver, **Multimedia**, **Concurrent**, **Network**, CMake, and a compatible C++ compiler. Multimedia and Concurrent are standard Qt modules used for playback and background imports; no separate FFmpeg dependency is introduced. Open `CMakeLists.txt` in Qt Creator and use a matching macOS or Windows kit, or build from the command line.
+Install Qt **6.4 or newer**, including Widgets, SQL, the SQLite driver, **Multimedia**, **Concurrent**, **Network**, CMake, **OpenSSL Crypto 1.1.1 or newer**, and a compatible C++ compiler. Multimedia and Concurrent are standard Qt modules used for playback and background imports; no separate FFmpeg dependency is introduced. Open `CMakeLists.txt` in Qt Creator and use a matching macOS or Windows kit, or build from the command line.
 
 macOS (replace the example prefix with your Qt installation):
 
@@ -196,9 +216,13 @@ ctest --test-dir build -C Release --output-on-failure
 .\build\Release\WorshipCue.exe
 ```
 
-Qt Test is required when `WORSHIPCUE_BUILD_TESTS=ON`. Tests use temporary databases and isolated preferences. Most widget tests use Qt’s offscreen backend. On macOS, the operator and media-playback suites use native Cocoa windows in a logged-in desktop session because AVFoundation needs its event dispatcher to decode video. The nineteen suites cover MCP protocol and subprocess transport, atomic service creation, migrations and rollback, persistence, service snapshots, timed advancement and pause/loop boundaries, transition defaults and overrides, output-control fades, bulk transition editing/undo and conflict rollback, background layering, rich text editing/rendering and undo, shared section edits and named arrangements, Looks and measured reflow/undo, standalone media separation and protected deletion, lyric import, four-output routing, native-mode validation/rollback with a test backend, independent format rendering, saved stage layouts/messages/countdowns, reordering, batch naming/import, real H.264 playback, MIDI parsing/configuration/conflicts/retrigger handling, persisted slide actions/targets, isolated native CoreMIDI input/output, usage dates, cleanup eligibility/protection, Recovery and interrupted removal, confirmation/cancel flows, and operator interactions. Windows commands are provided for development; Windows has **not** been tested in this milestone.
+Qt Test is required when `WORSHIPCUE_BUILD_TESTS=ON`. Tests use temporary databases and isolated preferences. Most widget tests use Qt’s offscreen backend. On macOS, the operator and media-playback suites use native Cocoa windows in a logged-in desktop session because AVFoundation needs its event dispatcher to decode video. The twenty-four suites cover packaging safeguards, isolated application deployment probes, license validation, editing-only output enforcement, protected installation state and clock rollback, confidence timer modes, stage timer display and persistence, embedded offline Help, article links/search/history, keyboard focus and live-output preservation, MCP protocol and subprocess transport, atomic service creation, migrations and rollback, persistence, service snapshots, timed advancement and pause/loop boundaries, transition defaults and overrides, output-control fades, bulk transition editing/undo and conflict rollback, background layering, rich text editing/rendering and undo, shared section edits and named arrangements, Looks and measured reflow/undo, standalone media separation and protected deletion, lyric import, four-output routing, native-mode validation/rollback with a test backend, independent format rendering, saved stage layouts/messages/countdowns, reordering, batch naming/import, real H.264 playback, MIDI parsing/configuration/conflicts/retrigger handling, persisted slide actions/targets, isolated native CoreMIDI input/output, usage dates, cleanup eligibility/protection, Recovery and interrupted removal, confirmation/cancel flows, and operator interactions. Windows commands are provided for development; Windows has **not** been tested in this milestone.
 
-Use `macdeployqt` or `windeployqt` from the matching Qt installation to package runtime libraries and plugins. Signing, notarization, native installers, and distribution updates remain future work.
+## Release packaging
+
+Run `python3 tools/package-release.py --qt-prefix /PATH/TO/QT --openssl-root /PATH/TO/OPENSSL` on the native target OS. It builds Release, deploys Qt/OpenSSL/runtime dependencies, validates the relocated GUI and MCP, and produces a macOS DMG or Windows Inno Setup installer with a checksum and verification report. Optional Developer ID/notarization and Windows certificate-store signing are supported. Private licensing credentials are excluded.
+
+An unsigned Apple Silicon DMG is built and verified locally, including mounting/copying it and running isolated resource, database, TLS, video and MCP checks. This Homebrew runtime requires macOS 15.0+. Windows installer builds, signing/notarization, and clean-machine acceptance remain unverified. Unsigned builds are labelled in filenames and the application. See [the release procedure and validation gates](docs/RELEASING.md). The manual CI workflow builds/tests unsigned artifacts without publishing them.
 
 ## Storage and compatibility
 
@@ -214,7 +238,7 @@ Back up the entire library folder, including the database, `media`, `backgrounds
 
 The current application includes a searchable content library, lyric import/paste, named saved services, local MCP service-order creation, picture/video import with batch naming, presentation backgrounds, global transition defaults with presentation overrides, presentation auto-advance/looping, service and slide reordering, Show/Edit operation, shared audience-style previews, live/next monitoring, keyboard controls, and output recovery handling. The rich text slide editor supports direct canvas editing, formatting, per-slide undo/redo, and preview. The bulk lyrics importer retains editable `---` separators.
 
-The next work begins with MCP integration improvements (Corrections 2 Priority 7). Freeform multi-object slide layouts remain future editor work. Library collections, full media source editing, motion lyric backgrounds, audience countdown presentations, Scripture generation, dedicated sermon presentations, additional external integrations, and installers remain unimplemented.
+Licensing and authorization (Corrections 2 Priority 9) now includes a deployed Cloudflare Worker/D1 backend and a real activated developer license. Priority 10 now includes repeatable packaging, a tested unsigned Apple Silicon DMG, and Windows installer/CI recipes. Native Windows, signing, and clean-machine validation remain. Freeform multi-object slide layouts remain future editor work. Library collections, full media source editing, motion lyric backgrounds, audience countdown presentations, Scripture generation, dedicated sermon presentations, and additional external integrations remain unimplemented.
 
 See [the roadmap](docs/ROADMAP.md) and [architecture](docs/ARCHITECTURE.md) for the inspection findings, boundaries, and remaining risks. Automated macOS checks do not replace rehearsal with real projectors, physical hot-plug, macOS Spaces, high DPI, and a Windows build before production use.
 

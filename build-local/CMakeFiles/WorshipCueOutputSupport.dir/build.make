@@ -86,10 +86,24 @@ CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_comp
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCueOutputSupport_autogen/mocs_compilation.cpp -o CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.s
 
+CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o: CMakeFiles/WorshipCueOutputSupport.dir/flags.make
+CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/StageTimer.cpp
+CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o: CMakeFiles/WorshipCueOutputSupport.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o -MF CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o.d -o CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/StageTimer.cpp
+
+CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/StageTimer.cpp > CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.i
+
+CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/StageTimer.cpp -o CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.s
+
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o: CMakeFiles/WorshipCueOutputSupport.dir/flags.make
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputConfiguration.cpp
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o: CMakeFiles/WorshipCueOutputSupport.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o -MF CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o.d -o CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputConfiguration.cpp
 
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.i: cmake_force
@@ -103,7 +117,7 @@ CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.s: cmake_f
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o: CMakeFiles/WorshipCueOutputSupport.dir/flags.make
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayout.cpp
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o: CMakeFiles/WorshipCueOutputSupport.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o -MF CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o.d -o CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayout.cpp
 
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.i: cmake_force
@@ -117,7 +131,7 @@ CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.s: cmake_force
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o: CMakeFiles/WorshipCueOutputSupport.dir/flags.make
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/NativeDisplayModes.cpp
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o: CMakeFiles/WorshipCueOutputSupport.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o -MF CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o.d -o CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/NativeDisplayModes.cpp
 
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.i: cmake_force
@@ -131,7 +145,7 @@ CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.s: cmake_fo
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o: CMakeFiles/WorshipCueOutputSupport.dir/flags.make
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/NativeDisplayModes_mac.mm
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o: CMakeFiles/WorshipCueOutputSupport.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building OBJCXX object CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building OBJCXX object CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o"
 	/usr/bin/clang++ $(OBJCXX_DEFINES) $(OBJCXX_INCLUDES) -x objective-c++ $(OBJCXX_FLAGS) -MD -MT CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o -MF CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o.d -o CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/NativeDisplayModes_mac.mm
 
 CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.i: cmake_force
@@ -145,6 +159,7 @@ CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.s: cmake
 # Object files for target WorshipCueOutputSupport
 WorshipCueOutputSupport_OBJECTS = \
 "CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o" \
+"CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o" \
 "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o" \
 "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o" \
 "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o" \
@@ -154,13 +169,14 @@ WorshipCueOutputSupport_OBJECTS = \
 WorshipCueOutputSupport_EXTERNAL_OBJECTS =
 
 libWorshipCueOutputSupport.a: CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o
+libWorshipCueOutputSupport.a: CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o
 libWorshipCueOutputSupport.a: CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o
 libWorshipCueOutputSupport.a: CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o
 libWorshipCueOutputSupport.a: CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o
 libWorshipCueOutputSupport.a: CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o
 libWorshipCueOutputSupport.a: CMakeFiles/WorshipCueOutputSupport.dir/build.make
 libWorshipCueOutputSupport.a: CMakeFiles/WorshipCueOutputSupport.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libWorshipCueOutputSupport.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX static library libWorshipCueOutputSupport.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/WorshipCueOutputSupport.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/WorshipCueOutputSupport.dir/link.txt --verbose=$(VERBOSE)
 

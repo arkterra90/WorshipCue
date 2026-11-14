@@ -940,19 +940,11 @@ CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
-  /opt/homebrew/opt/qt/include/QtCore/QUrl \
-  /opt/homebrew/opt/qt/include/QtCore/QEventLoop \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qeventloop.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdeadlinetimer.h \
-  /opt/homebrew/opt/qt/include/QtCore/QJsonArray \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonarray.h \
-  /opt/homebrew/opt/qt/include/QtCore/QJsonDocument \
-  /opt/homebrew/opt/qt/include/QtNetwork/QNetworkAccessManager \
-  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
+  /opt/homebrew/opt/qt/include/QtNetwork/QNetworkRequest \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qnetworkrequest.h \
   /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qtnetworkglobal.h \
   /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qtnetwork-config.h \
   /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qtnetworkexports.h \
-  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qnetworkrequest.h \
   /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qhttpheaders.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetaobject.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qspan.h \
@@ -963,6 +955,17 @@ CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QUrl \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QVariant \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q26numeric.h \
+  /opt/homebrew/opt/qt/include/QtCore/QUrl \
+  /opt/homebrew/opt/qt/include/QtCore/QEventLoop \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qeventloop.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdeadlinetimer.h \
+  /opt/homebrew/opt/qt/include/QtCore/QElapsedTimer \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qelapsedtimer.h \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonArray \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonarray.h \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonDocument \
+  /opt/homebrew/opt/qt/include/QtNetwork/QNetworkAccessManager \
+  /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/qnetworkaccessmanager.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QList \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QObject \
   /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/QSslConfiguration \
@@ -985,7 +988,6 @@ CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/QIODevice \
   /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/QNetworkRequest \
   /opt/homebrew/opt/qt/lib/QtNetwork.framework/Headers/QNetworkAccessManager \
-  /opt/homebrew/opt/qt/include/QtNetwork/QNetworkRequest \
   /opt/homebrew/opt/qt/include/QtCore/QRegularExpression \
   /opt/homebrew/opt/qt/include/QtCore/QSet \
   /opt/homebrew/opt/qt/include/QtCore/QTimer \

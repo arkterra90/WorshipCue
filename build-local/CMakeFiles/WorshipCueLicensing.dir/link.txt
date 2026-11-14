@@ -1,0 +1,2 @@
+/usr/bin/ar qc libWorshipCueLicensing.a CMakeFiles/WorshipCueLicensing.dir/WorshipCueLicensing_autogen/mocs_compilation.cpp.o CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseCrypto.cpp.o CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseStore.cpp.o CMakeFiles/WorshipCueLicensing.dir/src/licensing/LicenseManager.cpp.o
+/usr/bin/ranlib libWorshipCueLicensing.a

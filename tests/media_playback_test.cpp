@@ -24,6 +24,7 @@ private slots:
         PresentationController controller;
         MediaPlayback playback(&controller);
         DisplayWindow audience(DisplayWindow::Kind::Audience, &controller);
+        audience.setLiveAuthorizationCheck([] { return true; }); // Isolated renderer test.
         audience.setMediaPlayback(&playback);
         DisplayWindow secondAudience(DisplayWindow::Kind::Audience, &controller, nullptr, &audience);
         QVERIFY(secondAudience.sharesAudienceWith(&audience));
@@ -60,6 +61,7 @@ private slots:
         PresentationController controller;
         MediaPlayback playback(&controller);
         DisplayWindow audience(DisplayWindow::Kind::Audience, &controller);
+        audience.setLiveAuthorizationCheck([] { return true; }); // Isolated renderer test.
         audience.setMediaPlayback(&playback);
         controller.takeLive(QStringLiteral("Text"), {QStringLiteral("Before audio")});
         PresentationItem item{1, QStringLiteral("Prelude"), {QStringLiteral("")},
@@ -240,6 +242,7 @@ private slots:
         PresentationController controller;
         MediaPlayback playback(&controller);
         DisplayWindow audience(DisplayWindow::Kind::Audience, &controller);
+        audience.setLiveAuthorizationCheck([] { return true; }); // Isolated renderer test.
         audience.setMediaPlayback(&playback);
         audience.resize(320, 180);
         take(controller, {MediaKind::Image, path, QStringLiteral("Picture"), false});

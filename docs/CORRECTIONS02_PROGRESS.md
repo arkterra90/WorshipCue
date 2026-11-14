@@ -2,7 +2,7 @@
 
 ## Delivered in this increment
 
-Priorities 1–6 are implemented with feature-specific tests. The ordered remaining work begins with Priority 7.
+Priorities 1–8 are implemented with feature-specific tests. The ordered remaining work begins with Priority 9.
 
 ### 1.1 Media Library
 
@@ -76,6 +76,12 @@ Priorities 1–6 are implemented with feature-specific tests. The ordered remain
 
 ## Important modified files
 
+### Presentation workspace focus audit
+
+The center's five large editing buttons are consolidated into a flat **Presentation** dropdown in the workspace header. Slide text/MIDI and presentation arrangement/Look/timing actions remain available through their existing handlers. Slide context menus share the same QActions and enabled states. **Take Live** sits between Previous and Next beneath the live monitor, and saved timing/background details use secondary text below the grid.
+
+The macOS local app was rebuilt and all 20 regression suites passed after the change. Native operator checks open the dropdown, select the timing editor, cancel, and verify cue/Blackout preservation. They verify action availability, empty-selection disabling, transport placement, a slide grid taller than half the window at 1080×680 and 1280×760, and controls fitting during timed-video playback. The workspace and menu were visually inspected. The README and embedded Help articles describe the new locations. See [the controls audit](WORKSPACE_CONTROLS_UI_AUDIT.md).
+
 | Files | Purpose |
 |---|---|
 | `src/data/LibraryRepository.*` | Versioned migration, standalone assets, mixed playlist references, canonical section persistence, transactional order remapping |
@@ -92,6 +98,9 @@ Priorities 1–6 are implemented with feature-specific tests. The ordered remain
 | `src/ui/DisplayWindow.cpp`, `src/ui/SlideRenderer.cpp`, `src/ui/SlideTextDelegate.cpp` | Shared-lyric repainting, shared output-state compositor, moving-media continuity, audio behavior and labels |
 | `src/ui/PresentationSettingsDialog.*`, `src/ui/MainWindow.*` | Mixed-selection transition dialog, scoped actions, transactional bulk undo/redo |
 | `src/mcp/McpServer.cpp`, `src/mcp/McpCreationTools.cpp` | Compatible mixed-service inspection and structured song creation |
+| `src/mcp/McpLibraryTools.cpp`, `src/mcp/McpConnectionProbe.*`, `src/mcp/main.cpp` | Media lookup, revision-checked shared-song edits, asynchronous connection diagnostics, and bundled macOS plugin discovery |
+| `tools/check-mcp-package.py`, `tests/mcp_server_test.cpp` | Installed-runtime MCP smoke check and protocol/mutation/diagnostic integrity coverage |
+| `src/ui/HelpDialog.*`, `docs/help/*`, `tests/help_dialog_test.cpp` | Embedded offline articles, topic navigation/search/history, native keyboard reference, and resource/link/focus coverage |
 | `tests/song_structure_test.cpp`, updated repository/controller/operator/import/MCP/render/playback tests | Feature-specific and regression coverage |
 | `src/ui/OutputConfiguration.*`, `src/ui/NativeDisplayModes*`, `src/ui/OutputManager.*` | Four-route format/capability model, native backends, recovery, leases, and persistence |
 | `src/ui/StageLayout.*`, `src/ui/StageLayoutDialog.*`, `src/ui/OutputSettingsDialog.*` | Stage rendering/editor/runtime controls and four-tab output configuration |
@@ -123,7 +132,7 @@ cmake --build /private/tmp/worshipcue-c02-20261112 -j 6
 ctest --test-dir /private/tmp/worshipcue-c02-20261112 --output-on-failure --timeout 90
 ```
 
-The nineteen-suite regression run passes. Native macOS access is required for the Cocoa operator tests, AVFoundation playback tests, and isolated CoreMIDI round-trip test. The restricted sandbox cannot supply all of those native services.
+All twenty-one regression suites pass, including confidence monitor timers (62.73 seconds on November 13, 2026). Native macOS access is required for the Cocoa operator tests, AVFoundation playback tests, and isolated CoreMIDI round-trip test. The restricted sandbox cannot supply all of those native services.
 
 | Feature | Automated verification |
 |---|---|
@@ -144,6 +153,7 @@ The nineteen-suite regression run passes. Native macOS access is required for th
 | Outputs and stages | Routing/model/native-operator tests cover all four outputs, configuration persistence and conflicts, capability failures/recovery/restore via a test backend, custom stage layouts, runtime controls, and HD/4:3/portrait/wide rendering |
 | MIDI | Engine/repository/native/operator tests cover routing, parsing, reconnection, conflicts, retrigger/feedback gates, action persistence, stable targets, migration rollback, learning, cue snapshots, and actual isolated CoreMIDI input/output |
 | Cleanup and storage | Dedicated repository and native operator tests verify dates/eligibility, shared/active references, estimates, review/cancel, Recovery, permanent reclamation, migration rollback, and interrupted removal |
+| Offline Help | Dedicated tests load all 16 embedded topics from an empty working directory, check every related-topic link, search/highlights/history, empty results, shortcut labels, resource boundaries, and Find/Escape. Native operator tests cover Help menu entry points, live cue/timer preservation, and shortcut-reference refresh |
 | Compatibility | Existing suites exercise prior migrations, media presentations, background assignment, timing, rich text, routing, and MCP transport |
 
 Screenshots of the song editor, Media Library, Looks / Reflow editor, and bulk-transition dialog/playlist, MIDI device settings, and cleanup/review dialogs are visually inspected during verification. Physical pointer dragging, projector hot-plug, audio hardware output, and Windows behavior require platform/hardware validation. The PCM fixture verifies the transport with silence.
@@ -187,34 +197,91 @@ Workflow references: official [ProPresenter MIDI setup](https://support.renewedv
 
 See [cleanup instructions](../README.md#library-cleanup-and-recovery) and [architecture](ARCHITECTURE.md#library-cleanup-usage-and-recovery-corrections-2-priority-6).
 
-### Priority 7 — MCP integration
+### Priority 7 — Completed
 
-The stdio companion, setup dialog, client configuration generation, protocol tests, development path, and bundle inclusion already exist. This increment preserves compatibility with media entries and shared song arrangements.
+- Preserved the existing stdio companion, negotiated legacy and per-request protocol paths, setup/configuration generation, development executable, and bundled install. The tool inventory now has 15 operations.
+- `list_media_assets` / `get_media_asset` discover active standalone assets without exposing file bytes. `create_service_order` accepts direct `media_asset_id` items, including repeats, alongside existing presentations and new text. One transaction validates active references and rolls back the entire order on failure; shared files are reused. Recovery content remains excluded.
+- `get_presentation` returns an edit revision. `update_song_section` edits the authoritative lyrics of an existing section without changing page count/IDs; changed pages clear rich overrides, while unchanged formatting, Looks, MIDI actions, service orders, and repeated references survive. `save_song_arrangement` creates/updates named ordered section references and optionally selects the active arrangement. Both default to a dry run, enforce bounded typed inputs, reject stale revisions, and reuse the repository's original-state checks and transaction rollback. Live snapshots remain under operator control.
+- **Settings → AI / MCP Setup… → Test Connection** asynchronously checks the actual executable, MCP negotiation, current tools, and this window's library. It provides actionable missing/runtime/protocol/library/version/timeout reports, stops on close, and omits raw environment/stderr and credentials.
+- Fixed the macOS console companion's deployed plugin lookup: because it is not the bundle's primary executable, it now explicitly adds the enclosing `.app/Contents/PlugIns` before opening SQLite. Standalone development paths are unchanged. The installed-package check caught this failure with developer Qt settings removed.
+- `tools/check-mcp-package.py` validates deployed Qt/SQLite/TLS dependencies, then exercises actual installed stdio, invalid-input recovery, media lookup/repeated mixed services, shared edits, arrangements, and persistence in a temporary home/library/working directory. It checks only the companion and its SQL/TLS dependency graph, not GUI-only plugins or an installer.
+- The installed macOS check passed against `/private/tmp/worshipcue-p7-final/WorshipCue.app/Contents/MacOS/WorshipCueMcp`, with Qt deployed and developer environment settings removed. The temporary bundle uses ad-hoc signing; it is not a signed/notarized release or a clean-OS certification.
+- On November 13, 2026, the macOS GUI/companion and all targets built. All 19 regression suites passed with native macOS access for Cocoa, CoreMIDI, and AVFoundation; restricted-sandbox failures in those services passed after rerunning with native access. The MCP suite also verifies missing/corrupt-library startup, failed-process recovery, stale edits, rich-text/Look/MIDI identity preservation, and injected SQL rollback. The setup dialog and its successful real connection test are visually inspected.
+- Schema remains version 11; no migration is required. User instructions, mutation limits, protocol references, and package commands are in [MCP.md](MCP.md). Windows runtime, clean OS images, real AI-client configuration, and live Planning Center accounts remain external checks. Distribution signing/installers and unrelated Qt GUI-plugin deployment remain Priority 10 work.
 
-Add dedicated standalone media operations and structured section/arrangement mutations, bounded validation, expanded diagnostics, and packaged execution checks. Test each mutation's integrity and failure behavior. Test the packaged companion from a clean installed environment.
+### Priority 8 — Completed
 
-### Priority 8 — Offline help
+- **Help → WorshipCue Help…** opens a modeless offline reader. **Keyboard Reference…** opens the shortcut topic directly. The platform Help shortcut also opens the guide, and repeated menu actions reuse the open window.
+- Sixteen embedded Markdown articles cover all 15 requested topics plus a keyboard reference. Articles use current UI labels and include links to related local topics. The licensing article now describes activation/device management and offline authorization from Priority 9.
+- Search covers article titles and rendered content, matches all case-insensitive words, highlights results, and explains empty results. Topic selection, Home, Back/Forward history, local links, and platform Find/history shortcuts support keyboard and mouse navigation.
+- The keyboard reference displays configured audience shortcuts with native platform symbols and refreshes when the shortcut editor saves changes. Markdown punctuation in custom key labels is escaped for literal rendering.
+- The Help window stays outside the operator/output keyboard filter. Its reading/search controls preserve the current cue, and automatic presentation timing continues while Help is open.
+- CMake embeds the catalogue and every article in the GUI executable. Installation carries the resource collection with that binary. A temporary installed macOS app was checked for the initialized Help collection, catalogue, and all 16 article resource entries.
+- The macOS GUI/companion and test targets build. All 20 regression suites pass with native macOS access where required. Dedicated Help tests verify resource and link completeness from an empty working directory, body search, case/multiple terms, highlights, history, empty results, literal shortcut labels, local resource loading, Find, and Escape. Native operator checks verify both menu entries, window reuse/reopening, automatic shortcut-reference updates, and live cue/timer preservation. The Help window is visually inspected.
+- Schema remains version 11. Windows runtime and full signed installer verification remain external validation. Help uses Qt Widgets and the application's compiled resources.
 
-Documentation currently lives in repository Markdown files. A packaged offline documentation hub is unimplemented.
+### Confidence monitor timers — Completed
 
-Add a visible Help entry, navigable/searchable local content, shortcuts, and resource packaging covering implemented workflows. Test resource inclusion, offline navigation/search, and UI wording accuracy. Add licensing/MIDI instructions as those features become available.
+- Researched ProPresenter's dedicated timer controls, duration/scheduled/elapsed modes, stage-linked timer objects, overrun, and color warnings. Primary sources and implementation scope are recorded in [CONFIDENCE_MONITOR_TIMERS.md](CONFIDENCE_MONITOR_TIMERS.md).
+- The quiet **Timers…** toolbar button opens a reusable modeless panel with independent named timers for Stage Screen 1 and 2. Duration countdown, countdown to a local date/time, and elapsed time support Start/Restart & Show, Pause, Resume, and Reset, plus optional limits, overrun, and warning thresholds.
+- **Start & Show** displays a large timer footer on the standard confidence layout. Custom layouts retain their Timer element placement or receive the footer when no Timer element exists. Approaching the endpoint turns amber; reaching it turns red. Hiding the timer or closing the panel leaves its clock running. A rendered preview and routing status explain which screen will show it.
+- Timer configuration and visibility persist independently per stage output; app restarts restore Ready state. Runtime control preserves slide cues, media, audience blackout, and automatic presentation timing. Schema remains 11. Offline Help includes the operator workflow.
+- All 21 regression suites pass. Core, renderer, output persistence, and native operator tests cover the modes, invalid input, formatting, pause/resume/reset, limits/overrun, warning colors, independent screens, visibility, and modeless lifecycle. The local macOS app is rebuilt, and the panel and rendered confidence screen are visually inspected. Physical confidence monitors and Windows runtime remain external validation.
+
+### Planning Center / SongSelect import readiness
+
+- Verified the current Planning Center Services documentation for Item song/arrangement includes, arrangement `lyrics` and sequence arrays, scoped Plan endpoints and ID filters, and PAT/OAuth authentication. The existing MCP path remains the operator workflow; this increment does not introduce a separate GUI plan browser.
+- Fixed browser-plan-link resolution to search documented scoped plan collections, with direct service-type/plan IDs supported and bounded discovery. Requests validate returned plan identity and support either church-local PAT credentials or an externally managed OAuth access token. Auth/permissions/missing-plan failures provide distinct messages. Credentials remain outside SQLite, QSettings, tool arguments, and logs.
+- Imported arrangement lyrics now retain reusable named sections, multi-page groups, and canonical repeated lyrics. Custom sequence labels support Unicode. Invalid sequence types, unknown labels, and conflicting text under a label require resolution. Song sections, slides, and the service share the existing atomic transaction; injected database failures verify rollback and a subsequent successful save.
+- **Settings → AI / MCP Setup…** can include credential placeholders in the copied client configuration and explains importing SongSelect Lyrics into Planning Center's selected **Lyrics & Chords** arrangement first. An attached PDF alone is insufficient. The local connection test remains explicitly separate from Planning Center account verification.
+- `tools/check-planning-center.py` verifies the actual companion's tools and Services access and optionally previews a plan in a temporary library. Four isolated subprocess checks cover connection-only operation, preview-only imports, unresolved-lyrics guidance, missing credentials, credential omission, and cleanup. Setup details are embedded in offline Help and documented in [MCP.md](MCP.md#connect-planning-center-services).
+- All 21 CTest suites pass (63.96 seconds on November 13, 2026), as do the checker's four subprocess tests. Native operator tests exercise placeholder generation/copy/reset and the real local companion connection. The updated setup dialog is visually inspected, and the local app/companion are rebuilt.
+- Live Planning Center credentials are not configured in this workspace, so a real church account and SongSelect-populated plan have not been exercised. Church-local PAT setup is supported; distributed multi-church authorization requires a registered OAuth integration and token lifecycle management outside the companion.
 
 ### Priority 9 — Licensing
 
-The licensing client, Cloudflare Worker/D1 service, signing/verifying leases, secure credential storage, live-output authorization, activation UI, and developer-license issuance are unimplemented.
+Implemented the editing/live split, Qt licensing client and activation/device dialog, protected macOS Keychain/Windows DPAPI state, Ed25519 seven-day leases, renewal and rollback checks, and shared live authorization across controllers, all four output windows, media controls, and MIDI. Unlicensed editing, media inspection, libraries, and saved services remain available. License loss clears live content and closes outputs without deleting editing data or saved routes.
 
-Implement the authoritative backend and migrations, a five-installation transactional activation limit, signed expiring offline leases, replay-resistant transfer/deactivation, OS credential storage, and authorization enforcement across all live-output entry points. Add tests for invalid/expired/revoked leases, duplicated installations, concurrent sixth activations, transfer, replay, and editing-only mode. Provision a developer license through the deployed real backend after Cloudflare account/deployment access is configured. Keep all credentials out of source and logs.
+The Cloudflare Worker is deployed at `https://worshipcue-licensing.jerqin.workers.dev`, with its own `worshipcue-licenses` D1 database and two applied migrations. Atomic nonce/mutation batches, primary-consistent reads, SQL activation triggers, and idempotent UPSERT enforce five installations and replay-resistant transfer. Credentials are generated server-side, stored as peppered verifiers, and excluded from desktop/MCP state. Rate limits, bounded HTTPS requests, safe errors, separate admin authentication, issuance/revocation tooling, and ignored protected local secrets are included.
+
+One real developer license was issued by the backend and activated with the actual Qt client in this workstation's Keychain. Its credential remains in ignored `licensing/secrets/developer-license.json`; no code or private signing key is committed or printed. Live Cloudflare/D1 tests verified concurrent cap enforcement, duplicate registration, renewal, transfer/deactivation, and temporary-device cleanup. The production licensing dialog was visually reviewed.
+
+Local Worker tests cover invalid/revoked licenses, stale/tampered/replayed signatures, concurrent sixth attempts and duplicates, transfer, remote release, rate limits, and safe persistence. Qt tests cover lease authenticity/expiration, copied installations, rollback/protected denial state, storage failures, denied output rendering/restoration, editing-only UI/library behavior, and licensed operator regressions. See [LICENSING.md](LICENSING.md) for build/test commands and full operating/recovery details.
+
+All 22 desktop CTest suites pass (24.66 seconds on November 14, 2026), and all five local Worker tests pass. The actual backend reports one issued license and one active workstation after temporary integration-device cleanup.
+
+Windows DPAPI/runtime and physical display hardware remain unverified. Existing offline leases can outlive remote release/revocation by up to seven days; an idle live output is cleared within the 30-second watchdog. Runtime bundling is handled by Priority 10; release signing and clean-machine installer acceptance remain pending. No local library schema change was needed.
 
 ### Priority 10 — Distribution
 
-CMake currently builds a macOS application bundle with icons/background resources and its MCP companion and provides basic install targets. Repeatable DMG/Windows installer pipelines, dependency deployment validation, signing, and notarization are unimplemented.
+Implemented a native release pipeline in `tools/package-release.py` and a reusable installed-runtime checker. CMake supplies shared version/channel information, macOS Info.plist metadata, Windows icon/version resources, and legal-notice install rules. Development, unsigned, signed-unnotarized, and notarized artifacts are distinguished; unsigned app windows/Finder names are labelled. Normal editor/library behavior remains unchanged.
 
-Add release scripts and CI/build targets for deployed Qt dependencies, DMG and Windows installer creation, production MCP/help/migration/license resource checks, and optional signing/notarization using supplied credentials. Test installation/uninstallation and launch on clean macOS and Windows systems. Mark unsigned development builds explicitly. Distribution readiness remains unverified.
+The macOS path builds Release, stages both GUI and MCP, deploys Qt plus remaining third-party libraries, writes relative Qt configuration, restricts bundled plugin searches, checks dependency closure/architecture/minimum OS, signs inside-out, and produces a DMG with an Applications shortcut. Optional Developer ID, hardened runtime, timestamping, app/image notarization, stapling, and Gatekeeper checks fail closed if requested steps fail. No valid signing identity is configured here, so only ad-hoc integrity signing is tested.
+
+Built `dist/WorshipCue-0.3.0-macOS-arm64-unsigned.dmg` with its SHA-256 checksum and JSON verification report. The bundled Qt 6.12.0/runtime graph contains 69 Mach-O images and requires macOS 15.0+. The image is verified/mounted read-only, its app copied to a fresh path with spaces, and the copied GUI/companion checked with developer environment paths removed. Tests confirm actual H.264 decoding, TLS, 16 Help articles, 20 backgrounds, icon loading, SQLite migrations/persistence, public licensing configuration/invalid-lease rejection, and real MCP library/song/service workflows. User libraries, settings, Keychain and live outputs are untouched by the package probe. A separate visual launch check of the installed DMG copy passed after the user approved macOS Keychain access for the new ad-hoc signature: the unsigned label, existing-license renewal and updated offline Help were verified. Dependency license texts and available original notices/SBOMs are included; private licensing/signing files are excluded.
+
+The Windows recipe deploys Qt, OpenSSL and app-local MSVC runtime DLLs, uses a stable per-user Inno Setup installation ID with shortcuts and uninstall support, and supports Authenticode signing of GUI/MCP/setup/uninstaller. Its native installation test refuses an existing registered WorshipCue installation, installs into a temporary path, checks GUI/MCP, uninstalls and preserves an untracked user file. A manual GitHub Actions workflow prepares macOS arm64 and Windows x64 builds/tests/artifacts without publishing or receiving private license/backend credentials. **Windows compilation/installer execution and this new workflow have not run in this environment.**
+
+All 24 CTest suites pass on macOS (51.61 seconds on November 14, 2026), including the isolated package probe and seven Python packaging safeguards. No database schema change is required. See [RELEASING.md](RELEASING.md) for commands, prerequisites, signing setup, dependency provenance and clean-machine release gates.
+
+Remaining: native Windows/Intel artifacts and upgrade/uninstall validation, real signing/notarization, Gatekeeper/SmartScreen/download checks, and clean OS testing without developer software. Public distribution readiness is not claimed. Website download publication remains a separate authorized release action after these gates pass.
 
 ## External setup and limits
 
 - A Windows Qt/compiler environment and native Windows runtime are required for Windows validation.
 - Real displays, physical MIDI devices/network sessions, and audio hardware are required for their respective integration checks. Isolated native CoreMIDI virtual-port I/O is tested.
-- Cloudflare account/deployment access is required when implementing and deploying the authoritative licensing backend and issuing the real developer license.
+- Cloudflare licensing is deployed and this workstation has a real developer activation. Keep the ignored secret backup secure; future operations require authorized account/admin access.
 - Apple signing/notarization credentials and Windows signing credentials are required for signed release validation.
-- Later priorities have implementation and test plans above. They follow the completed Priority 1–6 increments.
+- Priority 10 has a tested unsigned macOS artifact and prepared Windows/signing paths; the remaining native/distribution acceptance gates are documented above.
+
+
+### Remembered activation without login prompts
+
+Per the user's follow-up, macOS activation persistence now uses an atomic, encrypted `licensing/activation-state.bin` cache with 0700 directory and 0600 file permissions, bound to the current machine/user. Valid saved activation opens immediately and renewal remains silent across unsigned builds. Windows keeps noninteractive DPAPI. Master license codes and OS login credentials are not retained by the desktop.
+
+Legacy Keychain migration explicitly disables interaction for the read (the per-query UI flag alone does not cover legacy items), restores the process policy afterward, and skips denied/locked records without opening a prompt. Existing accessible activations preserve their installation ID. An inaccessible older record needs a one-time activation-code entry and may need its old registration released; future launches reuse the private cache.
+
+Regression tests cover encrypted persistence across two fresh managers, unchanged installation identity, 0600/0700 permissions, wrong binding keys, tampering, symlink rejection, and preservation of prior state on invalid writes. The actual native developer activation and a subsequent fresh-process online verification pass without an OS login prompt. Signed leases, expiration, revocation, five-installation enforcement and editing-only restrictions remain in force.
+
+
+The updated native activation and fresh-process verification complete without OS authentication, and the updated DMG passes its isolated GUI/resource/TLS/video/MCP checks. The full regression run passes 22/24 suites; native operator-focus and media timing suites require rerunning in an unlocked desktop session. A read-only session check confirmed `CGSSessionScreenIsLocked=true` while those suites and optional visual automation could not obtain active windows. No tests or authorization gates were relaxed. The superseded developer registration was released after the one-time storage upgrade; the remembered installation is retained.

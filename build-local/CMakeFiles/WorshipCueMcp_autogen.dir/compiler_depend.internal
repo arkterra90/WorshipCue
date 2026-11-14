@@ -4,6 +4,7 @@
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCueMcp_autogen/timestamp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/CMakeLists.txt
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/4.4.5/CMakeCXXCompiler.cmake
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/4.4.5/CMakeOBJCXXCompiler.cmake
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/4.4.5/CMakeSystem.cmake
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h
@@ -11,9 +12,12 @@
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryCleanup.cpp
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryCleanup.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpCreationTools.cpp
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpLibraryTools.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpServer.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpServer.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/PlanningCenterClient.cpp
@@ -368,6 +372,7 @@
  /opt/homebrew/share/cmake/Modules/CMakeGenericSystem.cmake
  /opt/homebrew/share/cmake/Modules/CMakeInitializeConfigs.cmake
  /opt/homebrew/share/cmake/Modules/CMakeLanguageInformation.cmake
+ /opt/homebrew/share/cmake/Modules/CMakeOBJCXXInformation.cmake
  /opt/homebrew/share/cmake/Modules/CMakeSystemSpecificInformation.cmake
  /opt/homebrew/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake
  /opt/homebrew/share/cmake/Modules/CheckCXXCompilerFlag.cmake
@@ -375,7 +380,9 @@
  /opt/homebrew/share/cmake/Modules/CheckIncludeFileCXX.cmake
  /opt/homebrew/share/cmake/Modules/CheckLibraryExists.cmake
  /opt/homebrew/share/cmake/Modules/Compiler/AppleClang-CXX.cmake
+ /opt/homebrew/share/cmake/Modules/Compiler/AppleClang-OBJCXX.cmake
  /opt/homebrew/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+ /opt/homebrew/share/cmake/Modules/Compiler/Clang-OBJCXX.cmake
  /opt/homebrew/share/cmake/Modules/Compiler/Clang.cmake
  /opt/homebrew/share/cmake/Modules/Compiler/GNU.cmake
  /opt/homebrew/share/cmake/Modules/FindOpenGL.cmake
@@ -386,18 +393,23 @@
  /opt/homebrew/share/cmake/Modules/GNUInstallDirs.cmake
  /opt/homebrew/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake
  /opt/homebrew/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake
+ /opt/homebrew/share/cmake/Modules/Internal/CMakeOBJCXXLinkerInformation.cmake
  /opt/homebrew/share/cmake/Modules/Internal/CheckCommon.cmake
  /opt/homebrew/share/cmake/Modules/Internal/CheckCompilerFlag.cmake
  /opt/homebrew/share/cmake/Modules/Internal/CheckFlagCommonConfig.cmake
  /opt/homebrew/share/cmake/Modules/Internal/CheckSourceCompiles.cmake
+ /opt/homebrew/share/cmake/Modules/Linker/AppleClang-C.cmake
  /opt/homebrew/share/cmake/Modules/Linker/AppleClang-CXX.cmake
  /opt/homebrew/share/cmake/Modules/Linker/AppleClang.cmake
  /opt/homebrew/share/cmake/Modules/MacroAddFileDependencies.cmake
  /opt/homebrew/share/cmake/Modules/Platform/Apple-AppleClang-CXX.cmake
+ /opt/homebrew/share/cmake/Modules/Platform/Apple-AppleClang-OBJCXX.cmake
  /opt/homebrew/share/cmake/Modules/Platform/Apple-Clang-CXX.cmake
+ /opt/homebrew/share/cmake/Modules/Platform/Apple-Clang-OBJCXX.cmake
  /opt/homebrew/share/cmake/Modules/Platform/Apple-Clang.cmake
  /opt/homebrew/share/cmake/Modules/Platform/Darwin-Initialize.cmake
  /opt/homebrew/share/cmake/Modules/Platform/Darwin.cmake
+ /opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang-C.cmake
  /opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang-CXX.cmake
  /opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang.cmake
  /opt/homebrew/share/cmake/Modules/Platform/UnixPaths.cmake

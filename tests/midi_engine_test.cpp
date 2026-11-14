@@ -23,6 +23,29 @@ private slots:
         e.activateCue(1,{action(),action()});QCOMPARE(fake->sent.size(),2);e.activateCue(1,{action()});QCOMPARE(fake->sent.size(),2);e.activateCue(2,{action()});QCOMPARE(fake->sent.size(),3);e.releaseNotes();QCOMPARE(fake->sent.size(),4);QCOMPARE(fake->sent.last().second,QByteArray::fromHex("803c00"));e.releaseNotes();QCOMPARE(fake->sent.size(),4);
         e.activateCue(3,{action()});auto s=settings();s.enabled=false;QVERIFY(e.setSettings(s,&error,false));QCOMPARE(fake->sent.last().second,QByteArray::fromHex("803c00"));QVERIFY(fake->outputs.isEmpty());e.activateCue(4,{action()});auto count=fake->sent.size();QVERIFY(e.setSettings(settings(),&error,false));e.activateCue(4,{action()});QCOMPARE(fake->sent.size(),count);
     }
+    void authorizationBlocksOutputAndStillReleasesHeldNotes() {
+        auto backend = std::make_unique<FakeMidiBackend>();
+        auto *fake = backend.get();
+        MidiEngine engine(nullptr, std::move(backend));
+        QString error;
+        QVERIFY(engine.setSettings(settings(), &error, false));
+        bool authorized = false;
+        engine.setLiveAuthorizationCheck([&] { return authorized; });
+        QVERIFY(!engine.sendAction(action(), &error));
+        QVERIFY(error.contains("license"));
+        engine.activateCue(1, {action()});
+        QVERIFY(fake->sent.isEmpty());
+        authorized = true;
+        QVERIFY(engine.sendAction(action(), &error));
+        QCOMPARE(fake->sent.size(), 1);
+        authorized = false;
+        QVERIFY(!engine.sendAction(action(), &error));
+        engine.releaseNotes();
+        QCOMPARE(fake->sent.size(), 2);
+        QCOMPARE(fake->sent.last().second, QByteArray::fromHex("803c00"));
+        engine.releaseNotes();
+        QCOMPARE(fake->sent.size(), 2);
+    }
     void inputEdgesChannelFiltersAndModalGate(){
         auto backend=std::make_unique<FakeMidiBackend>();auto *f=backend.get();MidiEngine e(nullptr,std::move(backend));QString error;auto s=settings();s.inputs[0].channel=2;QVERIFY(e.setSettings(s,&error,false));QVERIFY(e.setBindings({binding()},&error));QSignalSpy command(&e,&MidiEngine::commandRequested);QSignalSpy monitor(&e,&MidiEngine::messageReceived);
         f->inject(QByteArray::fromHex("903c7f913c7f913c7f"));flush();QCOMPARE(command.count(),1);QCOMPARE(monitor.count(),3);

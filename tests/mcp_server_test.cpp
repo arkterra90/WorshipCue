@@ -1,4 +1,5 @@
 #include "../src/mcp/McpServer.h"
+#include "../src/mcp/McpConnectionProbe.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -6,7 +7,11 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QProcess>
+#include <QSignalSpy>
+#include <QSqlQuery>
 #include <QTemporaryDir>
+#include <QUrlQuery>
+#include <QUuid>
 #include <QtTest/QtTest>
 
 namespace {
@@ -49,11 +54,278 @@ QString executable() {
 QByteArray encoded(const QJsonObject &value) {
     return QJsonDocument(value).toJson(QJsonDocument::Compact) + '\n';
 }
+class PlanningEnvironment {
+    QMap<QByteArray, QByteArray> saved_;
+    QSet<QByteArray> present_;
+public:
+    PlanningEnvironment() {
+        for (const auto *key : {"PLANNING_CENTER_APPLICATION_ID", "PLANNING_CENTER_SECRET", "PLANNING_CENTER_ACCESS_TOKEN"}) {
+            saved_.insert(key, qgetenv(key));
+            if (qEnvironmentVariableIsSet(key)) present_.insert(key);
+            qunsetenv(key);
+        }
+    }
+    ~PlanningEnvironment() {
+        for (auto it = saved_.begin(); it != saved_.end(); ++it)
+            if (present_.contains(it.key())) qputenv(it.key().constData(), it.value()); else qunsetenv(it.key().constData());
+    }
+};
 }
 
 class McpServerTest : public QObject {
     Q_OBJECT
 private slots:
+    void planningCenterRequestsUsePatOrOAuthWithoutFollowingRedirects() {
+        PlanningEnvironment environment;
+        const QUrl url("https://api.planningcenteronline.com/services/v2/service_types");
+        QString error;
+        QVERIFY(!PlanningCenterClient::requestFor(url, &error).url().isValid());
+        QVERIFY(error.contains("server environment"));
+        qputenv("PLANNING_CENTER_APPLICATION_ID", "fixture-id");
+        qputenv("PLANNING_CENTER_SECRET", "fixture-secret");
+        const auto request = PlanningCenterClient::requestFor(url, &error);
+        QVERIFY(error.isEmpty());
+        QCOMPARE(request.rawHeader("Authorization"), QByteArray("Basic ") + QByteArray("fixture-id:fixture-secret").toBase64());
+        QCOMPARE(request.rawHeader("X-PCO-API-Version"), QByteArray("2018-11-01"));
+        QVERIFY(request.rawHeader("User-Agent").startsWith("WorshipCue/"));
+        QCOMPARE(request.attribute(QNetworkRequest::RedirectPolicyAttribute).toInt(), int(QNetworkRequest::ManualRedirectPolicy));
+        qputenv("PLANNING_CENTER_ACCESS_TOKEN", "fixture-access-token");
+        QCOMPARE(PlanningCenterClient::requestFor(url, &error).rawHeader("Authorization"), QByteArray("Bearer fixture-access-token"));
+        QVERIFY(error.isEmpty());
+        QVERIFY(!PlanningCenterClient::requestFor(QUrl("https://example.org/services/v2/"), &error).hasRawHeader("Authorization"));
+        QVERIFY(!error.isEmpty());
+        qputenv("PLANNING_CENTER_ACCESS_TOKEN", "invalid\r\nheader");
+        QVERIFY(!PlanningCenterClient::requestFor(url, &error).hasRawHeader("Authorization"));
+        QVERIFY(error.contains("invalid format"));
+    }
+
+    void planningCenterBrowserLinksResolveThroughDocumentedScopedEndpoints() {
+        QString error;
+        QStringList requests;
+        PlanningCenterClient client([&](const QUrl &url, QString *failure) {
+            requests.append(url.path());
+            if (url.path() == "/services/v2/service_types") return QJsonObject{{"data", QJsonArray{
+                QJsonObject{{"type", "ServiceType"}, {"id", "9"}}, QJsonObject{{"type", "ServiceType"}, {"id", "10"}}}}};
+            if (url.path().endsWith("/plans")) {
+                if (QUrlQuery(url).queryItemValue("where[id]") != "20") *failure = "Missing plan filter";
+                return QJsonObject{{"data", url.path().contains("/10/") ? QJsonArray{QJsonObject{{"id", "20"}}} : QJsonArray{}}};
+            }
+            if (url.path() == "/services/v2/service_types/10/plans/20") return QJsonObject{{"data", QJsonObject{{"type", "Plan"}, {"id", "20"}}}};
+            if (url.path().endsWith("/items")) {
+                if (QUrlQuery(url).queryItemValue("include") != "song,arrangement") *failure = "Missing song/arrangement includes";
+                return QJsonObject{{"data", QJsonArray{}}};
+            }
+            *failure = "Undocumented endpoint requested";
+            return QJsonObject{};
+        });
+        const auto plan = client.plan({}, "20", &error);
+        QVERIFY2(error.isEmpty(), qPrintable(error));
+        QCOMPARE(plan["service_type_id"].toString(), QString("10"));
+        QCOMPARE(requests.size(), 5);
+        QVERIFY(client.plan({}, "99", &error).isEmpty());
+        QVERIFY(!error.isEmpty());
+        requests.clear();
+        QVERIFY(client.plan("../invalid", "20", &error).isEmpty());
+        QVERIFY(requests.isEmpty());
+    }
+
+    void discoversMediaAndCreatesMixedOrdersAtomically() {
+        QTemporaryDir directory;
+        QString error;
+        LibraryRepository library;
+        QVERIFY(library.open(&error, directory.filePath("mixed.sqlite")));
+        const auto assets = library.registerMediaAssets({{MediaKind::Audio, "media/prelude.wav", "Prelude", true},
+                                                        {MediaKind::Image, "media/welcome.png", "Welcome", false}}, &error);
+        QCOMPARE(assets.size(), 2);
+        QVERIFY(library.updateMediaAsset(assets.first(), "Prelude", "Sunday", true, &error));
+        McpServer server(library);
+        auto listed = data(call(server, "list_media_assets", {{"limit", 1}}));
+        QCOMPARE(listed["total"].toInt(), 2);
+        QCOMPARE(listed["media_assets"].toArray().size(), 1);
+        QCOMPARE(listed["next_offset"].toInt(), 1);
+        QCOMPARE(data(call(server, "list_media_assets", {{"query", "Sunday"}}))["total"].toInt(), 1);
+        QCOMPARE(data(call(server, "list_media_assets", {{"offset", 2}}))["media_assets"].toArray().size(), 0);
+        const auto asset = data(call(server, "get_media_asset", {{"media_asset_id", assets.first()}}));
+        QCOMPARE(asset["name"].toString(), QString("Prelude"));
+        QCOMPARE(asset["media_kind"].toString(), QString("audio"));
+        QVERIFY(asset["loop"].toBool());
+        QVERIFY(!asset.contains("path"));
+        for (const auto &args : {QJsonObject{{"limit", 101}}, QJsonObject{{"offset", -1}}, QJsonObject{{"offset", 0.5}},
+                                 QJsonObject{{"query", 1}}, QJsonObject{{"query", QString(QChar::Null)}}, QJsonObject{{"sql", "SELECT 1"}}})
+            QVERIFY(toolFailed(call(server, "list_media_assets", args)));
+        QVERIFY(toolFailed(call(server, "get_media_asset", {{"media_asset_id", 0}})));
+        QVERIFY(toolFailed(call(server, "get_media_asset", {{"media_asset_id", 99999}})));
+
+        const auto songs = library.songs().size(), services = library.services().size();
+        QJsonObject args{{"name", "Mixed service"}, {"dry_run", true}, {"items", QJsonArray{
+            newItem("Welcome", {"Hello"}), QJsonObject{{"media_asset_id", assets.first()}},
+            QJsonObject{{"media_asset_id", assets.first()}}, QJsonObject{{"media_asset_id", assets.last()}}}}};
+        auto preview = call(server, "create_service_order", args);
+        QVERIFY(!toolFailed(preview));
+        const auto media = data(preview)["items"].toArray().at(1).toObject();
+        QCOMPARE(media["kind"].toString(), QString("media"));
+        QVERIFY(!media["new_presentation"].toBool());
+        QCOMPARE(media["slide_count"].toInt(), 1);
+        QCOMPARE(library.services().size(), services);
+        args["dry_run"] = false;
+        auto saved = call(server, "create_service_order", args);
+        QVERIFY(!toolFailed(saved));
+        const auto entries = library.service(data(saved)["service_id"].toInt());
+        QCOMPARE(entries.size(), 4);
+        QCOMPARE(entries[1].mediaAssetId, assets.first());
+        QCOMPARE(entries[2].mediaAssetId, assets.first());
+        QCOMPARE(entries[1].songId, 0);
+        QCOMPARE(library.songs().size(), songs + 1);
+        for (const auto &item : {QJsonObject{{"media_asset_id", assets.first()}, {"song_id", entries.first().songId}},
+                                 QJsonObject{{"media_asset_id", assets.first()}, {"slide_order", QJsonArray{0}}},
+                                 QJsonObject{{"media_asset_id", 99999}}, QJsonObject{{"media_asset_id", 1.5}}}) {
+            QVERIFY(toolFailed(call(server, "create_service_order", {{"name", "Invalid"}, {"items", QJsonArray{newItem("Orphan", {"Text"}), item}}})));
+        }
+        // Fail after the text presentation is inserted: all service and content
+        // rows must roll back, including a later direct-media insert.
+        const auto connection = QUuid::createUuid().toString();
+        {
+            auto db = QSqlDatabase::addDatabase("QSQLITE", connection);
+            db.setDatabaseName(library.databasePath()); QVERIFY(db.open());
+            QSqlQuery query(db);
+            QVERIFY(query.exec("CREATE TRIGGER fail_media BEFORE INSERT ON service_entries WHEN NEW.media_asset_id IS NOT NULL BEGIN SELECT RAISE(ABORT,'Injected media failure'); END"));
+            QVERIFY(toolFailed(call(server, "create_service_order", args)));
+            QCOMPARE(library.services().size(), services + 1);
+            QCOMPARE(library.songs().size(), songs + 1);
+            QVERIFY(query.exec("DROP TRIGGER fail_media"));
+            QVERIFY(query.exec("INSERT INTO cleanup_batches VALUES('test',1,1,'archived')"));
+            QVERIFY(query.exec(QString("UPDATE content_usage SET archived_batch='test' WHERE asset_id=%1").arg(assets.last())));
+            QVERIFY(toolFailed(call(server, "get_media_asset", {{"media_asset_id", assets.last()}})));
+            QCOMPARE(data(call(server, "list_media_assets"))["total"].toInt(), 1);
+            ServiceOrderItem hidden; hidden.mediaAssetId = assets.last();
+            QVERIFY(!library.createServiceOrder("Hidden", {hidden}, &error));
+        }
+        QSqlDatabase::removeDatabase(connection);
+    }
+
+    void sharedSectionAndArrangementEditsValidateRevisionsAndPreserveIdentity() {
+        QTemporaryDir directory;
+        QString error;
+        LibraryRepository library;
+        QVERIFY(library.open(&error, directory.filePath("song.sqlite")));
+        SongStructure structure;
+        structure.sections = {{"v", "Verse", 1}, {"c", "Chorus", 2}};
+        structure.arrangements = {{"full", "Full", {"v", "c", "c"}}};
+        structure.activeArrangementId = "full";
+        PresentationAppearance appearance;
+        appearance.lookId = library.createLook("Song Look", {}, &error);
+        QVERIFY(appearance.lookId > 0);
+        appearance.slideLookIds = {0, 0, 0};
+        appearance.richTextOverrides = {false, true, true};
+        appearance.fitText = {false, false, false};
+        const int id = library.createTextPresentation("Shared song", {"Verse", "Chorus A", "Chorus B"}, &error,
+            {}, {}, {"<p>Verse</p>", "<p>Chorus A</p>", "<p>Chorus B</p>"}, structure, appearance);
+        QVERIFY(id > 0);
+        QVERIFY(library.appendToService(1, id, &error));
+        const auto entry = library.service(1).last().id;
+        QVERIFY(library.setEntrySlideOrder(entry, {1, 2, 0, 1, 2}, &error));
+        MidiOutputAction action;
+        action.destination = "Test destination";
+        QVERIFY(library.setMidiActions(MidiOwnerType::Slide, library.song(id).slideIds[1], {}, {action}, &error));
+        const auto original = library.song(id);
+        McpServer server(library);
+        const auto revision = [&] { return data(call(server, "get_presentation", {{"song_id", id}})).value("revision"); };
+        QJsonObject edit{{"song_id", id}, {"expected_revision", revision()}, {"section_id", "c"}, {"slides", QJsonArray{"New chorus", "Chorus B"}}};
+        auto preview = call(server, "update_song_section", edit);
+        QVERIFY(!toolFailed(preview)); QVERIFY(data(preview)["dry_run"].toBool());
+        QCOMPARE(library.song(id).slides, original.slides);
+        edit["dry_run"] = false;
+        auto saved = call(server, "update_song_section", edit);
+        QVERIFY2(!toolFailed(saved), qPrintable(QString::fromUtf8(QJsonDocument(saved).toJson())));
+        QCOMPARE(library.song(id).slideIds, original.slideIds);
+        QCOMPARE(library.song(id).appearance.lookId, appearance.lookId);
+        QCOMPARE(library.song(id).appearance.richTextOverrides, QVector<bool>({false, false, true}));
+        QCOMPARE(library.song(id).midiActions[1], QVector<MidiOutputAction>({action}));
+        QCOMPARE(library.song(id).richText, QStringList({"<p>Verse</p>", "", "<p>Chorus B</p>"}));
+        QCOMPARE(library.entrySlides(entry), QStringList({"New chorus", "Chorus B", "Verse", "New chorus", "Chorus B"}));
+        QVERIFY(toolFailed(call(server, "update_song_section", edit))); // stale
+        edit["expected_revision"] = revision();
+        for (const auto &replacement : {QJsonObject{{"section_id", "missing"}}, QJsonObject{{"slides", QJsonArray{"Too few"}}},
+                                        QJsonObject{{"slides", QJsonArray{"", "Text"}}}, QJsonObject{{"dry_run", "false"}},
+                                        QJsonObject{{"slides", QJsonArray{QString(65537, 'x'), "Text"}}}, QJsonObject{{"unknown", true}}}) {
+            auto invalid = edit;
+            for (auto it = replacement.begin(); it != replacement.end(); ++it) invalid[it.key()] = it.value();
+            QVERIFY(toolFailed(call(server, "update_song_section", invalid)));
+        }
+        const auto unchanged = library.song(id);
+        QJsonObject arrangement{{"song_id", id}, {"expected_revision", revision()}, {"name", "Short"},
+            {"section_ids", QJsonArray{"c", "v", "c"}}, {"make_active", true}};
+        QVERIFY(!toolFailed(call(server, "save_song_arrangement", arrangement)));
+        QCOMPARE(library.song(id).structure.arrangements.size(), 1);
+        arrangement["dry_run"] = false;
+        auto arranged = call(server, "save_song_arrangement", arrangement);
+        QVERIFY(!toolFailed(arranged));
+        const auto arrangementId = data(arranged)["arrangement_id"].toString();
+        QCOMPARE(library.song(id).structure.activeArrangementId, arrangementId);
+        QCOMPARE(library.song(id).playbackOrder(), QVector<int>({1, 2, 0, 1, 2}));
+        QCOMPARE(library.song(id).slideIds, original.slideIds);
+        QCOMPARE(library.service(1).last().slideOrder, QVector<int>({1, 2, 0, 1, 2}));
+        QVERIFY(toolFailed(call(server, "save_song_arrangement", arrangement))); // stale
+        arrangement["expected_revision"] = revision();
+        arrangement["arrangement_id"] = arrangementId;
+        arrangement["name"] = "Short revised";
+        arrangement["section_ids"] = QJsonArray{"v", "c"};
+        QVERIFY(!toolFailed(call(server, "save_song_arrangement", arrangement)));
+        QCOMPARE(library.song(id).structure.arrangements.size(), 2);
+        arrangement["expected_revision"] = revision();
+        arrangement["section_ids"] = QJsonArray{"missing"};
+        QVERIFY(toolFailed(call(server, "save_song_arrangement", arrangement)));
+        arrangement["section_ids"] = QJsonArray{"v"};
+        arrangement["name"] = "Full"; // duplicate name
+        QVERIFY(toolFailed(call(server, "save_song_arrangement", arrangement)));
+        arrangement["name"] = "Unique"; arrangement["arrangement_id"] = "unknown";
+        QVERIFY(toolFailed(call(server, "save_song_arrangement", arrangement)));
+
+        const auto connection = QUuid::createUuid().toString();
+        {
+            auto db = QSqlDatabase::addDatabase("QSQLITE", connection);
+            db.setDatabaseName(library.databasePath()); QVERIFY(db.open());
+            QSqlQuery query(db);
+            QVERIFY(query.exec("CREATE TRIGGER fail_song BEFORE UPDATE ON songs BEGIN SELECT RAISE(ABORT,'Injected song failure'); END"));
+            edit["expected_revision"] = revision(); edit["slides"] = QJsonArray{"Must roll back", "Too"};
+            QVERIFY(toolFailed(call(server, "update_song_section", edit)));
+            QCOMPARE(library.song(id).slides, unchanged.slides);
+            QCOMPARE(library.song(id).richText, unchanged.richText);
+            QVERIFY(query.exec("DROP TRIGGER fail_song"));
+        }
+        QSqlDatabase::removeDatabase(connection);
+        QVERIFY(library.renamePresentation(id, "Operator changed title", &error));
+        QVERIFY(toolFailed(call(server, "update_song_section", edit)));
+    }
+
+    void connectionProbeUsesTheRealCompanionAndReportsFailures() {
+        QTemporaryDir directory;
+        QString error;
+        LibraryRepository library;
+        const auto path = directory.filePath("probe library.sqlite");
+        QVERIFY(library.open(&error, path));
+        McpConnectionProbe probe;
+        QSignalSpy done(&probe, &McpConnectionProbe::finished);
+        probe.start(executable(), path);
+        QTRY_COMPARE_WITH_TIMEOUT(done.size(), 1, 15000);
+        QVERIFY2(done.last().at(0).toBool(), qPrintable(done.last().at(1).toString()));
+        QVERIFY(!probe.isRunning());
+        probe.start(directory.filePath("missing-server"), path);
+        QCOMPARE(done.size(), 2); QVERIFY(!done.last().at(0).toBool());
+        probe.start(executable(), directory.filePath("missing-library"));
+        QCOMPARE(done.size(), 3); QVERIFY(!done.last().at(0).toBool());
+        QVERIFY(!QFileInfo::exists(directory.filePath("missing-library")));
+        QFile corrupt(directory.filePath("corrupt.sqlite")); QVERIFY(corrupt.open(QIODevice::WriteOnly));
+        corrupt.write("not a database"); corrupt.close();
+        probe.start(executable(), corrupt.fileName());
+        QTRY_COMPARE_WITH_TIMEOUT(done.size(), 4, 15000);
+        QVERIFY(!done.last().at(0).toBool());
+        QVERIFY(done.last().at(1).toString().contains("library path"));
+        probe.start(executable(), path);
+        QTRY_COMPARE_WITH_TIMEOUT(done.size(), 5, 15000);
+        QVERIFY(done.last().at(0).toBool());
+    }
+
     void inspectsSharedSongArrangementsAndPreviewsTheirExpandedCount() {
         LibraryRepository library;
         QString error;
@@ -139,6 +411,70 @@ private slots:
             QJsonObject{{"song_id", songId}}, QJsonObject{{"song_id", sermonId}}}}})));
     }
 
+    void planningCenterSongSelectLyricsKeepSectionsRepeatsAndRollback() {
+        QTemporaryDir directory;
+        const auto database = directory.filePath("songselect-bridge.sqlite");
+        LibraryRepository library;
+        QString error;
+        QVERIFY(library.open(&error, database));
+        const QString raw = QString(QChar(0xfeff)) + "[Verse1]\r\n[C]First page\r\n\r\nSecond page\r\n\r\nCHORUS\r\nTogether\r\n\r\nRéponse\r\nUne réponse\r\n\r\nChorus\r\nTogether";
+        QJsonValue sequence = QJsonArray{"Chorus", "Verse 1", "Réponse", "Chorus"};
+        QString lyrics = raw;
+        McpServer server(library, [&](const QUrl &url, QString *) {
+            if (!url.path().endsWith("/items")) return QJsonObject{{"data", QJsonObject{{"type", "Plan"}, {"id", "20"}}}};
+            return QJsonObject{{"data", QJsonArray{QJsonObject{{"id", "30"}, {"attributes", QJsonObject{
+                {"title", "Imported SongSelect fixture"}, {"item_type", "song"}, {"custom_arrangement_sequence", sequence}}},
+                {"relationships", QJsonObject{{"arrangement", QJsonObject{{"data", QJsonObject{{"id", "60"}}}}}}}}}},
+                {"included", QJsonArray{QJsonObject{{"type", "Arrangement"}, {"id", "60"},
+                    {"attributes", QJsonObject{{"lyrics", lyrics}}}}}}};
+        });
+        QJsonObject args{{"service_type_id", "10"}, {"plan_id", "20"}};
+        const auto songs = library.songs().size(), services = library.services().size();
+        const auto preview = call(server, "import_planning_center_service", args);
+        QVERIFY(!toolFailed(preview));
+        QVERIFY(data(preview)["ready_to_save"].toBool());
+        QCOMPARE(library.songs().size(), songs);
+        QCOMPARE(library.services().size(), services);
+        const auto connection = QUuid::createUuid().toString();
+        {
+            auto db = QSqlDatabase::addDatabase("QSQLITE", connection); db.setDatabaseName(database); QVERIFY(db.open());
+            QSqlQuery query(db);
+            QVERIFY(query.exec("CREATE TRIGGER reject_pco_entry BEFORE INSERT ON service_entries BEGIN SELECT RAISE(ABORT,'fixture rollback'); END"));
+        }
+        args["dry_run"] = false;
+        QVERIFY(toolFailed(call(server, "import_planning_center_service", args)));
+        QCOMPARE(library.songs().size(), songs);
+        QCOMPARE(library.services().size(), services);
+        {
+            auto db = QSqlDatabase::database(connection); QSqlQuery query(db);
+            QVERIFY(query.exec("DROP TRIGGER reject_pco_entry"));
+        }
+        QSqlDatabase::removeDatabase(connection);
+        const auto saved = call(server, "import_planning_center_service", args);
+        QVERIFY2(!toolFailed(saved), qPrintable(QString::fromUtf8(QJsonDocument(saved).toJson())));
+        const int serviceId = data(saved)["service_id"].toInt();
+        const auto entry = library.service(serviceId).first();
+        const auto song = library.song(entry.songId);
+        QCOMPARE(song.slides, QStringList({"First page", "Second page", "Together", "Une réponse"}));
+        QCOMPARE(song.structure.sections.size(), 3);
+        QCOMPARE(song.structure.sections.first().slideCount, 2);
+        QCOMPARE(song.structure.sections.last().name, QString("Réponse"));
+        QCOMPARE(library.entrySlides(entry.id), QStringList({"Together", "First page", "Second page", "Une réponse", "Together"}));
+        LibraryRepository reopened; QVERIFY(reopened.open(&error, database));
+        QCOMPARE(reopened.song(entry.songId).structure.toJson(), song.structure.toJson());
+        QCOMPARE(reopened.service(serviceId).first().slideOrder, entry.slideOrder);
+        sequence = "Chorus, Verse 1";
+        QVERIFY(toolFailed(call(server, "import_planning_center_service", args)));
+        sequence = QJsonArray{"Chorus"};
+        lyrics = "Chorus\nDifferent words\n\nChorus\nConflicting words";
+        QVERIFY(toolFailed(call(server, "import_planning_center_service", args)));
+        lyrics.clear();
+        const auto missing = call(server, "import_planning_center_service", args);
+        QVERIFY(toolFailed(missing));
+        QVERIFY(data(missing)["unresolved_items"].toArray().first().toObject()["reason"].toString().contains("Lyrics & Chords"));
+        QCOMPARE(library.services().size(), services + 1);
+    }
+
     void planningCenterImportPreviewsResolvesAndSavesAtomically() {
         LibraryRepository library;
         QString error;
@@ -151,6 +487,8 @@ private slots:
         int requests = 0;
         McpServer server(library, [&](const QUrl &url, QString *) {
             ++requests;
+            if (url.path() == "/services/v2/service_types") return QJsonObject{{"data", QJsonArray{QJsonObject{{"id", "10"}}}}};
+            if (url.path().endsWith("/plans")) return QJsonObject{{"data", QJsonArray{fixture["plan"].toObject()["data"]}}};
             if (!url.path().endsWith("/items")) return fixture["plan"].toObject();
             return fixture[url.query().contains("offset=3") ? "page2" : "page1"].toObject();
         });
@@ -221,6 +559,8 @@ private slots:
         const int id = data(saved)["service_id"].toInt();
         const auto entry = library.service(id).first();
         QCOMPARE(library.song(entry.songId).slides, QStringList({"First verse", "Sing together"}));
+        QCOMPARE(library.song(entry.songId).structure.sections.size(), 2);
+        QCOMPARE(library.song(entry.songId).structure.sections.first().name, QString("Verse 1"));
         QCOMPARE(library.entrySlides(entry.id), QStringList({"Sing together", "First verse", "Sing together"}));
         auto entries = page["data"].toArray();
         auto item = entries.first().toObject();
@@ -252,7 +592,7 @@ private slots:
         QVERIFY(result.value(QStringLiteral("capabilities")).toObject().contains(QStringLiteral("tools")));
         QVERIFY(result.value(QStringLiteral("_meta")).toObject().contains(QStringLiteral("io.modelcontextprotocol/serverInfo")));
         const auto list = send(server, request(QStringLiteral("tools/list"))).value(QStringLiteral("result")).toObject().value(QStringLiteral("tools")).toArray();
-        QCOMPARE(list.size(), 11);
+        QCOMPARE(list.size(), 15);
         QSet<QString> names;
         for (const auto &entry : list) {
             const auto tool = entry.toObject();

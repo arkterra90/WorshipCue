@@ -1,0 +1,73 @@
+name: Build and verify release installers
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Qt SDK
+        run: |
+          python -m pip install aqtinstall==3.3.0
+          python -m aqt install-qt mac desktop 6.8.3 clang_64 --outputdir "$RUNNER_TEMP/Qt" --modules qtmultimedia qtimageformats
+          brew install openssl@3
+      - name: Build and run regression tests
+        run: |
+          cmake -S . -B build-ci -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/Qt/6.8.3/macos" -DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)" -DWORSHIPCUE_BUILD_TESTS=ON
+          cmake --build build-ci --parallel 3
+          ctest --test-dir build-ci --output-on-failure
+      - name: Build and test unsigned DMG
+        run: python tools/package-release.py --qt-prefix "$RUNNER_TEMP/Qt/6.8.3/macos" --openssl-root "$(brew --prefix openssl@3)" --architecture arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macOS-arm64-unsigned
+          path: dist/*
+          if-no-files-found: error
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Install Qt, OpenSSL and installer compiler
+        shell: pwsh
+        run: |
+          python -m pip install aqtinstall==3.3.0
+          python -m aqt install-qt windows desktop 6.8.3 win64_msvc2022_64 --outputdir "$env:RUNNER_TEMP/Qt" --modules qtmultimedia qtimageformats
+          & "$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe" install openssl:x64-windows
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          choco install innosetup --version=6.4.3 --yes --no-progress
+      - name: Build and run regression tests
+        shell: pwsh
+        run: |
+          cmake -S . -B build-ci -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:RUNNER_TEMP/Qt/6.8.3/msvc2022_64" -DOPENSSL_ROOT_DIR="$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" -DWORSHIPCUE_BUILD_TESTS=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build build-ci --parallel 3
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:PATH = "$env:RUNNER_TEMP/Qt/6.8.3/msvc2022_64/bin;$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin;$env:PATH"
+          ctest --test-dir build-ci --output-on-failure
+          exit $LASTEXITCODE
+      - name: Build, install and uninstall unsigned installer
+        shell: pwsh
+        run: |
+          $compiler = Get-ChildItem "${env:ProgramFiles(x86)}/Inno Setup */ISCC.exe" | Sort-Object FullName -Descending | Select-Object -First 1
+          python tools/package-release.py --qt-prefix "$env:RUNNER_TEMP/Qt/6.8.3/msvc2022_64" --openssl-root "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" --generator Ninja --iscc "$($compiler.FullName)"
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Windows-x64-unsigned
+          path: dist/*
+          if-no-files-found: error
+# This manual workflow uploads build artifacts only. It never publishes a release
+# or receives server signing keys, Cloudflare credentials or developer licenses.

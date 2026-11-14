@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCueOutputSupport_autogen/mocs_compilation.cpp" "CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o" "gcc" "CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/StageTimer.cpp" "CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o" "gcc" "CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/NativeDisplayModes.cpp" "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o" "gcc" "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputConfiguration.cpp" "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o" "gcc" "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayout.cpp" "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o" "gcc" "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o.d"

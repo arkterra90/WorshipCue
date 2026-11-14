@@ -19,6 +19,12 @@ struct StageRuntime {
     QString message;
     qint64 remainingMs = 300000;
     bool running = false;
+    bool timerVisible = true;
+    bool timerWarning = false;
+    bool timerOverrun = false;
+    bool timerFinished = false;
+    QString timerName;
+    QString timerText;
 };
 struct StageLayout {
     QString id = QStringLiteral("standard");

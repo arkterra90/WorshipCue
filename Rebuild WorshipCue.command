@@ -30,7 +30,7 @@ if [ ! -f "$project_dir/CMakeLists.txt" ]; then
     exit 1
 fi
 if ! command -v cmake >/dev/null 2>&1; then
-    printf 'CMake is missing. Install the build tools with: brew install cmake qt\n' >&2
+    printf 'CMake is missing. Install the build tools with: brew install cmake qt openssl@3\n' >&2
     exit 1
 fi
 

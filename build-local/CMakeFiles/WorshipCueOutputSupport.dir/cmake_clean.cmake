@@ -4,6 +4,8 @@ file(REMOVE_RECURSE
   "WorshipCueOutputSupport_autogen"
   "CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o"
   "CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o.d"
+  "CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o"
+  "CMakeFiles/WorshipCueOutputSupport.dir/src/core/StageTimer.cpp.o.d"
   "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o"
   "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o.d"
   "CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o"

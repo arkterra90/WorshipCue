@@ -35,38 +35,62 @@ QString relationshipId(const QJsonObject &item, const QString &relationship) {
     return item.value("relationships").toObject().value(relationship).toObject().value("data").toObject().value("id").toString();
 }
 QString sectionKey(QString label) {
-    label = label.toCaseFolded();
-    label.remove(QRegularExpression(QStringLiteral("[^a-z0-9]")));
+    label = label.normalized(QString::NormalizationForm_C).toCaseFolded();
+    label.remove(QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}]")));
     if (!label.isEmpty() && !label.back().isDigit()) label += QLatin1Char('1');
     return label;
 }
 struct Lyrics {
     QStringList slides;
     QMap<QString, QVector<int>> sections;
+    SongStructure structure;
 };
-Lyrics splitLyrics(QString raw) {
+Lyrics splitLyrics(QString raw, const QJsonArray &sequence) {
     raw.replace(QStringLiteral("\r\n"), QStringLiteral("\n"));
     raw.replace(QLatin1Char('\r'), QLatin1Char('\n'));
+    if (raw.startsWith(QChar(0xfeff))) raw.remove(0, 1);
     static const QRegularExpression heading(QStringLiteral(
         "^\\[?((?:verse|chorus|pre[- ]?chorus|bridge|refrain|intro|outro|tag|ending|instrumental)(?:[ \\t]*[0-9]+)?)\\]?:?$"),
         QRegularExpression::CaseInsensitiveOption);
-    Lyrics output;
+    ImportedLyrics imported;
+    QSet<QString> labels;
+    for (const auto &label : sequence) if (label.isString()) labels.insert(sectionKey(label.toString()));
     QString current;
     QStringList lines;
     const auto flush = [&] {
         const auto slides = LyricsImporter::parse(lines.join(QLatin1Char('\n'))).slides;
-        for (const auto &slide : slides) {
-            if (!current.isEmpty()) output.sections[current].append(int(output.slides.size()));
-            output.slides.append(slide);
-        }
+        if (!slides.isEmpty()) imported.sections.append({current, slides});
         lines.clear();
     };
     for (const auto &line : raw.split(QLatin1Char('\n'))) {
+        auto label = line.trimmed();
+        if (label.startsWith('[') && label.endsWith(']')) label = label.mid(1, label.size() - 2).trimmed();
+        if (label.endsWith(':')) label.chop(1);
         const auto match = heading.match(line.trimmed());
-        if (match.hasMatch()) { flush(); current = sectionKey(match.captured(1)); }
+        if (match.hasMatch() || (!label.isEmpty() && labels.contains(sectionKey(label)))) {
+            flush(); current = match.hasMatch() ? match.captured(1) : label;
+        }
         else lines.append(line);
     }
     flush();
+    Lyrics output;
+    if (imported.sections.isEmpty()) return output;
+    output.structure = imported.songStructure(&output.slides);
+    QSet<QString> ambiguous;
+    int start = 0;
+    for (const auto &section : output.structure.sections) {
+        const auto key = sectionKey(section.name);
+        // Differing lyrics under the same heading cannot be resolved by a label.
+        // ImportedLyrics disambiguates those names; compare the original groups.
+        for (const auto &group : imported.sections) {
+            if (sectionKey(group.name) == key && group.slides != output.slides.mid(start, section.slideCount))
+                ambiguous.insert(key);
+        }
+        if (output.sections.contains(key)) ambiguous.insert(key);
+        for (int i = 0; i < section.slideCount; ++i) output.sections[key].append(start + i);
+        start += section.slideCount;
+    }
+    for (const auto &key : ambiguous) output.sections.remove(key);
     return output;
 }
 QJsonArray asArray(const QStringList &slides) {
@@ -81,7 +105,7 @@ QJsonArray McpServer::extraToolDefinitions() {
     const auto definitions = QJsonDocument::fromJson(R"json([
       {"name":"create_song_presentation","description":"Create a reusable, editable song presentation in the WorshipCue library. Supply title and either explicit slides OR lyrics (blank lines, section headings and --- split slides; bracketed chords are stripped). dry_run previews without saving. Returns song_id for use in create_service_order.","inputSchema":{"type":"object","additionalProperties":false,"properties":{"title":{"type":"string","minLength":1,"maxLength":256},"lyrics":{"type":"string","minLength":1,"maxLength":1048576},"slides":{"type":"array","minItems":1,"maxItems":1000,"items":{"type":"string","minLength":1,"maxLength":65536}},"dry_run":{"type":"boolean","default":false}},"required":["title"],"oneOf":[{"required":["lyrics"]},{"required":["slides"]}]}},
       {"name":"create_sermon_presentation","description":"Create a reusable, editable sermon presentation: a title slide followed by your explicit content slides. Optional speaker and scripture appear on the title slide. Supply actual sermon/scripture content, never invent attributed quotations. Stored as an ordinary WorshipCue text presentation. dry_run previews without saving; returns song_id for service orders.","inputSchema":{"type":"object","additionalProperties":false,"properties":{"title":{"type":"string","minLength":1,"maxLength":256},"speaker":{"type":"string","maxLength":256},"scripture":{"type":"string","maxLength":1024},"slides":{"type":"array","minItems":1,"maxItems":999,"items":{"type":"string","minLength":1,"maxLength":65536}},"dry_run":{"type":"boolean","default":false}},"required":["title","slides"]}},
-      {"name":"list_planning_center_service_types","description":"Read Planning Center Services service type IDs/names. Requires PLANNING_CENTER_APPLICATION_ID and PLANNING_CENTER_SECRET in the server environment (Personal Access Token).","inputSchema":{"type":"object","additionalProperties":false,"properties":{"offset":{"type":"integer","minimum":0,"maximum":2147483647},"limit":{"type":"integer","minimum":1,"maximum":100}}}},
+      {"name":"list_planning_center_service_types","description":"Read Planning Center Services service type IDs/names. Requires your church's PLANNING_CENTER_APPLICATION_ID / PLANNING_CENTER_SECRET (Personal Access Token), or an externally managed OAuth PLANNING_CENTER_ACCESS_TOKEN, in the server environment.","inputSchema":{"type":"object","additionalProperties":false,"properties":{"offset":{"type":"integer","minimum":0,"maximum":2147483647},"limit":{"type":"integer","minimum":1,"maximum":100}}}},
       {"name":"list_planning_center_plans","description":"Read saved Planning Center plans for a service_type_id, newest dates first. Returns API data with plan IDs/dates/titles and pagination links. Does not modify Planning Center.","inputSchema":{"type":"object","additionalProperties":false,"properties":{"service_type_id":{"type":"string","pattern":"^[1-9][0-9]{0,19}$"},"offset":{"type":"integer","minimum":0,"maximum":2147483647},"limit":{"type":"integer","minimum":1,"maximum":100}},"required":["service_type_id"]}},
       {"name":"get_planning_center_plan","description":"Read a complete Planning Center plan and ordered items with included songs/arrangements and available lyrics. Details/notes are planning data, not automatically audience slide content. IDs are strings. Does not modify either app.","inputSchema":{"type":"object","additionalProperties":false,"properties":{"service_type_id":{"type":"string","pattern":"^[1-9][0-9]{0,19}$"},"plan_id":{"type":"string","pattern":"^[1-9][0-9]{0,19}$"}},"required":["service_type_id","plan_id"]}},
       {"name":"import_planning_center_service","description":"Preview or atomically create a WorshipCue service from a Planning Center plan. Defaults dry_run=true. Preserves pre/during/post and item sequence. Reuses unique matching library songs; imports available arrangement lyrics and labelled sequences. Headers are skipped explicitly; ordinary items become title slides. Media/missing lyrics/ambiguous matches/unmappable sequences block saving until item_overrides supplies song_id/slide_order, title/slides, or skip:true. allow_placeholders=true explicitly permits title-only placeholders. No files are downloaded, no Planning Center writes, and private item notes are not projected. Each save creates a NEW service.","inputSchema":{"type":"object","additionalProperties":false,"properties":{"service_type_id":{"type":"string","pattern":"^[1-9][0-9]{0,19}$"},"plan_id":{"type":"string","pattern":"^[1-9][0-9]{0,19}$"},"name":{"type":"string","minLength":1,"maxLength":256},"dry_run":{"type":"boolean","default":true},"allow_placeholders":{"type":"boolean","default":false},"item_overrides":{"type":"object","maxProperties":500,"additionalProperties":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"skip":{"const":true}},"required":["skip"]},{"type":"object","additionalProperties":false,"properties":{"song_id":{"type":"integer","minimum":1,"maximum":2147483647},"slide_order":{"type":"array","maxItems":10000,"items":{"type":"integer","minimum":0}}},"required":["song_id"]},{"type":"object","additionalProperties":false,"properties":{"title":{"type":"string","minLength":1,"maxLength":256},"slides":{"type":"array","minItems":1,"maxItems":1000,"items":{"type":"string","minLength":1,"maxLength":65536}},"slide_order":{"type":"array","maxItems":10000,"items":{"type":"integer","minimum":0}}},"required":["title","slides"]}]}}},"required":["service_type_id","plan_id"]}}
@@ -241,6 +265,7 @@ QJsonObject McpServer::callCreationTool(const QString &name, const QJsonObject &
     const auto overrides = args.value("item_overrides").toObject();
     QSet<QString> sourceIds;
     QJsonArray items, preview, issues, warnings;
+    QMap<int, SongStructure> importedStructures;
     for (const auto &value : source.value("items").toArray()) {
         if (!value.isObject()) return failure(QStringLiteral("Planning Center contains an invalid item."));
         const auto sourceItem = value.toObject();
@@ -251,6 +276,7 @@ QJsonObject McpServer::callCreationTool(const QString &name, const QJsonObject &
         const QString kind = attr.value("item_type").toString();
         const QString title = attr.value("title").toString().trimmed();
         QJsonObject item;
+        SongStructure importedStructure;
         QString resolution;
         QString issue;
         bool skip = false;
@@ -271,11 +297,13 @@ QJsonObject McpServer::callCreationTool(const QString &name, const QJsonObject &
             const auto song = included.value(QStringLiteral("Song:") + relationshipId(sourceItem, "song")).value("attributes").toObject();
             const auto arrangement = included.value(QStringLiteral("Arrangement:") + relationshipId(sourceItem, "arrangement")).value("attributes").toObject();
             const QString songTitle = song.value("title").toString().trimmed().isEmpty() ? title : song.value("title").toString().trimmed();
-            const auto lyrics = splitLyrics(arrangement.value("lyrics").toString());
             const auto custom = attr.value("custom_arrangement_sequence");
+            const auto baseSequence = arrangement.value("sequence");
             const auto sequence = custom.isArray() && !custom.toArray().isEmpty() ? custom.toArray() : arrangement.value("sequence").toArray();
+            const auto lyrics = splitLyrics(arrangement.value("lyrics").toString(), sequence);
             QJsonArray order;
-            bool sequenceKnown = true;
+            bool sequenceKnown = (custom.isUndefined() || custom.isNull() || custom.isArray())
+                && (baseSequence.isUndefined() || baseSequence.isNull() || baseSequence.isArray());
             for (const auto &section : sequence) {
                 const auto indices = lyrics.sections.value(sectionKey(section.toString()));
                 if (!section.isString() || indices.isEmpty()) { sequenceKnown = false; break; }
@@ -287,15 +315,16 @@ QJsonObject McpServer::callCreationTool(const QString &name, const QJsonObject &
                     && std::all_of(candidate.media.begin(), candidate.media.end(), [](const auto &media) { return media.kind == MediaKind::None; }))
                     matches.append(candidate);
             if (matches.size() > 1) issue = QStringLiteral("Multiple library presentations match this song title; choose a song_id override.");
-            else if (matches.size() == 1 && (sequence.isEmpty() || (sequenceKnown && matches.first().slides == lyrics.slides))) {
+            else if (matches.size() == 1 && sequenceKnown && (sequence.isEmpty() || matches.first().slides == lyrics.slides)) {
                 item = {{"song_id", matches.first().id}};
                 if (!sequence.isEmpty()) item.insert("slide_order", order);
                 resolution = QStringLiteral("reused_library_song");
-            } else if (!lyrics.slides.isEmpty() && (sequence.isEmpty() || sequenceKnown)) {
+            } else if (!lyrics.slides.isEmpty() && sequenceKnown) {
                 item = {{"title", songTitle}, {"slides", asArray(lyrics.slides)}};
                 if (!sequence.isEmpty()) item.insert("slide_order", order);
+                importedStructure = lyrics.structure;
                 resolution = QStringLiteral("imported_arrangement_lyrics");
-            } else issue = lyrics.slides.isEmpty() ? QStringLiteral("No usable arrangement lyrics or matching library song; supply slides or song_id.")
+            } else issue = lyrics.slides.isEmpty() ? QStringLiteral("No usable arrangement lyrics or matching library song. In Planning Center, open this song's selected arrangement → Lyrics & Chords and import SongSelect Lyrics; a PDF attachment alone is insufficient. Then retry, or supply slides or song_id.")
                 : QStringLiteral("Song sequence cannot be mapped to labelled lyrics; supply explicit slides/order.");
         } else if (kind == QStringLiteral("item")) {
             item = {{"title", title}, {"slides", QJsonArray{title}}};
@@ -310,7 +339,10 @@ QJsonObject McpServer::callCreationTool(const QString &name, const QJsonObject &
             issue.clear();
         }
         if (!issue.isEmpty()) issues.append(QJsonObject{{"item_id", id}, {"title", title}, {"reason", issue}});
-        if (!skip && issue.isEmpty()) items.append(item);
+        if (!skip && issue.isEmpty()) {
+            if (!importedStructure.isEmpty()) importedStructures.insert(int(items.size()), importedStructure);
+            items.append(item);
+        }
         preview.append(QJsonObject{{"item_id", id}, {"title", title}, {"item_type", kind}, {"resolution", resolution}, {"skipped", skip}});
     }
     for (auto it = overrides.begin(); it != overrides.end(); ++it)
@@ -324,7 +356,7 @@ QJsonObject McpServer::callCreationTool(const QString &name, const QJsonObject &
         if (items.isEmpty() && issues.isEmpty()) metadata.insert("error", "This plan has no importable items.");
         return result(metadata, !dryRun || items.isEmpty());
     }
-    auto response = callTool(QStringLiteral("create_service_order"), {{"name", serviceName}, {"items", items}, {"dry_run", dryRun}});
+    auto response = callTool(QStringLiteral("create_service_order"), {{"name", serviceName}, {"items", items}, {"dry_run", dryRun}}, importedStructures);
     auto data = response.value("structuredContent").toObject();
     if (response.value("isError").toBool()) metadata.insert("ready_to_save", false);
     for (auto it = metadata.begin(); it != metadata.end(); ++it) data.insert(it.key(), it.value());

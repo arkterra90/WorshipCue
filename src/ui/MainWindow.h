@@ -3,10 +3,12 @@
 #include "../core/PresentationController.h"
 #include "../data/LibraryRepository.h"
 #include "OutputManager.h"
+#include "../licensing/LicenseManager.h"
 #include "../midi/MidiEngine.h"
 #include "../media/MediaPlayback.h"
 #include <QKeySequence>
 #include <QMainWindow>
+#include <QPointer>
 #include <memory>
 
 class QCloseEvent;
@@ -26,11 +28,14 @@ class MediaManager;
 class QProgressDialog;
 class QAction;
 class QTimer;
+class HelpDialog;
+class StageControlsDialog;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit MainWindow(QWidget *parent = nullptr, std::unique_ptr<MidiBackend> midiBackend = {});
+    explicit MainWindow(QWidget *parent = nullptr, std::unique_ptr<MidiBackend> midiBackend = {},
+                        std::unique_ptr<LicenseManager> license = {});
     ~MainWindow() override;
     bool initialize(QString *error, const QString &databasePath = {});
     bool importMediaFiles(const QStringList &paths);
@@ -40,6 +45,11 @@ protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
+    std::unique_ptr<LicenseManager> license_;
+    QPointer<QDialog> licenseDialog_;
+    QLabel *licenseStatus_ = nullptr;
+    void showLicense();
+    void updateLicense();
     LibraryRepository library_;
     PresentationController controller_;
     OutputManager outputs_;
@@ -72,10 +82,11 @@ private:
     QLabel *timingStatus_ = nullptr;
     QLabel *selectedTimingInfo_ = nullptr;
     QPushButton *pauseAutoAdvance_ = nullptr;
-    QPushButton *editSlide_ = nullptr;
-    QPushButton *songSections_ = nullptr;
-    QPushButton *looksButton_ = nullptr;
-    QPushButton *presentationSettings_ = nullptr;
+    QAction *editSlide_ = nullptr;
+    QAction *songSections_ = nullptr;
+    QAction *looksAction_ = nullptr;
+    QAction *presentationSettings_ = nullptr;
+    QAction *slideMidi_ = nullptr;
     QComboBox *globalTransitionType_ = nullptr;
     QDoubleSpinBox *globalTransitionTime_ = nullptr;
     QComboBox *slideViewMode_ = nullptr;
@@ -117,6 +128,8 @@ private:
     QString databasePath_;
     qint64 externalDataVersion_ = -1;
     QTimer *libraryRefreshTimer_ = nullptr;
+    QPointer<HelpDialog> helpDialog_;
+    QPointer<StageControlsDialog> stageControlsDialog_;
     QTimer *cleanupLeaseTimer_ = nullptr;
     QString cleanupLeaseOwner_;
     quint64 usageRevision_ = 0;
@@ -194,6 +207,8 @@ private:
     void updateOutputStatus();
     void configureShortcuts();
     void configureMcp();
+    void showHelp(const QString &topic = {});
+    void showStageControls();
     void refreshExternalChanges();
     void focusOperator();
     void markSaved();

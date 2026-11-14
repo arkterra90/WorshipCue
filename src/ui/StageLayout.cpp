@@ -12,7 +12,7 @@ QString StageLayout::elementName(StageElement::Kind kind) {
     case StageElement::Kind::NextSlide: return "Next slide";
     case StageElement::Kind::Title: return "Presentation title";
     case StageElement::Kind::Clock: return "Clock";
-    case StageElement::Kind::Countdown: return "Countdown timer";
+    case StageElement::Kind::Countdown: return "Timer";
     case StageElement::Kind::Message: return "Stage message";
     case StageElement::Kind::CustomText: return "Custom text";
     }
@@ -85,6 +85,8 @@ QString stageElementText(const StageElement &element, const LivePresentation &st
     case StageElement::Kind::Title: return state.title;
     case StageElement::Kind::Clock: return QDateTime::currentDateTime().toString("h:mm:ss AP");
     case StageElement::Kind::Countdown: {
+        if (!runtime.timerVisible) return {};
+        if (!runtime.timerText.isEmpty()) return runtime.timerText;
         const auto seconds = qMax<qint64>(0, (runtime.remainingMs + 999) / 1000);
         return QStringLiteral("%1:%2").arg(seconds / 60, 2, 10, QLatin1Char('0')).arg(seconds % 60, 2, 10, QLatin1Char('0'));
     }
@@ -112,7 +114,12 @@ void paintStageLayout(QPainter &p, const QRectF &canvas, const StageLayout &layo
             if (bounds.width() <= r.width() && bounds.height() <= r.height()) { size = candidate; low = candidate + 1; }
             else high = candidate - 1;
         }
-        font.setPixelSize(size); p.setFont(font); p.setPen(QColor(e.color));
+        QColor color(e.color);
+        if (e.kind == StageElement::Kind::Countdown) {
+            if (runtime.timerOverrun || runtime.timerFinished) color = QColor("#ff6b6b");
+            else if (runtime.timerWarning) color = QColor("#f5c252");
+        }
+        font.setPixelSize(size); p.setFont(font); p.setPen(color);
         p.save(); p.setClipRect(r, Qt::IntersectClip); p.drawText(r, flags, text); p.restore();
     }
     p.restore();

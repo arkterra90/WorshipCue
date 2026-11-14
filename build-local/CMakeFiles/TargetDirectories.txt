@@ -1,3 +1,5 @@
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueLicensing.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueLicenseCheck.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMidiModel.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMcp.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueOutputSupport.dir
@@ -10,6 +12,10 @@
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/install.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/install/local.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/install/strip.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueLicensing_autogen_timestamp_deps.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueLicensing_autogen.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueLicenseCheck_autogen_timestamp_deps.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueLicenseCheck_autogen.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMidiModel_autogen_timestamp_deps.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMidiModel_autogen.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMcp_autogen_timestamp_deps.dir

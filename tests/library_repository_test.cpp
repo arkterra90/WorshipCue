@@ -250,6 +250,9 @@ private slots:
         QVERIFY(reject(QStringLiteral("Order"), {validNew, {2, {}, {}, {3}}}));
         QVERIFY(reject(QStringLiteral("Order"), {{0, QStringLiteral("Prayer"), {QStringLiteral("Text")}, {1}}}));
         QVERIFY(reject(QStringLiteral("Order"), {{2, {}, {}, QVector<int>(10001, 0)}}));
+        auto invalidStructure = validNew;
+        invalidStructure.structure = SongStructure::fromSlides(2);
+        QVERIFY(reject(QStringLiteral("Order"), {validNew, invalidStructure}));
         QVERIFY(repository.createServiceOrder(QStringLiteral("Valid afterward"), {validNew}, &error) > 0);
     }
 

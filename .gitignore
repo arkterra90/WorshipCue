@@ -1,0 +1,20 @@
+# Licensing secrets and Cloudflare local state
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+.wrangler/
+node_modules/
+licensing/secrets/
+licensing/wrangler.local.jsonc
+/build-priority9/
+
+# Release workspaces and generated distribution artifacts
+/build-release/
+/dist/
+__pycache__/
+*.pyc
+
+/build-ci/
+/build-tests/

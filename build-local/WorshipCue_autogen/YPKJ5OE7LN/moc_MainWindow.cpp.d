@@ -809,7 +809,11 @@
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationSettings.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/StageTimer.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryCleanup.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/licensing/LicenseManager.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/licensing/LicenseStore.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/MediaPlayback.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/midi/MidiBackend.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/midi/MidiEngine.h \
@@ -819,8 +823,10 @@
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayout.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QByteArray \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QDateTime \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QElapsedTimer \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QHash \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QJsonArray \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QJsonObject \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QMetaType \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QMutex \
@@ -832,13 +838,23 @@
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QString \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QStringList \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QTimer \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QUrl \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QVector \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QKeySequence \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QPainter \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QPixmap \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtNetwork/QNetworkAccessManager \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtSql/QSqlDatabase \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtWidgets/QMainWindow \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtWidgets/QWidget \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/QFlags \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/QList \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/QMetaType \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/QObject \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/QSharedDataPointer \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/QString \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/QUrl \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/QVariant \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/q17memory.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/q20bit.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/q20functional.h \
@@ -848,6 +864,7 @@
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/q20utility.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/q23type_traits.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/q23utility.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/q26numeric.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qabstracteventdispatcher.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qalgorithms.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qalloc.h \
@@ -881,6 +898,7 @@
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcontainerinfo.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcontainertools_impl.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcontiguouscache.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qcryptographichash.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdarwinhelpers.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdatastream.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qdatetime.h \
@@ -900,9 +918,11 @@
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qglobalstatic.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qhash.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qhashfunctions.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qiodevice.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qiodevicebase.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qiterable.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qiterator.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsonarray.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsondocument.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsonobject.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtCore.framework/Versions/A/Headers/qjsonparseerror.h \
@@ -1019,6 +1039,23 @@
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtguiglobal.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtransform.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qwindowdefs.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/QSslConfiguration \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/QSslPreSharedKeyAuthenticator \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qabstractsocket.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qhostaddress.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qhttpheaders.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qnetworkaccessmanager.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qnetworkrequest.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qssl.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qsslcertificate.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qsslconfiguration.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qsslerror.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qsslpresharedkeyauthenticator.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qsslsocket.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qtcpsocket.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qtnetwork-config.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qtnetworkexports.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtNetwork.framework/Versions/A/Headers/qtnetworkglobal.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtSql.framework/Versions/A/Headers/qsqldatabase.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtSql.framework/Versions/A/Headers/qtsql-config.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtSql.framework/Versions/A/Headers/qtsqlexports.h \
