@@ -49,6 +49,11 @@ QStringList MediaManager::supportedVideoExtensions() {
     return {QStringLiteral("mp4"), QStringLiteral("mov"), QStringLiteral("m4v"), QStringLiteral("webm"), QStringLiteral("avi"), QStringLiteral("mkv")};
 }
 
+QStringList MediaManager::supportedAudioExtensions() {
+    return {QStringLiteral("mp3"), QStringLiteral("wav"), QStringLiteral("m4a"), QStringLiteral("aac"),
+            QStringLiteral("flac"), QStringLiteral("ogg"), QStringLiteral("aiff"), QStringLiteral("aif")};
+}
+
 QString MediaManager::absolutePath(const QString &relativePath) const {
     if (relativePath.isEmpty() || QDir::isAbsolutePath(relativePath)) return {};
     if (QFileInfo(QDir(directory_).filePath(QStringLiteral("media"))).isSymLink()) return {};
@@ -106,10 +111,11 @@ bool MediaManager::importFiles(const QStringList &sourcePaths, const QStringList
     const QString root = directory_;
     const QStringList imageExtensions = supportedImageExtensions();
     const QStringList videoExtensions = supportedVideoExtensions();
+    const QStringList audioExtensions = supportedAudioExtensions();
     canceled_ = std::make_shared<std::atomic_bool>(false);
     const auto canceled = canceled_;
     watcher_.setFuture(QtConcurrent::run([this, root, sourcePaths, targetNames, loopVideos,
-                                        imageExtensions, videoExtensions, canceled] {
+                                        imageExtensions, videoExtensions, audioExtensions, canceled] {
         MediaImportResult result;
         BatchCleanup cleanup;
         auto fail = [&](const QString &message) {
@@ -151,8 +157,10 @@ bool MediaManager::importFiles(const QStringList &sourcePaths, const QStringList
                 kind = MediaKind::Image;
             } else if (videoExtensions.contains(extension)) {
                 kind = MediaKind::Video;
+            } else if (audioExtensions.contains(extension)) {
+                kind = MediaKind::Audio;
             } else {
-                return fail(QStringLiteral("“%1” is not a supported image or video file.").arg(sourceInfo.fileName()));
+                return fail(QStringLiteral("“%1” is not a supported image, video, or audio file.").arg(sourceInfo.fileName()));
             }
             // Preserve the original encoding suffix; renaming never converts a file.
             if (QFileInfo(targetNames.at(index)).suffix().compare(sourceInfo.suffix(), Qt::CaseInsensitive) != 0)
@@ -174,7 +182,7 @@ bool MediaManager::importFiles(const QStringList &sourcePaths, const QStringList
             }
             if (!destination.commit()) return fail(QStringLiteral("Could not finish saving “%1”: %2").arg(targetNames.at(index), destination.errorString()));
             result.media.append({kind, QStringLiteral("media/") + batch + QLatin1Char('/') + targetNames.at(index),
-                                 targetNames.at(index), kind == MediaKind::Video && loopVideos});
+                                 targetNames.at(index), (kind == MediaKind::Video || kind == MediaKind::Audio) && loopVideos});
             QMetaObject::invokeMethod(this, [this, index, sourcePaths] {
                 emit progressChanged(index + 1, sourcePaths.size());
             }, Qt::QueuedConnection);

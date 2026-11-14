@@ -1,3 +1,4 @@
+#include "fixtures/SchemaDowngrade.h"
 #include "../src/data/LibraryRepository.h"
 
 #include <QSqlError>
@@ -57,6 +58,121 @@ QVector<int> entryIds(const QVector<ServiceEntry> &entries) {
 class LibraryRepositoryTest : public QObject {
     Q_OBJECT
 private slots:
+    void bulkTransitionsAreAtomicPersistentAndPreserveUnrelatedSettings() {
+        QTemporaryDir directory;
+        const auto path = directory.filePath(QStringLiteral("transitions.sqlite3"));
+        QString error;
+        LibraryRepository repository;
+        QVERIFY(repository.open(&error, path));
+        const PresentationSettings first{1200, true, SlideTransitionType::Cut, 500, false};
+        const PresentationSettings second{2100, false, SlideTransitionType::SlideRight, 900, true};
+        const int a = repository.createTextPresentation("A", {"one", "two"}, &error, first, "backgrounds/a.jpg");
+        const int b = repository.createTextPresentation("B", {"three"}, &error, second);
+        const int plan = repository.createServiceOrder("Bulk", {{a, {}, {}, {1,0,1}}, {b, {}, {}, {}}}, &error);
+        const auto assetIds = repository.registerMediaAssets({{MediaKind::Video, "media/clip.mov", "Clip", true}}, &error);
+        QCOMPARE(assetIds.size(), 1);
+        const int mediaEntry = repository.appendMediaToService(plan, assetIds.first(), &error);
+        const int otherMediaEntry = repository.appendMediaToService(plan, assetIds.first(), &error);
+        const auto entries = repository.service(plan);
+        const auto fade = [](PresentationSettings settings) {
+            settings.transition = SlideTransitionType::Fade;
+            settings.transitionDurationMs = 750;
+            settings.overrideTransition = true;
+            return settings;
+        };
+        const auto originalMedia = repository.entrySource(mediaEntry);
+        QVector<TransitionChange> changes{
+            {TransitionChange::Target::Presentation, a, first, fade(first)},
+            {TransitionChange::Target::Presentation, b, second, fade(second)},
+            {TransitionChange::Target::MediaEntry, mediaEntry, originalMedia.settings, fade(originalMedia.settings)}};
+        QVERIFY2(repository.updateTransitions(changes, &error), qPrintable(error));
+        QCOMPARE(repository.song(a).settings, fade(first));
+        QCOMPARE(repository.song(b).settings, fade(second));
+        QCOMPARE(repository.song(a).backgroundPath, QStringLiteral("backgrounds/a.jpg"));
+        QCOMPARE(repository.song(a).slides, (QStringList{"one", "two"}));
+        QCOMPARE(repository.service(plan).first().slideOrder, (QVector<int>{1,0,1}));
+        QCOMPARE(entryIds(repository.service(plan)), entryIds(entries));
+        QCOMPARE(repository.entrySource(mediaEntry).media, originalMedia.media);
+        QVERIFY(repository.entrySource(mediaEntry).settings.sameTransition(fade(originalMedia.settings)));
+        QVERIFY(!repository.entrySource(otherMediaEntry).settings.overrideTransition);
+        // A later timer edit survives undo and redo.
+        auto changedTiming = repository.song(a).settings;
+        changedTiming.autoAdvanceMs = 4300; changedTiming.loop = false;
+        QVERIFY(repository.updatePresentationSettings(a, changedTiming, &error));
+        auto inverse = changes;
+        for (auto &change : inverse) std::swap(change.before, change.after);
+        QVERIFY2(repository.updateTransitions(inverse, &error), qPrintable(error));
+        QVERIFY(repository.song(a).settings.sameTransition(first));
+        QCOMPARE(repository.song(a).settings.autoAdvanceMs, 4300);
+        QVERIFY(!repository.song(a).settings.loop);
+        QVERIFY(repository.updateTransitions(changes, &error));
+        // A later individual override prevents the whole undo, including earlier rows.
+        auto individual = repository.song(b).settings;
+        individual.transition = SlideTransitionType::SlideLeft;
+        QVERIFY(repository.updatePresentationSettings(b, individual, &error));
+        QVERIFY(!repository.updateTransitions(inverse, &error));
+        QVERIFY(error.contains(QStringLiteral("changed")));
+        QVERIFY(repository.song(a).settings.sameTransition(fade(first)));
+        QVERIFY(repository.entrySource(mediaEntry).settings.sameTransition(fade(originalMedia.settings)));
+        auto missing = changes; missing[1].id = 999999;
+        for (auto &change : missing) { change.before = fade(change.before); change.after.transition = SlideTransitionType::Cut; }
+        QVERIFY(!repository.updateTransitions(missing, &error));
+        QVERIFY(repository.song(a).settings.sameTransition(fade(first)));
+        auto invalid = inverse; invalid.last().after.transitionDurationMs = -1;
+        QVERIFY(!repository.updateTransitions(invalid, &error));
+        QVERIFY(repository.song(a).settings.sameTransition(fade(first)));
+        QVERIFY(!repository.updateTransitions({changes.first(), changes.first()}, &error));
+        // Media copies keep their overrides, and a reopened connection sees persisted values.
+        QVERIFY(repository.duplicateServiceEntry(mediaEntry, &error));
+        const auto copiedEntries = repository.service(plan);
+        QVERIFY(repository.entrySource(copiedEntries.at(3).id).settings.sameTransition(fade(originalMedia.settings)));
+        const int copiedPlan = repository.duplicateService(plan, "Copy", &error);
+        QVERIFY(copiedPlan > 0);
+        QVERIFY(repository.entrySource(repository.service(copiedPlan).at(2).id).settings.sameTransition(fade(originalMedia.settings)));
+        LibraryRepository reopened;
+        QVERIFY(reopened.open(&error, path));
+        QCOMPARE(reopened.song(b).settings, individual);
+        QVERIFY(reopened.entrySource(mediaEntry).settings.sameTransition(fade(originalMedia.settings)));
+    }
+
+    void versionEightTransitionMigrationPreservesEntriesAndRollsBackFailure() {
+        QTemporaryDir directory;
+        for (bool conflict : {false, true}) {
+            const auto path = directory.filePath(conflict ? "bad.sqlite3" : "good.sqlite3");
+            QString error;
+            QVector<int> ids;
+            int plan;
+            {
+                LibraryRepository repository;
+                QVERIFY(repository.open(&error, path));
+                plan = repository.services().first().id;
+                const auto assets = repository.registerMediaAssets({{MediaKind::Image, "media/picture.jpg", "Picture", false}}, &error);
+                QVERIFY(repository.appendMediaToService(plan, assets.first(), &error));
+                ids = entryIds(repository.service(plan));
+            }
+            QStringList statements{
+                "ALTER TABLE service_entries DROP COLUMN media_transition_type",
+                "ALTER TABLE service_entries DROP COLUMN media_transition_duration_ms"};
+            if (!conflict) statements.append("ALTER TABLE service_entries DROP COLUMN media_transition_override");
+            QVERIFY(removeCleanupSchema(path));
+            statements.prepend("DROP TABLE midi_slide_actions");
+            statements.prepend("DROP TABLE midi_bindings");
+            statements.append("PRAGMA user_version=8");
+            QVERIFY2(rawSql(path, statements, &error), qPrintable(error));
+            LibraryRepository migrated;
+            QCOMPARE(migrated.open(&error, path), !conflict);
+            QCOMPARE(rawValue(path, "PRAGMA user_version").toInt(), conflict ? 8 : 11);
+            if (conflict) {
+                QVERIFY(!error.isEmpty());
+                QCOMPARE(rawValue(path, "SELECT COUNT(*) FROM pragma_table_info('service_entries') WHERE name='media_transition_type'").toInt(), 0);
+                QCOMPARE(rawValue(path, "SELECT COUNT(*) FROM pragma_table_info('service_entries') WHERE name='media_transition_duration_ms'").toInt(), 0);
+            } else {
+                QCOMPARE(entryIds(migrated.service(plan)), ids);
+                QCOMPARE(migrated.entrySource(ids.last()).settings, PresentationSettings{});
+            }
+        }
+    }
+
     void completeServiceOrdersPersistWithNewAndRepeatedPresentations() {
         QTemporaryDir directory;
         QVERIFY(directory.isValid());
@@ -314,7 +430,7 @@ private slots:
             QCOMPARE(repository.entryRichText(91), (QStringList{QString(), QString(), QString()}));
             QCOMPARE(repository.service(2).first().id, 91);
         }
-        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 11);
         QCOMPARE(rawValue(path, QStringLiteral("SELECT id FROM slides WHERE position=0")).toInt(), 41);
         const QString badPath = directory.filePath(QStringLiteral("duplicate.sqlite3"));
         QVERIFY(createV4(badPath, true));
@@ -389,7 +505,7 @@ private slots:
                 if (service.id == sunday) foundName = service.name == QStringLiteral("Sunday 10:30");
             QVERIFY(foundName);
         }
-        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 11);
     }
 
     void migratesLegacyLibraryWithoutChangingIdsOrOrder() {
@@ -719,7 +835,7 @@ private slots:
             QCOMPARE(repository.entrySlides(29), (QStringList{QStringLiteral("Keep lyric"), QStringLiteral("Keep lyric")}));
             QCOMPARE(repository.service(4).first().id, 29);
         }
-        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 11);
         const QString badPath = directory.filePath(QStringLiteral("bad-v1.sqlite3"));
         QVERIFY(createV1(badPath, true));
         {
@@ -841,7 +957,7 @@ private slots:
             QCOMPARE(repository.service(4).first().slideOrder, (QVector<int>{0, 0}));
             QVERIFY(repository.updatePresentationSettings(17, {100, false, SlideTransitionType::Fade, 0}, &error));
         }
-        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 11);
         const QString badPath = directory.filePath(QStringLiteral("bad-v2.sqlite3"));
         QVERIFY(createV2(badPath, true));
         {
@@ -959,7 +1075,7 @@ private slots:
             QCOMPARE(repository.service(4).first().id, 29);
             QCOMPARE(repository.service(4).first().slideOrder, (QVector<int>{0, 0}));
         }
-        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 5);
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 11);
         const QString badPath = directory.filePath(QStringLiteral("bad-v3.sqlite3"));
         QVERIFY(createV3(badPath, true));
         {
@@ -970,6 +1086,134 @@ private slots:
         QCOMPARE(rawValue(badPath, QStringLiteral("PRAGMA user_version")).toInt(), 3);
         QCOMPARE(rawValue(badPath, QStringLiteral("SELECT COUNT(*) FROM pragma_table_info('songs') WHERE name='transition_override'")).toInt(), 0);
         QCOMPARE(rawValue(badPath, QStringLiteral("SELECT title FROM songs WHERE id=1")).toString(), QStringLiteral("Inherited"));
+    }
+
+    void standaloneMediaReferencesStaySeparateAndSurviveCopies() {
+        QTemporaryDir directory;
+        const auto path = directory.filePath(QStringLiteral("media.sqlite3"));
+        QString error;
+        int assetId = 0;
+        int serviceId = 0;
+        {
+            LibraryRepository repository;
+            QVERIFY(repository.open(&error, path));
+            const auto presentationCount = repository.songs().size();
+            const SlideMedia media{MediaKind::Audio, QStringLiteral("media/session/music.wav"), QStringLiteral("Music.wav"), true};
+            const auto ids = repository.registerMediaAssets({media, media}, &error);
+            QCOMPARE(ids.size(), 2);
+            QCOMPARE(ids.first(), ids.last());
+            assetId = ids.first();
+            QCOMPARE(repository.songs().size(), presentationCount);
+            QCOMPARE(repository.mediaAssets().size(), 1);
+            QVERIFY(repository.mediaAsset(assetId).importedAt > 0);
+            serviceId = repository.createService(QStringLiteral("Mixed service"), &error);
+            QVERIFY(repository.appendToService(serviceId, 1, &error));
+            const int firstEntry = repository.service(serviceId).first().id;
+            const int inserted = repository.appendMediaToService(serviceId, assetId, &error, firstEntry);
+            QVERIFY(inserted > 0);
+            const auto entry = repository.service(serviceId).first();
+            QCOMPARE(entry.id, inserted);
+            QCOMPARE(entry.songId, 0);
+            QCOMPARE(entry.mediaAssetId, assetId);
+            QCOMPARE(repository.entrySlides(entry.id), QStringList({QStringLiteral("")}));
+            QCOMPARE(repository.entryMedia(entry.id), QVector<SlideMedia>({media}));
+            QVERIFY(repository.setEntrySlideOrder(entry.id, {0}, &error));
+            QVERIFY(!repository.setEntrySlideOrder(entry.id, {0, 0}, &error));
+            QVERIFY(!repository.setEntrySlideOrder(entry.id, {1}, &error));
+            QVERIFY(repository.updateMediaAsset(assetId, QStringLiteral("Prelude.wav"), QStringLiteral("Sunday"), false, &error));
+            QCOMPARE(repository.entrySource(entry.id).title, QStringLiteral("Prelude.wav"));
+            QVERIFY(!repository.entryMedia(entry.id).first().loop);
+            QCOMPARE(repository.mediaAssets(QStringLiteral("Sunday")).first().id, assetId);
+            QVERIFY(!repository.deleteMediaAsset(assetId, &error));
+            QVERIFY(error.contains(QStringLiteral("referenced")));
+            QVERIFY(repository.duplicateServiceEntry(entry.id, &error));
+            QCOMPARE(repository.service(serviceId).at(1).mediaAssetId, assetId);
+            const int copy = repository.duplicateService(serviceId, QStringLiteral("Copy"), &error);
+            QVERIFY(copy > 0);
+            QCOMPARE(repository.service(copy).first().mediaAssetId, assetId);
+            QCOMPARE(repository.mediaAssets().size(), 1);
+            QVERIFY(repository.deleteSong(1, &error));
+            QCOMPARE(repository.service(serviceId).size(), 2);
+        }
+        LibraryRepository reopened;
+        QVERIFY(reopened.open(&error, path));
+        QCOMPARE(reopened.mediaAsset(assetId).folder, QStringLiteral("Sunday"));
+        QCOMPARE(reopened.entrySource(reopened.service(serviceId).first().id).mediaAssetId, assetId);
+        for (const auto &plan : reopened.services())
+            for (const auto &entry : reopened.service(plan.id))
+                if (entry.mediaAssetId == assetId) QVERIFY(reopened.removeFromService(entry.id, &error));
+        QVERIFY(reopened.deleteMediaAsset(assetId, &error));
+        QCOMPARE(reopened.mediaAsset(assetId).id, 0);
+    }
+
+    void mediaBatchRollbackAndPresentationProtection() {
+        QTemporaryDir directory;
+        QString error;
+        LibraryRepository repository;
+        QVERIFY(repository.open(&error, directory.filePath(QStringLiteral("library.sqlite3"))));
+        const SlideMedia image{MediaKind::Image, QStringLiteral("media/session/image.jpg"), QStringLiteral("Image.jpg"), false};
+        auto invalid = image;
+        invalid.path = QStringLiteral("media/../../outside.jpg");
+        QVERIFY(repository.registerMediaAssets({image, invalid}, &error).isEmpty());
+        QVERIFY(repository.mediaAssets().isEmpty());
+        const int presentation = repository.createPresentation(QStringLiteral("Legacy batch"), {QStringLiteral("")}, {image}, &error);
+        QVERIFY2(presentation > 0, qPrintable(error));
+        const int assetId = repository.mediaAssets().first().id;
+        QCOMPARE(repository.registerMediaAssets({image}, &error), QVector<int>({assetId}));
+        QVERIFY(!repository.deleteMediaAsset(assetId, &error));
+        auto conflict = image;
+        conflict.kind = MediaKind::Video;
+        QVERIFY(repository.registerMediaAssets({conflict}, &error).isEmpty());
+        QVERIFY(!repository.updateMediaAsset(assetId, QStringLiteral("../bad"), {}, false, &error));
+        QVERIFY(!repository.updateMediaAsset(assetId, image.name, {}, true, &error));
+        QCOMPARE(repository.mediaAsset(assetId).media, image);
+        QVERIFY(!repository.appendMediaToService(999, assetId, &error));
+        const int plan = repository.createService(QStringLiteral("Media"), &error);
+        QVERIFY(!repository.appendMediaToService(plan, assetId, &error, 999));
+        QVERIFY(repository.service(plan).isEmpty());
+        QVERIFY(repository.deleteSong(presentation, &error));
+        QVERIFY(repository.deleteMediaAsset(assetId, &error));
+    }
+
+    void versionFiveMigrationPreservesMediaAndEntrySequence() {
+        QTemporaryDir directory;
+        const auto path = directory.filePath(QStringLiteral("v5.sqlite3"));
+        QString error;
+        {
+            LibraryRepository repository;
+            QVERIFY(repository.open(&error, path));
+            QVERIFY(repository.createPresentation(QStringLiteral("Pictures"), {QStringLiteral("")},
+                {{MediaKind::Image, QStringLiteral("media/legacy/a.jpg"), QStringLiteral("a.jpg"), false}}, &error));
+        }
+        // Reconstruct the v5 entry table and remove the new registry to exercise a real upgrade.
+        QVERIFY(removeCleanupSchema(path));
+        QVERIFY(rawSql(path, {QStringLiteral("DROP TABLE midi_bindings"), QStringLiteral("DROP TABLE midi_slide_actions"),
+            QStringLiteral("CREATE TABLE service_entries_v5(id INTEGER PRIMARY KEY AUTOINCREMENT,service_id INTEGER NOT NULL REFERENCES services(id),song_id INTEGER NOT NULL REFERENCES songs(id),position INTEGER NOT NULL,slide_order TEXT)"),
+            QStringLiteral("INSERT INTO service_entries_v5 SELECT id,service_id,song_id,position,slide_order FROM service_entries"),
+            QStringLiteral("INSERT INTO service_entries_v5(id,service_id,song_id,position) VALUES(800,1,1,9)"),
+            QStringLiteral("DELETE FROM service_entries_v5 WHERE id=800"),
+            QStringLiteral("DROP TABLE service_entries"),
+            QStringLiteral("ALTER TABLE service_entries_v5 RENAME TO service_entries"),
+            QStringLiteral("CREATE INDEX service_entries_order ON service_entries(service_id,position,id)"),
+            QStringLiteral("ALTER TABLE songs DROP COLUMN look_id"),
+            QStringLiteral("ALTER TABLE slides DROP COLUMN look_id"),
+            QStringLiteral("ALTER TABLE slides DROP COLUMN look_rich_override"),
+            QStringLiteral("ALTER TABLE slides DROP COLUMN look_fit"),
+            QStringLiteral("DROP TABLE looks"),
+            QStringLiteral("ALTER TABLE songs DROP COLUMN song_structure"),
+            QStringLiteral("DROP INDEX slides_media_path"),
+            QStringLiteral("DROP TABLE media_assets"),
+            QStringLiteral("PRAGMA user_version=5")}, &error));
+        LibraryRepository migrated;
+        QVERIFY2(migrated.open(&error, path), qPrintable(error));
+        QCOMPARE(migrated.mediaAssets().size(), 1);
+        const auto asset = migrated.mediaAssets().first();
+        QCOMPARE(asset.media.path, QStringLiteral("media/legacy/a.jpg"));
+        QCOMPARE(asset.importedAt, 0);
+        QCOMPARE(migrated.service(1).first().id, 1);
+        QVERIFY(migrated.appendMediaToService(1, asset.id, &error));
+        QVERIFY(migrated.service(1).last().id > 800);
+        QCOMPARE(rawValue(path, QStringLiteral("PRAGMA user_version")).toInt(), 11);
     }
 
     void readErrorsAreAvailableToOperator() {

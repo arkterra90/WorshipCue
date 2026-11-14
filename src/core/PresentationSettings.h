@@ -30,6 +30,10 @@ struct PresentationSettings {
             && int(transition) >= int(SlideTransitionType::Cut)
             && int(transition) <= int(SlideTransitionType::SlideRight);
     }
+    bool sameTransition(const PresentationSettings &other) const {
+        return transition == other.transition && transitionDurationMs == other.transitionDurationMs
+            && overrideTransition == other.overrideTransition;
+    }
     bool operator==(const PresentationSettings &other) const {
         return autoAdvanceMs == other.autoAdvanceMs && loop == other.loop
             && transition == other.transition && transitionDurationMs == other.transitionDurationMs

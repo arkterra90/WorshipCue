@@ -26,7 +26,8 @@ QString bodyText(const QModelIndex &index) {
     const auto media = index.data(Qt::UserRole + 3).value<SlideMedia>();
     if (media.kind != MediaKind::None) {
         const QString name = media.name.isEmpty() ? QFileInfo(media.path).fileName() : media.name;
-        const QString kind = media.kind == MediaKind::Video ? QStringLiteral("Video") : QStringLiteral("Picture");
+        const QString kind = media.kind == MediaKind::Audio ? QStringLiteral("Audio")
+            : media.kind == MediaKind::Video ? QStringLiteral("Video") : QStringLiteral("Picture");
         return name.isEmpty() ? kind : kind + QLatin1Char('\n') + name;
     }
     return QStringLiteral("Empty slide");

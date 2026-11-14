@@ -3,6 +3,7 @@
 #include "../core/PresentationController.h"
 #include "../data/LibraryRepository.h"
 #include "OutputManager.h"
+#include "../midi/MidiEngine.h"
 #include "../media/MediaPlayback.h"
 #include <QKeySequence>
 #include <QMainWindow>
@@ -29,7 +30,7 @@ class QTimer;
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr, std::unique_ptr<MidiBackend> midiBackend = {});
     ~MainWindow() override;
     bool initialize(QString *error, const QString &databasePath = {});
     bool importMediaFiles(const QStringList &paths);
@@ -43,8 +44,17 @@ private:
     PresentationController controller_;
     OutputManager outputs_;
     MediaPlayback playback_;
+    MidiEngine midi_;
     std::unique_ptr<MediaManager> mediaManager_;
     QListWidget *songs_ = nullptr;
+    QListWidget *mediaAssets_ = nullptr;
+    QLineEdit *mediaSearch_ = nullptr;
+    QComboBox *mediaFolders_ = nullptr;
+    QLabel *mediaDetails_ = nullptr;
+    QPushButton *mediaImportButton_ = nullptr;
+    bool browsingMedia_ = false;
+    int liveLibraryMediaId_ = 0;
+    bool importAsPresentation_ = false;
     QListWidget *service_ = nullptr;
     QListWidget *slides_ = nullptr;
     QLineEdit *search_ = nullptr;
@@ -63,6 +73,9 @@ private:
     QLabel *selectedTimingInfo_ = nullptr;
     QPushButton *pauseAutoAdvance_ = nullptr;
     QPushButton *editSlide_ = nullptr;
+    QPushButton *songSections_ = nullptr;
+    QPushButton *looksButton_ = nullptr;
+    QPushButton *presentationSettings_ = nullptr;
     QComboBox *globalTransitionType_ = nullptr;
     QDoubleSpinBox *globalTransitionTime_ = nullptr;
     QComboBox *slideViewMode_ = nullptr;
@@ -94,14 +107,35 @@ private:
     QKeySequence blackoutShortcut_;
     QKeySequence clearShortcut_;
     PresentationSettings programSettings_;
+    QVector<QVector<TransitionChange>> transitionUndo_, transitionRedo_;
+    QAction *bulkTransitions_ = nullptr;
+    QAction *undoTransitions_ = nullptr;
+    QAction *redoTransitions_ = nullptr;
     QPixmap selectedBackground_;
     QString selectedBackgroundPath_;
+    QString selectedTimingSummary_;
     QString databasePath_;
     qint64 externalDataVersion_ = -1;
     QTimer *libraryRefreshTimer_ = nullptr;
+    QTimer *cleanupLeaseTimer_ = nullptr;
+    QString cleanupLeaseOwner_;
+    quint64 usageRevision_ = 0;
+    CleanupProtection cleanupProtection(const QVector<PresentationItem> &) const;
+    QString managedCleanupPath(const QString &) const;
+    bool prepareCleanupSnapshot(const QVector<PresentationItem> &, QString *error);
+    void recordLiveUsage();
+    void configureCleanup();
 
     void buildUi();
     bool reloadSongs(bool reportFailure = true);
+    bool reloadMedia(bool reportFailure = true);
+    int selectedMediaAssetId() const;
+    Song workspaceSource() const;
+    void showSelectedMedia();
+    void editMediaAsset();
+    void deleteMediaAsset();
+    void appendMedia(int id = 0, int beforeEntryId = 0);
+    void previewMediaAsset();
     bool reloadServices(int selectServiceId = 0, int selectEntryId = 0, int selectSlide = 0, bool reportFailure = true);
     bool reloadService(int selectEntryId = 0, int selectSlide = 0, bool reportFailure = true);
     bool showSelectedService(int selectSlide = 0, bool reportFailure = true);
@@ -115,6 +149,9 @@ private:
     void createSong();
     void importLyrics();
     void editSong();
+    void editSongStructure();
+    void configureLooks();
+    void refreshStructuredSong(int songId);
     void editSelectedSlide();
     void editPresentation(int songId, int sourceSlide = 0);
     void duplicateSong();
@@ -124,6 +161,9 @@ private:
     void updatePlaybackUi();
     void configurePresentation(int songId);
     void configureProgramTransitions();
+    void configureSelectedTransitions();
+    void undoTransitions(bool redo = false);
+    void updateTransitionActions();
     void saveProgramTransitions();
     void updateProgramTransitionUi();
     void updateSlideView();
@@ -140,6 +180,11 @@ private:
     void moveSlide(int delta);
     void resetSlideOrder();
     void goLive();
+    PresentationItem midiSnapshot(const Song &, const QVector<int> &, int entryId = 0) const;
+    bool takeSavedService(int serviceId, int entryId, int row, QString *error);
+    void reloadMidiBindings();
+    void dispatchMidi(const MidiBinding &);
+    void configureMidiSlide();
     void advance();
     void rewind();
     void syncLiveSelection();
@@ -158,6 +203,8 @@ private:
     int selectedEntryId() const;
     QStringList selectedSlides() const;
     QStringList selectedRichText() const;
+    QVector<SlideLook> selectedLooks() const;
+    QVector<SlideLook> resolveLooks(QVector<SlideLook> looks) const;
     QVector<int> selectedSlideOrder() const;
     QVector<SlideMedia> selectedMedia() const;
     SlideMedia resolveMedia(SlideMedia media) const;

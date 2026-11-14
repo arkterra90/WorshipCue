@@ -42,6 +42,7 @@ template <> constexpr inline auto OutputManager::qt_create_metaobjectdata<qt_met
         "targetsChanged",
         "",
         "statusChanged",
+        "layoutsChanged",
         "operatorFocusRequested"
     };
 
@@ -50,8 +51,10 @@ template <> constexpr inline auto OutputManager::qt_create_metaobjectdata<qt_met
         QtMocHelpers::SignalData<void()>(1, 2, QMC::AccessPublic, QMetaType::Void),
         // Signal 'statusChanged'
         QtMocHelpers::SignalData<void()>(3, 2, QMC::AccessPublic, QMetaType::Void),
-        // Signal 'operatorFocusRequested'
+        // Signal 'layoutsChanged'
         QtMocHelpers::SignalData<void()>(4, 2, QMC::AccessPublic, QMetaType::Void),
+        // Signal 'operatorFocusRequested'
+        QtMocHelpers::SignalData<void()>(5, 2, QMC::AccessPublic, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -77,7 +80,8 @@ void OutputManager::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         switch (_id) {
         case 0: _t->targetsChanged(); break;
         case 1: _t->statusChanged(); break;
-        case 2: _t->operatorFocusRequested(); break;
+        case 2: _t->layoutsChanged(); break;
+        case 3: _t->operatorFocusRequested(); break;
         default: ;
         }
     }
@@ -86,7 +90,9 @@ void OutputManager::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
             return;
         if (QtMocHelpers::indexOfMethod<void (OutputManager::*)()>(_a, &OutputManager::statusChanged, 1))
             return;
-        if (QtMocHelpers::indexOfMethod<void (OutputManager::*)()>(_a, &OutputManager::operatorFocusRequested, 2))
+        if (QtMocHelpers::indexOfMethod<void (OutputManager::*)()>(_a, &OutputManager::layoutsChanged, 2))
+            return;
+        if (QtMocHelpers::indexOfMethod<void (OutputManager::*)()>(_a, &OutputManager::operatorFocusRequested, 3))
             return;
     }
 }
@@ -110,14 +116,14 @@ int OutputManager::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 3)
+        if (_id < 4)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 3;
+        _id -= 4;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 3)
+        if (_id < 4)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 3;
+        _id -= 4;
     }
     return _id;
 }
@@ -135,8 +141,14 @@ void OutputManager::statusChanged()
 }
 
 // SIGNAL 2
-void OutputManager::operatorFocusRequested()
+void OutputManager::layoutsChanged()
 {
     QMetaObject::activate(this, &staticMetaObject, 2, nullptr);
+}
+
+// SIGNAL 3
+void OutputManager::operatorFocusRequested()
+{
+    QMetaObject::activate(this, &staticMetaObject, 3, nullptr);
 }
 QT_WARNING_POP

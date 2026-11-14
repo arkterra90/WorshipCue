@@ -35,6 +35,28 @@ private:
     }
 
 private slots:
+    void multipleSelectionsMoveTogetherWithoutChangingTheirOrder() {
+        ReorderListWidget list;
+        populate(list);
+        list.setSelectionMode(QAbstractItemView::ExtendedSelection);
+        list.item(2)->setSelected(true);
+        QSignalSpy changed(&list, &ReorderListWidget::orderChanged);
+        QVERIFY(list.moveSelectedItems(4));
+        QCOMPARE(ids(list), (QVector<int>{20,40,10,30}));
+        QCOMPARE(changed.count(), 1);
+        QCOMPARE(list.selectedItems().size(), 2);
+        QCOMPARE(list.currentItem()->data(Qt::UserRole).toInt(), 10);
+        QVERIFY(list.moveSelectedItems(0));
+        QCOMPARE(ids(list), (QVector<int>{10,30,20,40}));
+        QCOMPARE(changed.count(), 2);
+        QVERIFY(!list.moveSelectedItems(1));
+        QCOMPARE(changed.count(), 2);
+        list.selectAll();
+        QVERIFY(list.moveSelectedItems(list.count()));
+        QCOMPARE(ids(list), (QVector<int>{10,30,20,40}));
+        QCOMPARE(list.selectedItems().size(), 4);
+    }
+
     void slideCardsHaveConsistentHitAreas_data() {
         QTest::addColumn<int>("thumbnailWidth");
         QTest::newRow("small") << 160;

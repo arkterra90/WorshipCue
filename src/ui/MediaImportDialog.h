@@ -22,6 +22,8 @@ public:
     QString title() const;
     QStringList names() const { return plannedNames_; }
     bool loopVideos() const;
+    bool createPresentation() const;
+    bool addToService() const;
     void setPresentationTitle(const QString &title);
 
 private:
@@ -39,6 +41,8 @@ private:
     QSpinBox *start_;
     QSpinBox *padding_;
     QCheckBox *loop_;
+    QCheckBox *createPresentation_;
+    QCheckBox *addToService_;
     QStackedWidget *options_;
     QTableWidget *preview_;
     QLabel *error_;

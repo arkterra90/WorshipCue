@@ -923,6 +923,46 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/PRMOGMWJPH/../../../src/core/MediaSlide.h \
   /opt/homebrew/opt/qt/include/QtCore/QMetaType \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/PRMOGMWJPH/../../../src/core/MidiTypes.h \
+  /opt/homebrew/opt/qt/include/QtCore/QByteArray \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonObject \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonobject.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborcommon.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatetime.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcalendar.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlocale.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvariant.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdebug.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtextstream.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcontiguouscache.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsharedpointer.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsharedpointer_impl.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/set \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/unordered_set \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmap.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata_impl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qset.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qhash.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvarlengtharray.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qalloc.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q23utility.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q20utility.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qregularexpression.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/quuid.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/PRMOGMWJPH/../../../src/core/PresentationLook.h \
+  /opt/homebrew/opt/qt/include/QtCore/QRectF \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrect.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcheckedint_impl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmargins.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsize.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpoint.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/PRMOGMWJPH/../../../src/core/PresentationSettings.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtmochelpers.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtmocconstants.h \
@@ -938,9 +978,6 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtsan_impl.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/sanitizer/tsan_interface.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qresultstore.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmap.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata_impl.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfuture_impl.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qthreadpool.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qthread.h \
@@ -967,20 +1004,6 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrunnable.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qexception.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpromise.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvariant.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdebug.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtextstream.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcontiguouscache.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsharedpointer.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsharedpointer_impl.h \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/set \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/unordered_set \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qset.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qhash.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvarlengtharray.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qalloc.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q23utility.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q20utility.h \
   /opt/homebrew/opt/qt/include/QtCore/QCache \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcache.h \
   /opt/homebrew/opt/qt/include/QtGui/QPixmap \
@@ -990,11 +1013,6 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiexports.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpaintdevice.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qwindowdefs.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrect.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcheckedint_impl.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmargins.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsize.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpoint.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcolor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgb.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgba64.h \
@@ -1020,7 +1038,6 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtMultimedia.framework/Headers/qtmultimediaexports.h \
   /opt/homebrew/opt/qt/include/QtMultimedia/QMediaPlayer \
   /opt/homebrew/opt/qt/lib/QtMultimedia.framework/Headers/qmediaplayer.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
   /opt/homebrew/opt/qt/include/QtMultimedia/QVideoSink \
   /opt/homebrew/opt/qt/lib/QtMultimedia.framework/Headers/qvideosink.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_BackgroundLibraryDialog.cpp \
@@ -1037,7 +1054,6 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpalette.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbrush.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontmetrics.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontinfo.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontvariableaxis.h \
@@ -1047,6 +1063,9 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_DisplayWindow.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/DisplayWindow.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../core/PresentationController.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/OutputConfiguration.h \
+  /opt/homebrew/opt/qt/include/QtCore/QSize \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/StageLayout.h \
   /opt/homebrew/opt/qt/include/QtGui/QPainter \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainter.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextoption.h \
@@ -1060,6 +1079,9 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/MainWindow.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../data/LibraryRepository.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../data/../core/MediaSlide.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../data/../core/MidiTypes.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../data/../core/PresentationLook.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../data/../core/SongStructure.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../data/../core/PresentationSettings.h \
   /opt/homebrew/opt/qt/include/QtSql/QSqlDatabase \
   /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qsqldatabase.h \
@@ -1068,6 +1090,12 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsqlexports.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetaobject.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/OutputManager.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/NativeDisplayModes.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../midi/MidiEngine.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../midi/MidiBackend.h \
+  /opt/homebrew/opt/qt/include/QtCore/QMutex \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../midi/../core/MidiTypes.h \
+  /opt/homebrew/opt/qt/include/QtCore/QHash \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../media/MediaPlayback.h \
   /opt/homebrew/opt/qt/include/QtGui/QKeySequence \
   /opt/homebrew/opt/qt/include/QtWidgets/QMainWindow \
@@ -1077,6 +1105,12 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/MediaImportDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../media/BatchRenamer.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_OutputManager.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_OutputSettingsDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/OutputSettingsDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_PresentationLookDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/PresentationLookDialog.h \
+  /opt/homebrew/opt/qt/include/QtGui/QUndoStack \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qundostack.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_PresentationSettingsDialog.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/PresentationSettingsDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../core/PresentationSettings.h \
@@ -1092,10 +1126,8 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qitemselectionmodel.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qabstractitemdelegate.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qstyleoption.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlocale.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qabstractspinbox.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qvalidator.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qregularexpression.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qslider.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qabstractslider.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qstyle.h \
@@ -1104,4 +1136,10 @@ CMakeFiles/WorshipCue.dir/WorshipCue_autogen/mocs_compilation.cpp.o: \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_SlideEditorDialog.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/SlideEditorDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_SongEditorDialog.cpp \
-  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/SongEditorDialog.h
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/SongEditorDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../core/LyricsImporter.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/../core/SongStructure.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_SongStructureDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/SongStructureDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/moc_StageLayoutDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCue_autogen/YPKJ5OE7LN/../../../src/ui/StageLayoutDialog.h

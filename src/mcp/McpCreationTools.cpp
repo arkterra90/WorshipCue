@@ -118,9 +118,11 @@ QJsonObject McpServer::callCreationTool(const QString &name, const QJsonObject &
             || (args.contains("dry_run") && !args.value("dry_run").isBool()))
             return failure(QStringLiteral("Supply a nonblank title of at most 256 characters, a boolean dry_run, and only documented fields."));
         QStringList slides;
+        SongStructure structure;
         if (!sermon && args.contains("lyrics")) {
             if (args.contains("slides") || !text(args.value("lyrics"), 1024 * 1024)) return failure(QStringLiteral("Supply either lyrics (at most 1 Mi characters) or slides."));
-            slides = LyricsImporter::parse(args.value("lyrics").toString(), args.value("title").toString()).slides;
+            const auto imported = LyricsImporter::parse(args.value("lyrics").toString(), args.value("title").toString());
+            structure = imported.songStructure(&slides);
         } else {
             if (!args.value("slides").isArray()) return failure(QStringLiteral("slides must be an array of text strings."));
             for (const auto &slide : args.value("slides").toArray()) {
@@ -128,6 +130,11 @@ QJsonObject McpServer::callCreationTool(const QString &name, const QJsonObject &
                 slides.append(slide.toString());
             }
             if (slides.isEmpty()) return failure(QStringLiteral("Supply at least one content slide."));
+        }
+        if (!sermon && structure.isEmpty()) {
+            ImportedLyrics imported;
+            imported.slides = slides;
+            structure = imported.songStructure(&slides);
         }
         if (sermon) {
             QStringList title{args.value("title").toString().trimmed()};
@@ -140,17 +147,19 @@ QJsonObject McpServer::callCreationTool(const QString &name, const QJsonObject &
             }
             slides.prepend(title.join(QLatin1Char('\n')));
         }
+        if (!sermon && !structure.validate(int(slides.size()), &error)) return failure(error);
         const QJsonObject item{{"title", args.value("title")}, {"slides", asArray(slides)}};
         const auto validation = callTool(QStringLiteral("create_service_order"), {{"name", args.value("title")}, {"items", QJsonArray{item}}, {"dry_run", true}});
         if (validation.value("isError").toBool()) return validation;
         const bool dryRun = args.value("dry_run").toBool();
         int id = 0;
         if (!dryRun) {
-            id = library_.createTextPresentation(args.value("title").toString(), slides, &error);
+            id = library_.createTextPresentation(args.value("title").toString(), slides, &error, {}, {}, {}, structure);
             if (!id) return failure(error);
         }
         QJsonObject data{{"presentation_type", sermon ? "sermon" : "song"}, {"title", args.value("title").toString().trimmed()},
             {"slide_count", slides.size()}, {"saved", !dryRun}, {"dry_run", dryRun}};
+        if (!sermon) data.insert("arranged_slide_count", structure.slideOrder().size());
         if (id) data.insert("song_id", id);
         if (dryRun) {
             QJsonArray preview;

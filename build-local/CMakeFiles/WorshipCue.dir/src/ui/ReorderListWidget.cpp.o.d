@@ -986,6 +986,9 @@ CMakeFiles/WorshipCue.dir/src/ui/ReorderListWidget.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtabbar.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtabwidget.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qrubberband.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaAssetListWidget.h \
+  /opt/homebrew/opt/qt/include/QtCore/QMimeData \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmimedata.h \
   /opt/homebrew/opt/qt/include/QtCore/QAbstractItemModel \
   /opt/homebrew/opt/qt/include/QtGui/QCursor \
   /opt/homebrew/opt/qt/include/QtGui/QDrag \
@@ -1021,8 +1024,6 @@ CMakeFiles/WorshipCue.dir/src/ui/ReorderListWidget.cpp.o: \
   /opt/homebrew/opt/qt/include/QtGui/QDragLeaveEvent \
   /opt/homebrew/opt/qt/include/QtGui/QDragMoveEvent \
   /opt/homebrew/opt/qt/include/QtGui/QDropEvent \
-  /opt/homebrew/opt/qt/include/QtCore/QMimeData \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmimedata.h \
   /opt/homebrew/opt/qt/include/QtGui/QPainter \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpainter.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextoption.h \

@@ -154,6 +154,7 @@ bool BackgroundLibraryDialog::importFiles(const QStringList &paths, QString *err
             continue;
         }
         selection = QStringLiteral("backgrounds/") + name;
+        emit fileImported(selection);
     }
     reload(selection);
     if (error) *error = failures.join(QLatin1Char('\n'));

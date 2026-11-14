@@ -1,4 +1,7 @@
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMidiModel.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMcp.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueOutputSupport.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMidi.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCue.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMcpBundle.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/edit_cache.dir
@@ -7,7 +10,13 @@
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/install.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/install/local.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/install/strip.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMidiModel_autogen_timestamp_deps.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMidiModel_autogen.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMcp_autogen_timestamp_deps.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMcp_autogen.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueOutputSupport_autogen_timestamp_deps.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueOutputSupport_autogen.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMidi_autogen_timestamp_deps.dir
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCueMidi_autogen.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCue_autogen_timestamp_deps.dir
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/WorshipCue_autogen.dir

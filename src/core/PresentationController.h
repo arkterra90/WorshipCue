@@ -6,6 +6,8 @@
 #include <QTimer>
 #include <QVector>
 #include "MediaSlide.h"
+#include "MidiTypes.h"
+#include "PresentationLook.h"
 #include "PresentationSettings.h"
 
 struct PresentationItem {
@@ -17,6 +19,12 @@ struct PresentationItem {
     // Absolute at the playback boundary; the library stores managed relative paths.
     QString backgroundPath;
     QStringList richText;
+    int songId = 0;
+    QStringList sourceSlideKeys;
+    QVector<SlideLook> looks;
+    QVector<qint64> sourceSlideIds;
+    QVector<QVector<MidiOutputAction>> midiActions;
+    int mediaAssetId = 0;
 };
 
 struct LivePresentation {
@@ -38,6 +46,23 @@ struct LivePresentation {
     QString upcomingBackgroundPath;
     QStringList richText;
     QString upcomingRichText;
+    QVector<SlideLook> looks;
+    QVector<qint64> sourceSlideIds;
+    QVector<QVector<MidiOutputAction>> midiActions;
+    SlideLook upcomingLook;
+
+    QVector<MidiOutputAction> currentMidiActions() const { return midiActions.value(index); }
+    SlideLook currentLook() const { return looks.value(index); }
+    QString currentBackgroundPath() const {
+        const auto style = currentLook();
+        return style.id > 0 && style.settings.background == PresentationLook::Background::Image
+            ? style.backgroundPath : backgroundPath;
+    }
+    SlideLook nextLook() const {
+        if (index < 0) return {};
+        if (loopsAtEnd()) return looks.value(0);
+        return index + 1 < slides.size() ? looks.value(index + 1) : upcomingLook;
+    }
 
     QString currentText() const {
         return index >= 0 && index < slides.size() ? slides.at(index) : QString{};
@@ -68,6 +93,8 @@ struct LivePresentation {
     }
     QString nextBackgroundPath() const {
         if (index < 0) return {};
+        const auto style = nextLook();
+        if (style.id > 0 && style.settings.background == PresentationLook::Background::Image) return style.backgroundPath;
         return loopsAtEnd() || index + 1 < slides.size() ? backgroundPath : upcomingBackgroundPath;
     }
     SlideMedia currentMedia() const {
@@ -87,6 +114,8 @@ class PresentationController : public QObject {
 public:
     explicit PresentationController(QObject *parent = nullptr);
     const LivePresentation &state() const { return state_; }
+    const QVector<PresentationItem> &snapshotItems() const { return serviceSnapshot_; }
+    const PresentationItem *liveItem() const { return itemIndex_ >= 0 && itemIndex_ < serviceSnapshot_.size() ? &serviceSnapshot_.at(itemIndex_) : nullptr; }
     void takeLive(const QString &title, const QStringList &slides, int slideIndex = 0,
                   const PresentationSettings &settings = {});
     void takeLive(const PresentationItem &item, int slideIndex = 0);
@@ -98,6 +127,9 @@ public:
     void toggleBlackout();
     void toggleClear();
     void restoreOutput();
+    // Shared lyric edits update all matching occurrences without re-cueing media or timers.
+    bool refreshSongText(int songId, const QStringList &keys, const QStringList &texts,
+                         const QStringList &richText, const QVector<SlideLook> &looks = {});
     // Updates inherited transitions for the next cue without changing current output.
     void setGlobalTransitionDefaults(const PresentationSettings &defaults);
     // Active includes a suspended countdown; completion clears it entirely.

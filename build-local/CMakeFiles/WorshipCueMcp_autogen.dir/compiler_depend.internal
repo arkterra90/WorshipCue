@@ -7,6 +7,10 @@
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles/4.4.5/CMakeSystem.cmake
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.h
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpCreationTools.cpp

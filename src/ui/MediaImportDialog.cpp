@@ -16,18 +16,18 @@
 
 MediaImportDialog::MediaImportDialog(const QStringList &filenames, QWidget *parent, bool namingOnly)
     : QDialog(parent), filenames_(filenames), namingOnly_(namingOnly) {
-    setWindowTitle(namingOnly ? QStringLiteral("Rename Media Slides") : QStringLiteral("Import Pictures and Video"));
+    setWindowTitle(namingOnly ? QStringLiteral("Rename Media Slides") : QStringLiteral("Import Media"));
     resize(760, 620);
     auto *layout = new QVBoxLayout(this);
     auto *intro = new QLabel(namingOnly
         ? QStringLiteral("Rename this presentation’s slide labels together. Stored media locations stay stable so live presentations keep working.")
-        : QStringLiteral("Create a presentation from your selected files. WorshipCue copies them into its media library using the names below; your original files stay unchanged."), this);
+        : QStringLiteral("Import individual files into the Media Library. You can also group this batch into a slide presentation."), this);
     intro->setWordWrap(true);
     layout->addWidget(intro);
     auto *titleForm = new QFormLayout;
-    title_ = new QLineEdit(QStringLiteral("Picture Presentation"), this);
+    title_ = new QLineEdit(QStringLiteral("Media"), this);
     title_->setObjectName(QStringLiteral("presentationTitle"));
-    auto *titleLabel = new QLabel(QStringLiteral("Presentation title"), this);
+    auto *titleLabel = new QLabel(QStringLiteral("Batch name / presentation title"), this);
     titleForm->addRow(titleLabel, title_);
     layout->addLayout(titleForm);
     title_->setVisible(!namingOnly);
@@ -103,10 +103,18 @@ MediaImportDialog::MediaImportDialog(const QStringList &filenames, QWidget *pare
         preview_->setItem(row, 1, new QTableWidgetItem);
     }
     layout->addWidget(preview_, 1);
-    loop_ = new QCheckBox(QStringLiteral("Loop videos in this presentation"), this);
+    loop_ = new QCheckBox(QStringLiteral("Loop audio and videos"), this);
     loop_->setObjectName(QStringLiteral("loopVideos"));
     loop_->setVisible(!namingOnly);
     layout->addWidget(loop_);
+    createPresentation_ = new QCheckBox(QStringLiteral("Also create a slide presentation from this batch"), this);
+    createPresentation_->setObjectName(QStringLiteral("createMediaPresentation"));
+    createPresentation_->setVisible(!namingOnly);
+    layout->addWidget(createPresentation_);
+    addToService_ = new QCheckBox(QStringLiteral("Add imported items to the current service"), this);
+    addToService_->setObjectName(QStringLiteral("addMediaToService"));
+    addToService_->setVisible(!namingOnly);
+    layout->addWidget(addToService_);
     error_ = new QLabel(this);
     error_->setObjectName(QStringLiteral("renameError"));
     error_->setWordWrap(true);
@@ -114,7 +122,7 @@ MediaImportDialog::MediaImportDialog(const QStringList &filenames, QWidget *pare
     layout->addWidget(error_);
     actions_ = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     actions_->setObjectName(QStringLiteral("mediaImportActions"));
-    actions_->button(QDialogButtonBox::Ok)->setText(namingOnly ? QStringLiteral("Rename Slides") : QStringLiteral("Import Presentation"));
+    actions_->button(QDialogButtonBox::Ok)->setText(namingOnly ? QStringLiteral("Rename Slides") : QStringLiteral("Import Media"));
     layout->addWidget(actions_);
     connect(actions_, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(actions_, &QDialogButtonBox::accepted, this, [this] {
@@ -135,10 +143,13 @@ MediaImportDialog::MediaImportDialog(const QStringList &filenames, QWidget *pare
         lastAutoName_ = title;
         updatePreview();
     });
+    connect(createPresentation_, &QCheckBox::toggled, this, &MediaImportDialog::updatePreview);
     updatePreview();
 }
 
 QString MediaImportDialog::title() const { return title_->text().trimmed(); }
+bool MediaImportDialog::createPresentation() const { return createPresentation_->isChecked(); }
+bool MediaImportDialog::addToService() const { return addToService_->isChecked(); }
 bool MediaImportDialog::loopVideos() const { return loop_->isChecked(); }
 void MediaImportDialog::setPresentationTitle(const QString &title) { title_->setText(title); }
 
@@ -155,7 +166,7 @@ void MediaImportDialog::updatePreview() {
     plannedNames_ = BatchRenamer::names(filenames_, options, &error);
     for (int row = 0; row < filenames_.size(); ++row)
         preview_->item(row, 1)->setText(row < plannedNames_.size() ? plannedNames_.at(row) : QStringLiteral("—"));
-    if (!namingOnly_ && title().isEmpty()) error = QStringLiteral("Enter a presentation title.");
+    if (!namingOnly_ && createPresentation_->isChecked() && title().isEmpty()) error = QStringLiteral("Enter a presentation title.");
     error_->setText(error);
     actions_->button(QDialogButtonBox::Ok)->setEnabled(error.isEmpty() && !plannedNames_.isEmpty());
 }

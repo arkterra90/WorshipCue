@@ -1,4 +1,5 @@
 #include "ReorderListWidget.h"
+#include "MediaAssetListWidget.h"
 
 #include <QAbstractItemModel>
 #include <QCursor>
@@ -35,6 +36,30 @@ bool ReorderListWidget::moveItem(int from, int to) {
     return true;
 }
 
+bool ReorderListWidget::moveSelectedItems(int insertionRow) {
+    if (insertionRow < 0 || insertionRow > count()) return false;
+    QVector<int> rows;
+    for (int i = 0; i < count(); ++i) if (item(i)->isSelected()) rows.append(i);
+    if (rows.isEmpty() || (insertionRow < count() && item(insertionRow)->isSelected())) return false;
+    int destination = insertionRow;
+    for (int row : rows) if (row < insertionRow) --destination;
+    QVector<QListWidgetItem *> moved;
+    auto *current = currentItem();
+    {
+        const QSignalBlocker block(this);
+        for (int row : rows) moved.append(item(row));
+        for (auto it = rows.crbegin(); it != rows.crend(); ++it) takeItem(*it);
+        for (int i = 0; i < moved.size(); ++i) {
+            insertItem(destination + i, moved.at(i));
+            moved.at(i)->setSelected(true);
+        }
+        setCurrentItem(current, QItemSelectionModel::NoUpdate);
+        scrollToItem(current);
+    }
+    emit orderChanged();
+    return true;
+}
+
 void ReorderListWidget::startDrag(Qt::DropActions supportedActions) {
     if (dragDropMode() != QAbstractItemView::InternalMove || currentRow() < 0
         || !(supportedActions & Qt::MoveAction)) return;
@@ -63,6 +88,7 @@ int ReorderListWidget::destinationAt(const QPoint &position) const {
 
 void ReorderListWidget::updateDropRow(const QPoint &position) {
     dropRow_ = destinationAt(position);
+    externalMediaAppend_ = !itemAt(position);
     // Continue scrolling while the pointer moves along an edge during a drag.
     const int margin = autoScrollMargin();
     if (position.y() < margin) verticalScrollBar()->setValue(verticalScrollBar()->value() - verticalScrollBar()->singleStep());
@@ -73,10 +99,18 @@ void ReorderListWidget::updateDropRow(const QPoint &position) {
 
 void ReorderListWidget::clearDropRow() {
     dropRow_ = -1;
+    externalMediaDrag_ = false;
+    externalMediaAppend_ = false;
     viewport()->update();
 }
 
 void ReorderListWidget::dragEnterEvent(QDragEnterEvent *event) {
+    if (mediaDropsEnabled_ && event->mimeData()->hasFormat(QString::fromLatin1(mediaAssetMimeType))) {
+        externalMediaDrag_ = true;
+        event->setDropAction(Qt::CopyAction);
+        event->accept();
+        return;
+    }
     if (event->source() != this || dragDropMode() != QAbstractItemView::InternalMove
         || !event->mimeData()->hasFormat(QString::fromLatin1(reorderMimeType))) {
         event->ignore();
@@ -88,6 +122,13 @@ void ReorderListWidget::dragEnterEvent(QDragEnterEvent *event) {
 }
 
 void ReorderListWidget::dragMoveEvent(QDragMoveEvent *event) {
+    if (mediaDropsEnabled_ && event->mimeData()->hasFormat(QString::fromLatin1(mediaAssetMimeType))) {
+        externalMediaDrag_ = true;
+        event->setDropAction(Qt::CopyAction);
+        event->accept();
+        updateDropRow(event->position().toPoint());
+        return;
+    }
     if (event->source() != this || dragDropMode() != QAbstractItemView::InternalMove
         || !event->mimeData()->hasFormat(QString::fromLatin1(reorderMimeType))) {
         clearDropRow();
@@ -106,24 +147,42 @@ void ReorderListWidget::dragLeaveEvent(QDragLeaveEvent *event) {
 
 void ReorderListWidget::dropEvent(QDropEvent *event) {
     clearDropRow();
+    if (mediaDropsEnabled_ && event->mimeData()->hasFormat(QString::fromLatin1(mediaAssetMimeType))) {
+        bool valid = false;
+        const int assetId = event->mimeData()->data(QString::fromLatin1(mediaAssetMimeType)).toInt(&valid);
+        if (!valid || assetId <= 0) { event->ignore(); return; }
+        const auto *before = itemAt(event->position().toPoint());
+        emit mediaDropped(assetId, before ? before->data(Qt::UserRole).toInt() : 0);
+        event->setDropAction(Qt::CopyAction);
+        event->accept();
+        return;
+    }
     if (event->source() != this || dragDropMode() != QAbstractItemView::InternalMove
         || !event->mimeData()->hasFormat(QString::fromLatin1(reorderMimeType))
         || currentRow() < 0) {
         event->ignore();
         return;
     }
-    const int from = currentRow();
-    const int to = destinationAt(event->position().toPoint());
-    moveItem(from, to);
+    if (selectedItems().size() > 1) {
+        const auto *target = itemAt(event->position().toPoint());
+        moveSelectedItems(target ? row(target) : count());
+    } else {
+        const int from = currentRow();
+        const int to = destinationAt(event->position().toPoint());
+        moveItem(from, to);
+    }
     event->setDropAction(Qt::MoveAction);
     event->accept();
 }
 
 void ReorderListWidget::paintEvent(QPaintEvent *event) {
     QListWidget::paintEvent(event);
-    if (dropRow_ < 0 || dropRow_ >= count() || dropRow_ == currentRow()) return;
+    if (dropRow_ < 0 || dropRow_ >= count()) return;
+    const bool group = selectedItems().size() > 1;
+    if (!externalMediaDrag_ && (group ? !externalMediaAppend_ && item(dropRow_)->isSelected()
+                                    : dropRow_ == currentRow())) return;
     const QRect target = visualItemRect(item(dropRow_)).adjusted(1, 1, -1, -1);
-    const bool after = dropRow_ > currentRow();
+    const bool after = externalMediaDrag_ || group ? externalMediaAppend_ : dropRow_ > currentRow();
     QPainter painter(viewport());
     painter.setPen(QPen(palette().highlight().color(), 3));
     if (viewMode() == QListView::IconMode) {

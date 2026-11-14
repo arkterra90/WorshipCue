@@ -62,6 +62,83 @@ private:
     }
 
 private slots:
+    void outputControlsUseGlobalDefaultsAndPresentationOverrides_data() {
+        QTest::addColumn<int>("globalType");
+        QTest::addColumn<int>("globalDuration");
+        QTest::addColumn<int>("overrideType");
+        QTest::addColumn<int>("overrideDuration");
+        QTest::addColumn<bool>("overridden");
+        for (int type = 0; type <= 3; ++type)
+            QTest::newRow(qPrintable(QStringLiteral("inherited-%1").arg(type))) << type << 120 << 0 << 500 << false;
+        QTest::newRow("explicit-cut") << 1 << 120 << 0 << 0 << true;
+        QTest::newRow("explicit-fade") << 0 << 0 << 1 << 80 << true;
+        QTest::newRow("zero-duration") << 1 << 0 << 0 << 500 << false;
+    }
+
+    void outputControlsUseGlobalDefaultsAndPresentationOverrides() {
+        QFETCH(int, globalType);
+        QFETCH(int, globalDuration);
+        QFETCH(int, overrideType);
+        QFETCH(int, overrideDuration);
+        QFETCH(bool, overridden);
+        PresentationController controller;
+        DisplayWindow audience(DisplayWindow::Kind::Audience, &controller);
+        controller.setGlobalTransitionDefaults({});
+        const PresentationSettings source{5000, true, SlideTransitionType(overrideType), overrideDuration, overridden};
+        controller.takeServiceLive(3, {{12, "Song", {"First", "Second"}, {}, source}, {13, "Next", {"Closing"}}}, 12, 1);
+        QTest::qWait(120);
+        controller.setAutoAdvancePaused(true);
+        const auto normal = audienceImage(audience);
+        const auto revision = controller.state().cueRevision;
+        const auto remaining = controller.autoAdvanceRemainingMs();
+        const PresentationSettings program{0, false, SlideTransitionType(globalType), globalDuration};
+        controller.setGlobalTransitionDefaults(program);
+        const auto effective = source.resolvedWithDefaults(program);
+        const bool animated = effective.transition != SlideTransitionType::Cut && effective.transitionDurationMs > 0;
+        controller.toggleBlackout();
+        QCOMPARE(controller.state().settings, effective);
+        if (animated) QCOMPARE(audienceImage(audience), normal);
+        QImage fullyBlack(normal.size(), normal.format());
+        fullyBlack.fill(Qt::black);
+        QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience), fullyBlack, 1000);
+        const auto black = audienceImage(audience);
+        controller.restoreOutput();
+        if (animated) QCOMPARE(audienceImage(audience), black);
+        QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience), normal, 1000);
+        controller.toggleClear();
+        if (animated) QCOMPARE(audienceImage(audience), normal);
+        DisplayWindow cleared(DisplayWindow::Kind::Audience, &controller);
+        QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience), audienceImage(cleared), 1000);
+        QCOMPARE(controller.state().serviceId, 3);
+        QCOMPARE(controller.state().entryId, 12);
+        QCOMPARE(controller.state().index, 1);
+        QCOMPARE(controller.state().currentText(), QStringLiteral("Second"));
+        QCOMPARE(controller.state().cueRevision, revision);
+        QCOMPARE(controller.autoAdvanceRemainingMs(), remaining);
+        QVERIFY(controller.autoAdvanceManuallyPaused());
+        QVERIFY(controller.state().clear);
+    }
+
+    void sharedLyricEditsRepaintAudienceWithoutANewCue() {
+        PresentationController controller;
+        DisplayWindow audience(DisplayWindow::Kind::Audience, &controller);
+        PresentationItem song{0, QStringLiteral("Song"), {QStringLiteral("Original chorus"), QStringLiteral("Original chorus")}};
+        song.songId = 5;
+        song.sourceSlideKeys = {QStringLiteral("chorus/0"), QStringLiteral("chorus/0")};
+        controller.takeLive(song);
+        const auto before = audienceImage(audience);
+        const auto revision = controller.state().cueRevision;
+        QSignalSpy frames(&audience, &DisplayWindow::audienceFrameChanged);
+        QVERIFY(controller.refreshSongText(5, {QStringLiteral("chorus/0")},
+            {QStringLiteral("Edited shared chorus")}, {QStringLiteral("")}));
+        QCOMPARE(controller.state().cueRevision, revision);
+        QVERIFY(frames.count() > 0);
+        QVERIFY(audienceImage(audience) != before);
+        const auto edited = audienceImage(audience);
+        QVERIFY(controller.next());
+        QCOMPARE(audienceImage(audience), edited);
+    }
+
     void richTextKeepsCharacterStylesAndParagraphAlignment() {
         const QString html = QStringLiteral(
             "<p align='right'><span style=\"font-family:'Helvetica'; font-size:96px; "
@@ -210,7 +287,7 @@ private slots:
         QCOMPARE(audienceImage(audience), second);
     }
 
-    void rapidCueKeepsCurrentCompositeAndOutputControlsAreImmediate() {
+    void rapidCueAndOutputControlsContinueFromTheVisibleComposite() {
         PresentationController controller;
         DisplayWindow audience(DisplayWindow::Kind::Audience, &controller);
         PresentationSettings settings;
@@ -229,21 +306,18 @@ private slots:
         QVERIFY(controller.next());
         QCOMPARE(audienceImage(audience), middle);
         controller.toggleBlackout();
+        QCOMPARE(audienceImage(audience), middle);
+        QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience).pixelColor(160, 90), QColor(Qt::black), 1600);
         const QImage black = audienceImage(audience);
-        QCOMPARE(black.pixelColor(160, 90), QColor(Qt::black));
-        QTest::qWait(100);
-        QCOMPARE(audienceImage(audience), black);
         controller.restoreOutput();
-        const QImage restored = audienceImage(audience);
-        QVERIFY(restored != middle);
-        QVERIFY(restored != black);
-        QTest::qWait(100);
-        QCOMPARE(audienceImage(audience), restored);
+        QCOMPARE(audienceImage(audience), black);
+        QTest::qWait(150);
+        const QImage restoring = audienceImage(audience);
+        QVERIFY(restoring != black);
         controller.toggleClear();
-        const QImage cleared = audienceImage(audience);
-        QVERIFY(cleared != restored);
-        QTest::qWait(100);
-        QCOMPARE(audienceImage(audience), cleared);
+        QCOMPARE(audienceImage(audience), restoring);
+        DisplayWindow expected(DisplayWindow::Kind::Audience, &controller);
+        QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience), audienceImage(expected), 1600);
     }
 
     void mediaFadeWaitsForDecodedFrameAndSharesHiddenOutput() {
@@ -280,7 +354,7 @@ private slots:
         controller.previous();
         controller.toggleBlackout();
         QTRY_VERIFY_WITH_TIMEOUT(!playback.frame().isNull(), 3000);
-        QCOMPARE(audienceImage(audience).pixelColor(160, 90), QColor(Qt::black));
+        QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience).pixelColor(160, 90), QColor(Qt::black), 1500);
     }
 
     void picturesRetainFullBrightnessAndFitWithoutCropping() {

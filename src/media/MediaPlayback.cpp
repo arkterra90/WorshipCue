@@ -92,20 +92,22 @@ void MediaPlayback::syncCue() {
         return;
     }
     if (!player_.isAvailable()) {
-        fail(QStringLiteral("Video playback is unavailable. Check the Qt Multimedia installation."));
+        fail(QStringLiteral("Media playback is unavailable. Check the Qt Multimedia installation."));
         return;
     }
     player_.setLoops(media.loop ? QMediaPlayer::Infinite : QMediaPlayer::Once);
     videoErrorConnection_ = connect(&player_, &QMediaPlayer::errorOccurred, this,
         [this, generation](QMediaPlayer::Error error, const QString &message) {
-            if (generation == loadGeneration_ && !switching_ && isVideo() && error != QMediaPlayer::NoError)
+            if (generation == loadGeneration_ && !switching_ && isPlayable() && error != QMediaPlayer::NoError)
                 fail(QStringLiteral("Could not play %1: %2").arg(label(), message));
         });
     mediaStatusConnection_ = connect(&player_, &QMediaPlayer::mediaStatusChanged, this,
         [this, generation](QMediaPlayer::MediaStatus status) {
-            if (generation != loadGeneration_ || switching_ || !isVideo()) return;
+            if (generation != loadGeneration_ || switching_ || !isPlayable()) return;
             if (status == QMediaPlayer::InvalidMedia && error_.isEmpty())
-                fail(QStringLiteral("%1 could not be decoded. Try a different video format.").arg(label()));
+                fail(QStringLiteral("%1 could not be decoded. Try a different media format.").arg(label()));
+            if (isAudio() && (status == QMediaPlayer::LoadedMedia || status == QMediaPlayer::BufferedMedia))
+                loadTimeout_.stop();
             if (status == QMediaPlayer::EndOfMedia) finished_ = true;
             emit statusChanged();
         });
@@ -121,7 +123,7 @@ void MediaPlayback::syncCue() {
             emit frameChanged();
         });
     player_.setSource(QUrl::fromLocalFile(media.path));
-    loadTimeout_.start();
+    if (isVideo()) loadTimeout_.start();
     player_.play();
     emit statusChanged();
 }
@@ -160,16 +162,16 @@ QString MediaPlayback::status() const {
     if (activeMedia_.kind == MediaKind::None) return QStringLiteral("No media live");
     if (activeMedia_.kind == MediaKind::Image)
         return QStringLiteral("%1 • %2").arg(loadingImage_ ? QStringLiteral("Loading picture") : QStringLiteral("Picture"), label());
-    const QString state = finished_ ? QStringLiteral("Finished — last frame held")
+    const QString state = finished_ ? (isAudio() ? QStringLiteral("Finished") : QStringLiteral("Finished — last frame held"))
         : player_.playbackState() == QMediaPlayer::PausedState ? QStringLiteral("Paused")
-        : player_.mediaStatus() == QMediaPlayer::LoadingMedia ? QStringLiteral("Loading video")
+        : player_.mediaStatus() == QMediaPlayer::LoadingMedia ? QStringLiteral("Loading media")
         : player_.playbackState() == QMediaPlayer::PlayingState ? QStringLiteral("Playing")
         : QStringLiteral("Stopped");
     return QStringLiteral("%1 • %2%3").arg(state, label(), activeMedia_.loop ? QStringLiteral(" • Loop") : QString());
 }
 
 void MediaPlayback::togglePause() {
-    if (!isVideo() || !error_.isEmpty()) return;
+    if (!isPlayable() || !error_.isEmpty()) return;
     if (player_.playbackState() == QMediaPlayer::PlayingState) player_.pause();
     else {
         if (finished_) { finished_ = false; player_.setPosition(0); }
@@ -178,7 +180,7 @@ void MediaPlayback::togglePause() {
 }
 
 void MediaPlayback::restart() {
-    if (!isVideo() || !error_.isEmpty()) return;
+    if (!isPlayable() || !error_.isEmpty()) return;
     finished_ = false;
     player_.setPosition(0);
     player_.play();

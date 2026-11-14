@@ -20,10 +20,13 @@ public:
     QString status() const;
     QString errorString() const { return error_; }
     bool isVideo() const { return activeMedia_.kind == MediaKind::Video; }
+    bool isAudio() const { return activeMedia_.kind == MediaKind::Audio; }
+    bool isPlayable() const { return isVideo() || isAudio(); }
+    bool isPlaying() const { return player_.playbackState() == QMediaPlayer::PlayingState; }
     bool isPaused() const { return player_.playbackState() == QMediaPlayer::PausedState; }
     bool muted() const { return userMuted_; }
-    qint64 position() const { return isVideo() ? player_.position() : 0; }
-    qint64 duration() const { return isVideo() ? player_.duration() : 0; }
+    qint64 position() const { return isPlayable() ? player_.position() : 0; }
+    qint64 duration() const { return isPlayable() ? player_.duration() : 0; }
     void togglePause();
     void restart();
     void toggleMute();

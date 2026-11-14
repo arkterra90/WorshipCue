@@ -15,9 +15,12 @@ class ReorderListWidget : public QListWidget {
 public:
     explicit ReorderListWidget(QWidget *parent = nullptr);
     bool moveItem(int from, int to);
+    bool moveSelectedItems(int insertionRow);
+    void setMediaDropsEnabled(bool enabled) { mediaDropsEnabled_ = enabled; }
 
 signals:
     void orderChanged();
+    void mediaDropped(int assetId, int beforeEntryId);
 
 protected:
     void startDrag(Qt::DropActions supportedActions) override;
@@ -29,6 +32,9 @@ protected:
 
 private:
     int dropRow_ = -1;
+    bool mediaDropsEnabled_ = false;
+    bool externalMediaDrag_ = false;
+    bool externalMediaAppend_ = false;
     int destinationAt(const QPoint &position) const;
     void updateDropRow(const QPoint &position);
     void clearDropRow();

@@ -111,7 +111,7 @@ QJsonArray tools() {
                 {QStringLiteral("limit"), numberSchema(1, 100)}}, {QStringLiteral("song_id")}), true),
         tool(QStringLiteral("list_services"), QStringLiteral("List saved service IDs and names. Use get_service to inspect an order. Names may repeat."),
             objectSchema({{QStringLiteral("offset"), numberSchema(0)}, {QStringLiteral("limit"), numberSchema(1, 100)}}), true),
-        tool(QStringLiteral("get_service"), QStringLiteral("Read saved service items in order, paginated by offset/limit (default 50, max 100). Each item previews its first 20 arranged slides; slides_truncated marks omissions. Empty slide_order with natural_order=true means natural source order. Custom orders return at most 10000 indices, flagged if truncated. Text beyond the 256 Ki character response budget is explicitly truncated; use get_presentation for source slides."),
+        tool(QStringLiteral("get_service"), QStringLiteral("Read saved service items in order, paginated by offset/limit (default 50, max 100). Each item previews its first 20 arranged slides; slides_truncated marks omissions. Empty slide_order with natural_order=true uses the saved song arrangement or the unstructured source order. song_arrangement_id identifies structured songs. Custom orders return at most 10000 indices, flagged if truncated. Text beyond the 256 Ki character response budget is explicitly truncated; use get_presentation for source slides."),
             objectSchema({{QStringLiteral("service_id"), numberSchema(1)}, {QStringLiteral("offset"), numberSchema(0)},
                 {QStringLiteral("limit"), numberSchema(1, 100)}}, {QStringLiteral("service_id")}), true),
         tool(QStringLiteral("create_service_order"), QStringLiteral("Save a NEW service and its ordered items atomically. Reuse song_id, or create a new title with plain-text slides. Existing services and library presentations are never overwritten. dry_run=true validates and previews without saving. Limits: 500 items, 5000 new slides total, 4 Mi characters new text total, 50000 slide_order indices total. New text appears in the library. Repeated calls create separate services."),
@@ -126,7 +126,7 @@ QJsonArray tools() {
     return result;
 }
 QString mediaKind(MediaKind kind) {
-    return kind == MediaKind::Image ? QStringLiteral("image") : kind == MediaKind::Video ? QStringLiteral("video") : QStringLiteral("text");
+    return kind == MediaKind::Audio ? QStringLiteral("audio") : kind == MediaKind::Image ? QStringLiteral("image") : kind == MediaKind::Video ? QStringLiteral("video") : QStringLiteral("text");
 }
 QJsonObject slideData(const Song &song, int index, qsizetype *remaining) {
     const auto text = song.slides.at(index);
@@ -252,15 +252,16 @@ QJsonObject McpServer::serviceData(int id, QString *error, int offset, int limit
     qsizetype remaining = 256 * 1024;
     for (qsizetype row = offset; row < entries.size() && row - offset < limit; ++row) {
         const auto &entry = entries.at(row);
-        const auto song = library_.song(entry.songId);
+        const auto song = library_.entrySource(entry.id);
         if (!library_.lastError().isEmpty()) { *error = library_.lastError(); return {}; }
-        if (!song.id) { *error = QStringLiteral("A service item references a missing presentation."); return {}; }
+        if (!song.id && !song.mediaAssetId) { *error = QStringLiteral("A service item references missing content."); return {}; }
         QJsonArray order;
         const bool natural = entry.slideOrder.isEmpty();
-        const auto count = natural ? song.slides.size() : entry.slideOrder.size();
+        const auto effectiveOrder = natural ? song.playbackOrder() : entry.slideOrder;
+        const auto count = effectiveOrder.size();
         QJsonArray slides;
         for (qsizetype position = 0; position < count && position < 10000; ++position) {
-            const int index = natural ? int(position) : entry.slideOrder.at(position);
+            const int index = effectiveOrder.at(position);
             if (index < 0 || index >= song.slides.size()) { *error = QStringLiteral("A service has an invalid slide arrangement."); return {}; }
             if (!natural) order.append(index);
             if (position < 20) slides.append(slideData(song, index, &remaining));
@@ -269,6 +270,12 @@ QJsonObject McpServer::serviceData(int id, QString *error, int offset, int limit
             {QStringLiteral("title"), song.title}, {QStringLiteral("slide_order"), order},
             {QStringLiteral("natural_order"), natural}, {QStringLiteral("slide_count"), count},
             {QStringLiteral("slides"), slides}, {QStringLiteral("slides_truncated"), count > 20}};
+        if (!song.structure.isEmpty()) item.insert(QStringLiteral("song_arrangement_id"), song.structure.activeArrangementId);
+        if (entry.mediaAssetId) {
+            item.insert(QStringLiteral("media_asset_id"), entry.mediaAssetId);
+            item.insert(QStringLiteral("song_id"), QJsonValue(QJsonValue::Null));
+            item.insert(QStringLiteral("kind"), QStringLiteral("media"));
+        } else item.insert(QStringLiteral("kind"), QStringLiteral("presentation"));
         if (!natural && count > 10000) item.insert(QStringLiteral("slide_order_truncated"), true);
         items.append(item);
     }
@@ -320,6 +327,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &argument
             for (qsizetype i = offset; i < song.slides.size() && i - offset < limit; ++i) slides.append(slideData(song, int(i), &remaining));
             QJsonObject result{{QStringLiteral("song_id"), song.id}, {QStringLiteral("title"), song.title},
                 {QStringLiteral("slide_count"), song.slides.size()}, {QStringLiteral("slides"), slides}};
+            if (!song.structure.isEmpty()) result.insert(QStringLiteral("song_structure"), QJsonDocument::fromJson(song.structure.toJson().toUtf8()).object());
             if (qint64(offset) + limit < song.slides.size()) result.insert(QStringLiteral("next_offset"), offset + limit);
             return toolResult(result);
         }
@@ -356,6 +364,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &argument
         const auto object = value.toObject();
         ServiceOrderItem item;
         int slideCount = 0;
+        int playbackCount = 0;
         QString title;
         if (object.contains(QStringLiteral("song_id"))) {
             if (!onlyKeys(object, {QStringLiteral("song_id"), QStringLiteral("slide_order")}, &error)) return toolError(error);
@@ -364,6 +373,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &argument
             if (!library_.lastError().isEmpty()) return toolError(library_.lastError());
             if (!song.id || song.slides.isEmpty()) return toolError(QStringLiteral("Presentation %1 does not exist or has no slides. Search the library for a valid song_id.").arg(item.songId));
             slideCount = int(song.slides.size());
+            playbackCount = int(song.playbackOrder().size());
             title = song.title;
         } else {
             if (!onlyKeys(object, {QStringLiteral("title"), QStringLiteral("slides"), QStringLiteral("slide_order")}, &error)) return toolError(error);
@@ -380,6 +390,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &argument
                 item.slides.append(slide.toString().trimmed());
             }
             slideCount = int(item.slides.size());
+            playbackCount = slideCount;
         }
         if (object.contains(QStringLiteral("slide_order"))) {
             const auto order = object.value(QStringLiteral("slide_order"));
@@ -396,7 +407,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &argument
         for (int index : item.slideOrder) order.append(index);
         preview.append(QJsonObject{{QStringLiteral("song_id"), item.songId ? QJsonValue(item.songId) : QJsonValue(QJsonValue::Null)},
             {QStringLiteral("title"), title}, {QStringLiteral("new_presentation"), item.songId == 0},
-            {QStringLiteral("slide_count"), item.slideOrder.isEmpty() ? slideCount : int(item.slideOrder.size())}, {QStringLiteral("slide_order"), order}});
+            {QStringLiteral("slide_count"), item.slideOrder.isEmpty() ? playbackCount : int(item.slideOrder.size())}, {QStringLiteral("slide_order"), order}});
         items.append(item);
     }
     if (arguments.value(QStringLiteral("dry_run")).toBool())

@@ -1,12 +1,22 @@
 #include "MainWindow.h"
+#include "MidiDialogs.h"
+#include "LibraryCleanupDialog.h"
+#include <QUuid>
 #include "SlideRenderer.h"
+#include "PresentationLookDialog.h"
+#include "RichTextSupport.h"
 #include "ReorderListWidget.h"
 #include "SongEditorDialog.h"
+#include "SongStructureDialog.h"
 #include "SlideEditorDialog.h"
 #include "SlideTextDelegate.h"
 #include "SlideGridDelegate.h"
 #include "PresentationSettingsDialog.h"
+#include "OutputSettingsDialog.h"
+#include "StageLayoutDialog.h"
 #include "MediaImportDialog.h"
+#include "MediaAssetListWidget.h"
+#include <QCheckBox>
 #include "BackgroundLibraryDialog.h"
 #include "../core/BuiltInBackgrounds.h"
 #include "../media/MediaManager.h"
@@ -45,6 +55,7 @@
 #include <QPushButton>
 #include <QProgressDialog>
 #include <QSettings>
+#include <QSet>
 #include <QSignalBlocker>
 #include <QScrollBar>
 #include <QSplitter>
@@ -78,7 +89,7 @@ protected:
     void paintEvent(QPaintEvent *) override {
         QPainter p(this);
         if (audienceSource_) {
-            audienceSource_->paintAudience(p, rect());
+            audienceSource_->paintOutput(p, rect());
             return;
         }
         SlideRenderer::paintAudience(p, rect(), state_, background_, frame_);
@@ -86,7 +97,8 @@ protected:
         if (mediaLabels_ && frame_.isNull() && media.kind != MediaKind::None) {
             p.setPen(Qt::white);
             p.drawText(rect().adjusted(12, 12, -12, -12), Qt::AlignCenter | Qt::TextWordWrap,
-                QStringLiteral("%1\n%2").arg(media.kind == MediaKind::Video ? QStringLiteral("▶ VIDEO") : QStringLiteral("PICTURE PREVIEW"), media.name));
+                QStringLiteral("%1\n%2").arg(media.kind == MediaKind::Audio ? QStringLiteral("AUDIO")
+                    : media.kind == MediaKind::Video ? QStringLiteral("▶ VIDEO") : QStringLiteral("PICTURE PREVIEW"), media.name));
         }
     }
 private:
@@ -117,13 +129,21 @@ QWidget *column(QWidget *parent, QVBoxLayout **out) {
     (*out)->setSpacing(8);
     return w;
 }
-LivePresentation previewState(const QString &text, const SlideMedia &media = {}, const QString &html = {}) {
+LivePresentation previewState(const QString &text, const SlideMedia &media = {}, const QString &html = {}, const SlideLook &look = {}) {
     LivePresentation state;
     state.slides = {text};
     state.index = 0;
     state.media = {media};
     state.richText = {html};
+    state.looks = {look};
     return state;
+}
+QStringList arrangedSourceKeys(const Song &song, const QVector<int> &order) {
+    const auto source = song.structure.slideKeys();
+    if (source.isEmpty()) return {};
+    QStringList keys;
+    for (int index : order) keys.append(source.value(index));
+    return keys;
 }
 bool sameMediaContent(const QVector<SlideMedia> &a, const QVector<SlideMedia> &b) {
     if (a.size() != b.size()) return false;
@@ -141,8 +161,9 @@ QString transitionName(SlideTransitionType type) {
 }
 }
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), controller_(this), outputs_(&controller_, this), playback_(&controller_, this) {
+MainWindow::MainWindow(QWidget *parent, std::unique_ptr<MidiBackend> midiBackend)
+    : QMainWindow(parent), controller_(this), outputs_(&controller_, this), playback_(&controller_, this), midi_(this, std::move(midiBackend)) {
+    cleanupLeaseOwner_ = QUuid::createUuid().toString(QUuid::WithoutBraces);
     setWindowTitle(QStringLiteral("WorshipCue | Service Control"));
     resize(1440, 860);
     setMinimumSize(1080, 680);
@@ -157,6 +178,14 @@ MainWindow::MainWindow(QWidget *parent)
     if (!programSettings_.isValid()) programSettings_ = {};
     controller_.setGlobalTransitionDefaults(programSettings_);
     buildUi();
+    midi_.setObjectName(QStringLiteral("midiEngine"));
+    midi_.setDispatchGate([this] { return mode_->currentIndex() == 0 && !QApplication::activeModalWidget() && !QApplication::activePopupWidget(); });
+    connect(&midi_, &MidiEngine::commandRequested, this, &MainWindow::dispatchMidi);
+    connect(&controller_, &PresentationController::stateChanged, this, [this] {
+        const auto &state = controller_.state();
+        recordLiveUsage();
+        if (state.index >= 0) midi_.activateCue(state.cueRevision, state.currentMidiActions());
+    });
     playback_.setObjectName(QStringLiteral("mediaPlayback"));
     outputs_.audience().setMediaPlayback(&playback_);
     connect(&controller_, &PresentationController::stateChanged, this, &MainWindow::updateLiveUi);
@@ -182,11 +211,14 @@ MainWindow::MainWindow(QWidget *parent)
     qApp->installEventFilter(this);
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow() { midi_.shutdown(); library_.clearCleanupLease(cleanupLeaseOwner_); }
 
 bool MainWindow::initialize(QString *error, const QString &databasePath) {
     if (libraryRefreshTimer_) libraryRefreshTimer_->stop();
     if (!library_.open(error, databasePath)) return false;
+    transitionUndo_.clear();
+    transitionRedo_.clear();
+    updateTransitionActions();
     externalDataVersion_ = library_.dataVersion();
     databasePath_ = databasePath == QStringLiteral(":memory:") ? databasePath
         : databasePath.isEmpty() ? QDir(library_.databaseDirectory()).filePath(QStringLiteral("library.sqlite3"))
@@ -208,33 +240,58 @@ bool MainWindow::initialize(QString *error, const QString &databasePath) {
     connect(mediaManager_.get(), &MediaManager::importFinished, this, [this](const MediaImportResult &result) {
         if (importProgress_) { importProgress_->close(); importProgress_->deleteLater(); importProgress_ = nullptr; }
         importButton_->setEnabled(true);
+        mediaImportButton_->setEnabled(true);
         importAction_->setEnabled(true);
         if (result.canceled) { statusBar()->showMessage(QStringLiteral("Media import canceled."), 5000); return; }
         if (!result.error.isEmpty()) return reportError(result.error);
-        QStringList text;
-        for (int i = 0; i < result.media.size(); ++i) text.append(QString());
         QString error;
-        const int id = library_.createPresentation(importTitle_, text, result.media, &error);
-        if (!id) {
+        int presentationId = 0;
+        QVector<int> assetIds;
+        if (importAsPresentation_) {
+            QStringList texts;
+            for (int i = 0; i < result.media.size(); ++i) texts.append(QStringLiteral(""));
+            presentationId = library_.createPresentation(importTitle_, texts, result.media, &error);
+            if (presentationId && !library_.recordPresentationImport(presentationId, &error)) return reportError(error);
+        } else {
+            assetIds = library_.registerMediaAssets(result.media, &error);
+        }
+        if ((!importAsPresentation_ && assetIds.isEmpty()) || (importAsPresentation_ && !presentationId)) {
             mediaManager_->discardImport(result.directory);
             return reportError(error);
         }
-        // The service chosen when import began remains the destination if the operator browses elsewhere.
-        bool added = !importServiceId_ || library_.appendToService(importServiceId_, id, &error);
+        bool added = true;
+        if (importServiceId_) {
+            if (presentationId) added = library_.appendToService(importServiceId_, presentationId, &error);
+            else for (int id : assetIds) {
+                if (!library_.appendMediaToService(importServiceId_, id, &error)) { added = false; break; }
+            }
+        }
         search_->clear();
+        mediaSearch_->clear();
         reloadSongs();
-        for (int i = 0; i < songs_->count(); ++i)
-            if (songs_->item(i)->data(Qt::UserRole).toInt() == id) songs_->setCurrentRow(i);
+        reloadMedia();
+        if (presentationId) {
+            for (int i = 0; i < songs_->count(); ++i)
+                if (songs_->item(i)->data(Qt::UserRole).toInt() == presentationId) songs_->setCurrentRow(i);
+        } else {
+            mediaFolders_->setCurrentIndex(0);
+            sidebarTabs_->setCurrentIndex(2);
+            for (int i = 0; i < mediaAssets_->count(); ++i)
+                if (mediaAssets_->item(i)->data(Qt::UserRole).toInt() == assetIds.first()) mediaAssets_->setCurrentRow(i);
+            showSelectedMedia();
+        }
         if (currentServiceId_ == importServiceId_) {
             const auto entries = library_.service(currentServiceId_);
             if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+            if (presentationId) { browsingMedia_ = false; browsingLibrary_ = false; }
             reloadService(entries.isEmpty() ? 0 : entries.last().id);
         }
         markSaved();
-        if (!added) return reportError(QStringLiteral("The presentation was imported into the library, but could not be added to the service: %1").arg(error));
-        statusBar()->showMessage(QStringLiteral("Imported %1 media slides. Original files are unchanged.").arg(result.media.size()), 10000);
+        if (!added) return reportError(QStringLiteral("The media was imported, but adding it to the service stopped. All imported items are available in the library. %1").arg(error));
+        statusBar()->showMessage(QStringLiteral("Imported %1 media items.").arg(result.media.size()), 10000);
     });
     reloadSongs();
+    reloadMedia();
     reloadServices(QSettings().value(QStringLiteral("service/selected")).toInt());
     if (!library_.lastError().isEmpty()) {
         if (error) *error = library_.lastError();
@@ -246,6 +303,14 @@ bool MainWindow::initialize(QString *error, const QString &databasePath) {
         libraryRefreshTimer_->setInterval(1000);
         connect(libraryRefreshTimer_, &QTimer::timeout, this, &MainWindow::refreshExternalChanges);
     }
+    if (!cleanupLeaseTimer_) {
+        cleanupLeaseTimer_ = new QTimer(this);
+        cleanupLeaseTimer_->setInterval(10000);
+        connect(cleanupLeaseTimer_, &QTimer::timeout, this, &MainWindow::recordLiveUsage);
+    }
+    cleanupLeaseTimer_->start();
+    reloadMidiBindings();
+    midi_.restoreSettings();
     libraryRefreshTimer_->start();
     statusBar()->showMessage(QStringLiteral("Show: click a slide to take it live. Edit: preview and drag slides to arrange."), 10000);
     return true;
@@ -289,7 +354,7 @@ void MainWindow::buildUi() {
     auto *lyricsAction = fileMenu->addAction(QStringLiteral("Import Song Lyrics…"));
     lyricsAction->setObjectName(QStringLiteral("importLyricsAction"));
     connect(lyricsAction, &QAction::triggered, this, &MainWindow::importLyrics);
-    importAction_ = fileMenu->addAction(QStringLiteral("Import Pictures / Videos…"));
+    importAction_ = fileMenu->addAction(QStringLiteral("Import Media…"));
     importAction_->setObjectName(QStringLiteral("importMediaAction"));
     connect(importAction_, &QAction::triggered, this, &MainWindow::chooseMediaFiles);
     auto *renameMediaAction = fileMenu->addAction(QStringLiteral("Batch Rename Media…"));
@@ -311,13 +376,29 @@ void MainWindow::buildUi() {
     connect(programTransitionAction, &QAction::triggered, this, &MainWindow::configureProgramTransitions);
     auto *settingsMenu = menuBar()->addMenu(QStringLiteral("&Settings"));
     settingsMenu->addAction(programTransitionAction);
+    auto *screensAction = settingsMenu->addAction(QStringLiteral("Screens / Output Settings…"));
+    screensAction->setObjectName(QStringLiteral("outputSettingsAction"));
+    connect(screensAction, &QAction::triggered, this, [this] { OutputSettingsDialog dialog(&outputs_, this); dialog.exec(); });
+    auto *stageLayoutAction = settingsMenu->addAction(QStringLiteral("Stage Display Layouts…"));
+    stageLayoutAction->setObjectName(QStringLiteral("stageLayoutsAction"));
+    connect(stageLayoutAction, &QAction::triggered, this, [this] { StageLayoutDialog dialog(&outputs_, this); dialog.exec(); });
+    auto *stageControlsAction = settingsMenu->addAction(QStringLiteral("Stage Messages / Timers…"));
+    stageControlsAction->setObjectName(QStringLiteral("stageControlsAction"));
+    connect(stageControlsAction, &QAction::triggered, this, [this] { StageControlsDialog dialog(&outputs_, this); dialog.exec(); });
+    auto *cleanupAction = settingsMenu->addAction(QStringLiteral("Library Cleanup / Storage…"));
+    cleanupAction->setObjectName(QStringLiteral("libraryCleanupAction"));
+    connect(cleanupAction, &QAction::triggered, this, &MainWindow::configureCleanup);
+    auto *midiAction = settingsMenu->addAction(QStringLiteral("MIDI Devices / Mappings…"));
+    midiAction->setObjectName(QStringLiteral("midiSettingsAction"));
+    connect(midiAction, &QAction::triggered, this, [this] { editMidiSettings(this, midi_, library_); reloadMidiBindings(); });
     auto *mcpAction = settingsMenu->addAction(QStringLiteral("AI / MCP Setup…"));
     mcpAction->setObjectName(QStringLiteral("mcpSetupAction"));
     connect(mcpAction, &QAction::triggered, this, &MainWindow::configureMcp);
     auto *findAction = new QAction(QStringLiteral("Find in Library"), this);
     findAction->setObjectName(QStringLiteral("focusLibrarySearch"));
     findAction->setShortcuts(QKeySequence::Find);
-    menuBar()->addMenu(QStringLiteral("&Edit"))->addAction(findAction);
+    auto *editMenu = menuBar()->addMenu(QStringLiteral("&Edit"));
+    editMenu->addAction(findAction);
     connect(findAction, &QAction::triggered, this, [this] {
         sidebarTabs_->setCurrentIndex(0);
         search_->setFocus();
@@ -343,18 +424,21 @@ void MainWindow::buildUi() {
     toolbar->addWidget(returnToLive_);
     connect(returnToLive_, &QPushButton::clicked, this, &MainWindow::revealLiveCue);
     toolbar->addStretch();
-    toolbar->addWidget(new QLabel(QStringLiteral("Audience"), root));
+    toolbar->addWidget(new QLabel(QStringLiteral("Audience 1"), root));
     audienceTarget_ = new QComboBox(root);
     audienceTarget_->setObjectName(QStringLiteral("audienceTarget"));
     audienceTarget_->setMinimumWidth(155);
     audienceTarget_->setMaximumWidth(230);
     toolbar->addWidget(audienceTarget_);
-    toolbar->addWidget(new QLabel(QStringLiteral("Stage"), root));
+    toolbar->addWidget(new QLabel(QStringLiteral("Stage 1"), root));
     stageTarget_ = new QComboBox(root);
     stageTarget_->setObjectName(QStringLiteral("stageTarget"));
     stageTarget_->setMinimumWidth(155);
     stageTarget_->setMaximumWidth(230);
     toolbar->addWidget(stageTarget_);
+    auto *screensButton = button(QStringLiteral("Screens…"), root, QStringLiteral("outputSettingsButton"));
+    toolbar->addWidget(screensButton);
+    connect(screensButton, &QPushButton::clicked, screensAction, &QAction::trigger);
     layout->addLayout(toolbar);
     outputInfo_ = new QLabel(root);
     outputInfo_->setObjectName(QStringLiteral("outputStatus"));
@@ -381,7 +465,11 @@ void MainWindow::buildUi() {
     QVBoxLayout *left;
     sidebarTabs_ = new QTabWidget(split);
     sidebarTabs_->setObjectName(QStringLiteral("sidebarTabs"));
-    sidebarTabs_->setMinimumWidth(275);
+    sidebarTabs_->setMinimumWidth(350);
+    sidebarTabs_->tabBar()->setAcceptDrops(true);
+    sidebarTabs_->tabBar()->setChangeCurrentOnDrag(true);
+    sidebarTabs_->tabBar()->setExpanding(false);
+    sidebarTabs_->tabBar()->setUsesScrollButtons(true);
     sidebarTabs_->setDocumentMode(true);
     auto *sidebar = column(sidebarTabs_, &left);
     sidebarTabs_->addTab(sidebar, QStringLiteral("Content Library"));
@@ -410,7 +498,7 @@ void MainWindow::buildUi() {
     auto *lyricsImport = button(QStringLiteral("Import Song Lyrics…"), sidebar, QStringLiteral("importLyrics"));
     left->addWidget(lyricsImport);
     connect(lyricsImport, &QPushButton::clicked, this, &MainWindow::importLyrics);
-    importButton_ = button(QStringLiteral("Import Pictures / Videos…"), sidebar, QStringLiteral("importMedia"));
+    importButton_ = button(QStringLiteral("Import Media…"), sidebar, QStringLiteral("importMedia"));
     left->addWidget(importButton_);
     connect(importButton_, &QPushButton::clicked, this, &MainWindow::chooseMediaFiles);
     auto *backgroundLibrary = button(QStringLiteral("Background Library…"), sidebar, QStringLiteral("backgroundLibrary"));
@@ -431,6 +519,7 @@ void MainWindow::buildUi() {
         QMenu menu(this);
         menu.addAction(QStringLiteral("Add to Service"), this, &MainWindow::appendSong);
         menu.addAction(QStringLiteral("Edit Slides…"), this, &MainWindow::editSong);
+        menu.addAction(QStringLiteral("Song Sections / Arrangements…"), this, [this] { showSelectedLibrary(); editSongStructure(); });
         menu.addAction(QStringLiteral("Duplicate Song"), this, &MainWindow::duplicateSong);
         menu.addAction(QStringLiteral("Batch Rename Media…"), this, &MainWindow::renameMedia);
         menu.addAction(QStringLiteral("Timing && Transitions…"), this, [this] { configurePresentation(selectedSongId()); });
@@ -460,28 +549,70 @@ void MainWindow::buildUi() {
         currentServiceId_ = services_->currentData().toInt();
         QSettings().setValue(QStringLiteral("service/selected"), currentServiceId_);
         browsingLibrary_ = false;
+        browsingMedia_ = false;
         reloadService();
     });
     auto *serviceOrder = new ReorderListWidget(sidebar);
     service_ = serviceOrder;
+    serviceOrder->setMediaDropsEnabled(true);
+    service_->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    connect(serviceOrder, &ReorderListWidget::mediaDropped, this, &MainWindow::appendMedia);
     service_->setObjectName(QStringLiteral("serviceOrder"));
     service_->setDragDropMode(QAbstractItemView::InternalMove);
     service_->setDefaultDropAction(Qt::MoveAction);
     service_->setContextMenuPolicy(Qt::CustomContextMenu);
     service_->setToolTip(QStringLiteral("Select to preview. Double-click to go live. Drag to save a new service order."));
     left->addWidget(service_, 3);
+    bulkTransitions_ = new QAction(QStringLiteral("Transitions for Selection…"), this);
+    bulkTransitions_->setObjectName(QStringLiteral("bulkTransitions"));
+    connect(bulkTransitions_, &QAction::triggered, this, &MainWindow::configureSelectedTransitions);
+    undoTransitions_ = new QAction(QStringLiteral("Undo Bulk Transitions"), this);
+    undoTransitions_->setObjectName(QStringLiteral("undoBulkTransitions"));
+    redoTransitions_ = new QAction(QStringLiteral("Redo Bulk Transitions"), this);
+    redoTransitions_->setObjectName(QStringLiteral("redoBulkTransitions"));
+    undoTransitions_->setShortcuts(QKeySequence::Undo);
+    redoTransitions_->setShortcuts(QKeySequence::Redo);
+    for (auto *action : {undoTransitions_, redoTransitions_}) {
+        action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+        service_->addAction(action);
+        editMenu->addAction(action);
+    }
+    connect(undoTransitions_, &QAction::triggered, this, [this] { undoTransitions(); });
+    connect(redoTransitions_, &QAction::triggered, this, [this] { undoTransitions(true); });
+    auto *selectAllService = new QAction(QStringLiteral("Select All Service Items"), this);
+    selectAllService->setObjectName(QStringLiteral("selectAllServiceItems"));
+    selectAllService->setShortcuts(QKeySequence::SelectAll);
+    selectAllService->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    service_->addAction(selectAllService);
+    editMenu->addAction(selectAllService);
+    editMenu->addAction(bulkTransitions_);
+    connect(selectAllService, &QAction::triggered, service_, &QListWidget::selectAll);
+    connect(service_, &QListWidget::itemSelectionChanged, this, &MainWindow::updateTransitionActions);
+    updateTransitionActions();
     connect(service_, &QListWidget::currentRowChanged, this, [this] { showSelectedService(); });
     connect(service_, &QListWidget::itemClicked, this, [this] {
         if (browsingLibrary_) showSelectedService();
     });
     connect(service_, &QListWidget::itemDoubleClicked, this, [this] { goLive(); });
     connect(serviceOrder, &ReorderListWidget::orderChanged, this, &MainWindow::persistServiceOrder);
-    connect(service_, &QListWidget::customContextMenuRequested, this, [this](const QPoint &point) {
-        if (auto *item = service_->itemAt(point)) service_->setCurrentItem(item); else return;
+    connect(service_, &QListWidget::customContextMenuRequested, this, [this, selectAllService](const QPoint &point) {
+        if (auto *item = service_->itemAt(point)) {
+            if (item->isSelected()) service_->setCurrentItem(item, QItemSelectionModel::NoUpdate);
+            else service_->setCurrentItem(item, QItemSelectionModel::ClearAndSelect);
+        } else return;
         QMenu menu(this);
         menu.addAction(QStringLiteral("Take Selected Slide Live"), this, &MainWindow::goLive);
-        menu.addAction(QStringLiteral("Timing && Transitions…"), this, [this] {
-            configurePresentation(service_->currentItem()->data(Qt::UserRole + 1).toInt());
+        menu.addAction(bulkTransitions_);
+        menu.addAction(selectAllService);
+        menu.addAction(undoTransitions_);
+        menu.addAction(redoTransitions_);
+        menu.addAction(QStringLiteral("Timing && Transitions for Current Presentation…"), this, [this] {
+            const int songId = service_->currentItem()->data(Qt::UserRole + 1).toInt();
+            if (songId) configurePresentation(songId);
+            else {
+                service_->setCurrentItem(service_->currentItem(), QItemSelectionModel::ClearAndSelect);
+                configureSelectedTransitions();
+            }
         });
         menu.addAction(QStringLiteral("Assign Background…"), this, [this] {
             assignBackground(service_->currentItem()->data(Qt::UserRole + 1).toInt());
@@ -507,9 +638,64 @@ void MainWindow::buildUi() {
     connect(down, &QPushButton::clicked, this, [this] { moveService(1); });
     connect(duplicate, &QPushButton::clicked, this, &MainWindow::duplicateServiceEntry);
     connect(remove, &QPushButton::clicked, this, &MainWindow::removeServiceEntry);
+    auto *bulkButton = button(QStringLiteral("Transitions for Selection…"), sidebar, QStringLiteral("bulkTransitionsButton"));
+    left->addWidget(bulkButton);
+    connect(bulkButton, &QPushButton::clicked, bulkTransitions_, &QAction::trigger);
+    connect(bulkTransitions_, &QAction::changed, bulkButton, [this, bulkButton] { bulkButton->setEnabled(bulkTransitions_->isEnabled()); });
+    bulkButton->setEnabled(bulkTransitions_->isEnabled());
     saveInfo_ = new QLabel(QStringLiteral("Changes save automatically"), sidebar);
     saveInfo_->setObjectName(QStringLiteral("saveStatus"));
     left->addWidget(saveInfo_);
+
+    sidebar = column(sidebarTabs_, &left);
+    sidebarTabs_->addTab(sidebar, QStringLiteral("Media Library"));
+    mediaSearch_ = new QLineEdit(sidebar);
+    mediaSearch_->setObjectName(QStringLiteral("mediaSearch"));
+    mediaSearch_->setPlaceholderText(QStringLiteral("Search media and folders"));
+    left->addWidget(mediaSearch_);
+    mediaFolders_ = new QComboBox(sidebar);
+    mediaFolders_->setObjectName(QStringLiteral("mediaFolders"));
+    mediaFolders_->addItem(QStringLiteral("All Media"));
+    left->addWidget(mediaFolders_);
+    mediaAssets_ = new MediaAssetListWidget(sidebar);
+    mediaAssets_->setObjectName(QStringLiteral("mediaLibrary"));
+    mediaAssets_->setContextMenuPolicy(Qt::CustomContextMenu);
+    mediaAssets_->setToolTip(QStringLiteral("Select to inspect. Drag to the Service Playlist tab to add a shared reference."));
+    left->addWidget(mediaAssets_, 1);
+    mediaDetails_ = new QLabel(sidebar);
+    mediaDetails_->setObjectName(QStringLiteral("mediaDetails"));
+    mediaDetails_->setWordWrap(true);
+    mediaDetails_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    left->addWidget(mediaDetails_);
+    mediaImportButton_ = button(QStringLiteral("Import Media…"), sidebar, QStringLiteral("importMediaAssets"));
+    left->addWidget(mediaImportButton_);
+    connect(mediaImportButton_, &QPushButton::clicked, this, &MainWindow::chooseMediaFiles);
+    auto *mediaTools = new QHBoxLayout;
+    auto *previewMedia = button(QStringLiteral("Preview…"), sidebar, QStringLiteral("previewMediaAsset"));
+    auto *addMedia = button(QStringLiteral("Add to Service"), sidebar, QStringLiteral("appendMediaAsset"));
+    mediaTools->addWidget(previewMedia);
+    mediaTools->addWidget(addMedia);
+    left->addLayout(mediaTools);
+    auto *organizeMedia = button(QStringLiteral("Rename / Organize…"), sidebar, QStringLiteral("editMediaAsset"));
+    left->addWidget(organizeMedia);
+    connect(organizeMedia, &QPushButton::clicked, this, &MainWindow::editMediaAsset);
+    connect(previewMedia, &QPushButton::clicked, this, &MainWindow::previewMediaAsset);
+    connect(addMedia, &QPushButton::clicked, this, [this] { appendMedia(); });
+    connect(mediaSearch_, &QLineEdit::textChanged, this, [this] { reloadMedia(); });
+    connect(mediaFolders_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] { reloadMedia(); });
+    connect(mediaAssets_, &QListWidget::currentRowChanged, this, &MainWindow::showSelectedMedia);
+    connect(mediaAssets_, &QListWidget::itemClicked, this, &MainWindow::showSelectedMedia);
+    connect(mediaAssets_, &QListWidget::customContextMenuRequested, this, [this](const QPoint &point) {
+        if (auto *item = mediaAssets_->itemAt(point)) mediaAssets_->setCurrentItem(item); else return;
+        QMenu menu(this);
+        menu.addAction(QStringLiteral("Preview…"), this, &MainWindow::previewMediaAsset);
+        menu.addAction(QStringLiteral("Take Live"), this, [this] { showSelectedMedia(); goLive(); });
+        menu.addAction(QStringLiteral("Add to Service"), this, [this] { appendMedia(); });
+        menu.addAction(QStringLiteral("Rename / Organize…"), this, &MainWindow::editMediaAsset);
+        menu.addSeparator();
+        menu.addAction(QStringLiteral("Delete from Media Library…"), this, &MainWindow::deleteMediaAsset);
+        menu.exec(mediaAssets_->viewport()->mapToGlobal(point));
+    });
 
     QVBoxLayout *center;
     auto *workspace = column(split, &center);
@@ -520,11 +706,25 @@ void MainWindow::buildUi() {
     hint->setObjectName(QStringLiteral("hint"));
     hint->setWordWrap(true);
     center->addWidget(hint);
+    auto *sectionTools = new QHBoxLayout;
+    auto *sections = button(QStringLiteral("Song Sections / Arrangements…"), workspace, QStringLiteral("editSongStructure"));
+    songSections_ = sections;
+    sectionTools->addWidget(sections);
+    auto *looks = button(QStringLiteral("Looks / Reflow…"), workspace, QStringLiteral("configureLooks"));
+    looksButton_ = looks;
+    sectionTools->addWidget(looks);
+    connect(looks, &QPushButton::clicked, this, &MainWindow::configureLooks);
+    auto *midiSlide = button(QStringLiteral("Slide MIDI…"), workspace, QStringLiteral("configureSlideMidi"));
+    sectionTools->addWidget(midiSlide);
+    connect(midiSlide, &QPushButton::clicked, this, &MainWindow::configureMidiSlide);
+    center->addLayout(sectionTools);
+    connect(sections, &QPushButton::clicked, this, &MainWindow::editSongStructure);
     auto *presentationTools = new QHBoxLayout;
     editSlide_ = button(QStringLiteral("Edit Slide Text…"), workspace, QStringLiteral("editSlideText"));
     editSlide_->setEnabled(false);
     presentationTools->addWidget(editSlide_);
     auto *timingButton = button(QStringLiteral("Timing && Transitions…"), workspace, QStringLiteral("presentationSettings"));
+    presentationSettings_ = timingButton;
     presentationTools->addWidget(timingButton);
     center->addLayout(presentationTools);
     auto *viewTools = new QHBoxLayout;
@@ -580,6 +780,8 @@ void MainWindow::buildUi() {
         if (auto *item = slides_->itemAt(point)) slides_->setCurrentItem(item); else return;
         QMenu menu(this);
         menu.addAction(QStringLiteral("Edit Slide Text…"), this, &MainWindow::editSelectedSlide);
+        menu.addAction(QStringLiteral("Looks / Reflow…"), this, &MainWindow::configureLooks);
+        menu.addAction(QStringLiteral("MIDI Actions / Input Trigger…"), this, &MainWindow::configureMidiSlide);
         menu.addAction(QStringLiteral("Take Live"), this, &MainWindow::goLive);
         menu.addAction(QStringLiteral("Move Earlier in Service Arrangement"), this, [this] { moveSlide(-1); })->setEnabled(!browsingLibrary_);
         menu.addAction(QStringLiteral("Move Later in Service Arrangement"), this, [this] { moveSlide(1); })->setEnabled(!browsingLibrary_);
@@ -610,7 +812,7 @@ void MainWindow::buildUi() {
     globalTransitionTime_->setSuffix(QStringLiteral(" s"));
     globalTransitionTime_->setKeyboardTracking(false);
     globalRow->addWidget(globalTransitionTime_);
-    globalTransitions->setToolTip(QStringLiteral("Default for all presentations. Presentation overrides take priority. Changes apply to the next cue, including in a running service."));
+    globalTransitions->setToolTip(QStringLiteral("Default for all presentations. Presentation overrides take priority. Changes apply to the next cue or audience output control, including in a running service."));
     updateProgramTransitionUi();
     connect(globalTransitionType_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
         programSettings_.transition = SlideTransitionType(globalTransitionType_->currentData().toInt());
@@ -624,7 +826,7 @@ void MainWindow::buildUi() {
     auto *take = button(QStringLiteral("TAKE SELECTED SLIDE LIVE"), workspace, QStringLiteral("takeLive"));
     center->addWidget(take);
     connect(take, &QPushButton::clicked, this, &MainWindow::goLive);
-    auto *navigationHint = new QLabel(QStringLiteral("← Previous   •   → / Space Next   •   Esc Operator focus"), workspace);
+    auto *navigationHint = new QLabel(QStringLiteral("↑ / ← Previous   •   ↓ / → / Space Next   •   Esc Operator focus"), workspace);
     navigationHint->setObjectName(QStringLiteral("hint"));
     navigationHint->setWordWrap(true);
     center->addWidget(navigationHint);
@@ -712,7 +914,7 @@ void MainWindow::buildUi() {
     split->setSizes({300, 710, 350});
     const QSettings preferences;
     split->restoreState(preferences.value(QStringLiteral("workspace/panels")).toByteArray());
-    sidebarTabs_->setCurrentIndex(qBound(0, preferences.value(QStringLiteral("workspace/sidebarView"), 0).toInt(), 1));
+    sidebarTabs_->setCurrentIndex(qBound(0, preferences.value(QStringLiteral("workspace/sidebarView"), 0).toInt(), 2));
     slideViewMode_->setCurrentIndex(qBound(0, preferences.value(QStringLiteral("workspace/slideView"), 0).toInt(), 1));
     slideSize_->setValue(preferences.value(QStringLiteral("workspace/slideSize"), 224).toInt());
     previewTabs_->setCurrentIndex(qBound(0, preferences.value(QStringLiteral("workspace/previewTab"), 0).toInt(), 1));
@@ -736,7 +938,7 @@ bool MainWindow::reloadSongs(bool reportFailure) {
         if (song.id == selected) songs_->setCurrentItem(item);
     }
     if (!songs_->currentItem() && songs_->count()) songs_->setCurrentRow(0);
-    if (browsingLibrary_) return showSelectedPresentation(selectedSongId() == selected ? slide : 0, reportFailure);
+    if (browsingLibrary_ && !browsingMedia_) return showSelectedPresentation(selectedSongId() == selected ? slide : 0, reportFailure);
     return true;
 }
 
@@ -769,19 +971,23 @@ void MainWindow::refreshExternalChanges() {
     const int songScroll = songs_->verticalScrollBar()->value();
     const int serviceScroll = service_->verticalScrollBar()->value();
     const int slideScroll = slides_->verticalScrollBar()->value();
-    if (!reloadSongs(false) || !reloadServices(currentServiceId_, entryId, slide, false)) {
+    if (!reloadSongs(false) || !reloadMedia(false) || !reloadServices(currentServiceId_, entryId, slide, false)) {
         statusBar()->showMessage(QStringLiteral("External library update could not be loaded. Retrying automatically."), 5000);
         return;
     }
     songs_->verticalScrollBar()->setValue(songScroll);
     service_->verticalScrollBar()->setValue(serviceScroll);
     slides_->verticalScrollBar()->setValue(slideScroll);
+    reloadMidiBindings();
     externalDataVersion_ = version;
     statusBar()->showMessage(QStringLiteral("Library and saved services updated by an external connection."), 8000);
 }
 
 bool MainWindow::reloadService(int selectEntryId, int selectSlide, bool reportFailure) {
     libraryDestination_->setText(QStringLiteral("Adding to: %1").arg(services_->currentText()));
+    QSet<int> selectedIds;
+    for (auto *item : service_->selectedItems()) selectedIds.insert(item->data(Qt::UserRole).toInt());
+    if (selectEntryId && !selectedIds.contains(selectEntryId)) selectedIds.clear();
     if (!selectEntryId) selectEntryId = selectedEntryId();
     const auto entries = library_.service(currentServiceId_);
     if (!library_.lastError().isEmpty()) {
@@ -790,7 +996,7 @@ bool MainWindow::reloadService(int selectEntryId, int selectSlide, bool reportFa
     }
     QVector<Song> songs;
     for (const auto &entry : entries) {
-        songs.append(library_.song(entry.songId));
+        songs.append(library_.entrySource(entry.id));
         if (!library_.lastError().isEmpty()) {
             if (reportFailure) reportError(library_.lastError());
             return false;
@@ -807,20 +1013,239 @@ bool MainWindow::reloadService(int selectEntryId, int selectSlide, bool reportFa
         item->setData(Qt::UserRole, entry.id);
         item->setData(Qt::UserRole + 1, entry.songId);
         item->setData(Qt::UserRole + 2, song.title);
+        item->setData(Qt::UserRole + 3, entry.mediaAssetId);
+        if (entry.mediaAssetId) item->setToolTip(QStringLiteral("Shared Media Library item"));
         if (entry.id == selectEntryId) row = service_->count() - 1;
     }
     if (row < 0 && service_->count()) row = 0;
-    service_->setCurrentRow(row);
+    service_->setCurrentRow(row, QItemSelectionModel::NoUpdate);
+    for (int i = 0; i < service_->count(); ++i)
+        service_->item(i)->setSelected(selectedIds.isEmpty() ? i == row : selectedIds.contains(service_->item(i)->data(Qt::UserRole).toInt()));
+    if (service_->selectedItems().isEmpty() && row >= 0) service_->item(row)->setSelected(true);
+    updateTransitionActions();
     rebuilding_ = false;
     if (!showSelectedPresentation(selectSlide, reportFailure)) return false;
     updateLiveUi();
     return true;
 }
 
+int MainWindow::selectedMediaAssetId() const {
+    return mediaAssets_->currentItem() ? mediaAssets_->currentItem()->data(Qt::UserRole).toInt() : 0;
+}
+
+Song MainWindow::workspaceSource() const {
+    if (!browsingLibrary_) return library_.entrySource(selectedEntryId());
+    if (!browsingMedia_) return library_.song(selectedSongId());
+    const auto asset = library_.mediaAsset(selectedMediaAssetId());
+    Song source;
+    if (!asset.id) return source;
+    source.mediaAssetId = asset.id;
+    source.title = asset.media.name;
+    source.slides = {QStringLiteral("")};
+    source.richText = {QStringLiteral("")};
+    source.media = {asset.media};
+    source.slideIds = {0};
+    source.midiActions = {library_.midiActions(MidiOwnerType::Asset, asset.id)};
+    return source;
+}
+
+bool MainWindow::reloadMedia(bool reportFailure) {
+    const auto assets = library_.mediaAssets(mediaSearch_->text());
+    if (!library_.lastError().isEmpty()) {
+        if (reportFailure) reportError(library_.lastError());
+        return false;
+    }
+    const int selected = selectedMediaAssetId();
+    const QString folder = mediaFolders_->currentData().toString();
+    const QSignalBlocker listBlock(mediaAssets_);
+    const QSignalBlocker folderBlock(mediaFolders_);
+    QStringList folders;
+    for (const auto &asset : assets)
+        if (!asset.folder.isEmpty() && !folders.contains(asset.folder)) folders.append(asset.folder);
+    folders.sort(Qt::CaseInsensitive);
+    mediaFolders_->clear();
+    mediaFolders_->addItem(QStringLiteral("All Media"), QStringLiteral(""));
+    for (const auto &name : folders) mediaFolders_->addItem(name, name);
+    mediaFolders_->setCurrentIndex(qMax(0, mediaFolders_->findData(folder)));
+    const QString selectedFolder = mediaFolders_->currentData().toString();
+    mediaAssets_->clear();
+    for (const auto &asset : assets) {
+        if (!selectedFolder.isEmpty() && asset.folder != selectedFolder) continue;
+        auto *item = new QListWidgetItem(asset.media.name, mediaAssets_);
+        item->setData(Qt::UserRole, asset.id);
+        item->setToolTip(asset.media.path);
+        if (asset.id == selected) mediaAssets_->setCurrentItem(item);
+    }
+    if (!mediaAssets_->currentItem() && mediaAssets_->count()) mediaAssets_->setCurrentRow(0);
+    if (browsingMedia_) showSelectedMedia();
+    return true;
+}
+
+void MainWindow::showSelectedMedia() {
+    if (rebuilding_) return;
+    browsingLibrary_ = true;
+    browsingMedia_ = true;
+    const auto asset = library_.mediaAsset(selectedMediaAssetId());
+    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    mediaDetails_->clear();
+    if (asset.id) {
+        const QString path = resolveMedia(asset.media).path;
+        const QFileInfo file(path);
+        const QString kind = asset.media.kind == MediaKind::Image ? QStringLiteral("Image")
+            : asset.media.kind == MediaKind::Video ? QStringLiteral("Video") : QStringLiteral("Audio");
+        QStringList details{kind, asset.folder.isEmpty() ? QStringLiteral("Unfiled") : asset.folder};
+        if (file.isFile()) {
+            details << QStringLiteral("%1 bytes").arg(file.size());
+            if (asset.media.kind == MediaKind::Image) {
+                QImageReader reader(path);
+                const auto size = reader.size();
+                if (size.isValid()) details << QStringLiteral("%1 × %2").arg(size.width()).arg(size.height());
+            }
+            details << QStringLiteral("File modified %1").arg(file.lastModified().toString(Qt::ISODate));
+        } else details << QStringLiteral("File missing");
+        details << (asset.importedAt > 0
+            ? QStringLiteral("Imported %1").arg(QDateTime::fromSecsSinceEpoch(asset.importedAt).toString(Qt::ISODate))
+            : QStringLiteral("Import date unknown (legacy media)"));
+        details << asset.media.path;
+        mediaDetails_->setText(details.join(QLatin1Char('\n')));
+    }
+    showSelectedPresentation();
+}
+
+void MainWindow::editMediaAsset() {
+    const auto asset = library_.mediaAsset(selectedMediaAssetId());
+    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    if (!asset.id) return;
+    QDialog dialog(this);
+    dialog.setObjectName(QStringLiteral("mediaAssetEditor"));
+    dialog.setWindowTitle(QStringLiteral("Rename / Organize Media"));
+    auto *layout = new QVBoxLayout(&dialog);
+    auto *form = new QFormLayout;
+    auto *name = new QLineEdit(asset.media.name, &dialog);
+    name->setObjectName(QStringLiteral("mediaAssetName"));
+    name->setMaxLength(256);
+    auto *folder = new QComboBox(&dialog);
+    folder->setObjectName(QStringLiteral("mediaAssetFolder"));
+    folder->setEditable(true);
+    folder->addItem(QStringLiteral(""));
+    const auto assets = library_.mediaAssets();
+    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    for (const auto &item : assets)
+        if (!item.folder.isEmpty() && folder->findText(item.folder) < 0) folder->addItem(item.folder);
+    folder->setCurrentText(asset.folder);
+    folder->lineEdit()->setMaxLength(256);
+    auto *loop = new QCheckBox(QStringLiteral("Loop playback"), &dialog);
+    loop->setObjectName(QStringLiteral("mediaAssetLoop"));
+    loop->setEnabled(asset.media.kind != MediaKind::Image);
+    loop->setChecked(asset.media.loop);
+    form->addRow(QStringLiteral("Name"), name);
+    form->addRow(QStringLiteral("Folder"), folder);
+    form->addRow(loop);
+    layout->addLayout(form);
+    auto *actions = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(actions);
+    connect(actions, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    connect(actions, &QDialogButtonBox::accepted, &dialog, [&] {
+        QString error;
+        if (!library_.updateMediaAsset(asset.id, name->text(), folder->currentText(), loop->isChecked(), &error)) {
+            QMessageBox::warning(&dialog, QStringLiteral("Cannot save media"), error);
+            return;
+        }
+        dialog.accept();
+    });
+    if (dialog.exec() != QDialog::Accepted) return;
+    reloadMedia();
+    reloadService(selectedEntryId(), slides_->currentRow());
+    markSaved();
+}
+
+void MainWindow::deleteMediaAsset() {
+    const auto asset = library_.mediaAsset(selectedMediaAssetId());
+    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    if (!asset.id) return;
+    if (QMessageBox::question(this, QStringLiteral("Delete media item?"),
+        QStringLiteral("Remove “%1” from the Media Library? Items referenced by presentations or saved services are protected. "
+                       "The managed file is retained for recovery.").arg(asset.media.name),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes) return;
+    QString error;
+    if (!library_.deleteMediaAsset(asset.id, &error)) return reportError(error);
+    reloadMedia();
+    markSaved();
+}
+
+void MainWindow::appendMedia(int id, int beforeEntryId) {
+    if (!id) id = selectedMediaAssetId();
+    if (!id || !currentServiceId_) return;
+    QString error;
+    const int selected = library_.appendMediaToService(currentServiceId_, id, &error, beforeEntryId);
+    if (!selected) return reportError(error);
+    browsingLibrary_ = false;
+    browsingMedia_ = false;
+    sidebarTabs_->setCurrentIndex(1);
+    reloadService(selected);
+    markSaved();
+}
+
+void MainWindow::previewMediaAsset() {
+    const auto asset = library_.mediaAsset(selectedMediaAssetId());
+    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    if (!asset.id) return;
+    const QString previewOwner = cleanupLeaseOwner_ + "-preview";
+    CleanupProtection previewProtection; previewProtection.assets.insert(asset.id); previewProtection.paths.insert(asset.media.path);
+    QString previewError;
+    if (!library_.replaceCleanupLease(previewOwner, previewProtection, &previewError)) return reportError(previewError);
+    QTimer previewLease;
+    previewLease.setInterval(10000);
+    connect(&previewLease, &QTimer::timeout, this, [this, previewOwner, previewProtection] { QString error; library_.replaceCleanupLease(previewOwner, previewProtection, &error); });
+    previewLease.start();
+    QDialog dialog(this);
+    dialog.setObjectName(QStringLiteral("mediaAssetPreview"));
+    dialog.setWindowTitle(QStringLiteral("Preview — %1").arg(asset.media.name));
+    dialog.resize(720, 510);
+    PresentationController previewController;
+    MediaPlayback previewPlayback(&previewController);
+    auto *layout = new QVBoxLayout(&dialog);
+    auto *preview = new SlidePreview(&dialog);
+    layout->addWidget(preview, 1);
+    auto *status = new QLabel(&dialog);
+    status->setWordWrap(true);
+    layout->addWidget(status);
+    const auto media = resolveMedia(asset.media);
+    preview->setSlide(previewState(QStringLiteral(""), media), {}, mediaThumbnail(media));
+    auto *play = new QPushButton(QStringLiteral("Play Preview"), &dialog);
+    play->setObjectName(QStringLiteral("playMediaPreview"));
+    play->setVisible(media.kind != MediaKind::Image);
+    layout->addWidget(play);
+    connect(play, &QPushButton::clicked, &dialog, [&] {
+        QString usageError; library_.recordUsage(0, {asset.id}, {asset.media.path}, &usageError);
+        if (previewController.state().index < 0)
+            previewController.takeLive(PresentationItem{0, asset.media.name, {QStringLiteral("")}, {media}});
+        else previewPlayback.togglePause();
+    });
+    connect(&previewPlayback, &MediaPlayback::frameChanged, &dialog, [&] {
+        preview->setSlide(previewController.state(), {}, previewPlayback.frame());
+    });
+    connect(&previewPlayback, &MediaPlayback::statusChanged, &dialog, [&] {
+        status->setText(previewPlayback.status());
+        if (previewController.state().index >= 0)
+            play->setText(previewPlayback.isPlaying() ? QStringLiteral("Pause Preview") : QStringLiteral("Play Preview"));
+    });
+    if (media.kind == MediaKind::Image) {
+        library_.recordUsage(0, {asset.id}, {asset.media.path}, &previewError);
+        previewController.takeLive(PresentationItem{0, asset.media.name, {QStringLiteral("")}, {media}});
+    }
+    auto *close = new QDialogButtonBox(QDialogButtonBox::Close, &dialog);
+    layout->addWidget(close);
+    connect(close, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    dialog.exec();
+    library_.clearCleanupLease(previewOwner);
+}
+
 int MainWindow::selectedSongId() const {
     return songs_->currentItem() ? songs_->currentItem()->data(Qt::UserRole).toInt() : 0;
 }
 int MainWindow::workspaceSongId() const {
+    if (browsingMedia_) return 0;
     return browsingLibrary_ ? selectedSongId()
         : service_->currentItem() ? service_->currentItem()->data(Qt::UserRole + 1).toInt() : 0;
 }
@@ -837,6 +1262,18 @@ QStringList MainWindow::selectedRichText() const {
     for (int i = 0; i < slides_->count(); ++i) html.append(slides_->item(i)->data(Qt::UserRole + 4).toString());
     return html;
 }
+QVector<SlideLook> MainWindow::selectedLooks() const {
+    QVector<SlideLook> result;
+    for (int i = 0; i < slides_->count(); ++i) result.append(slides_->item(i)->data(Qt::UserRole + 6).value<SlideLook>());
+    return result;
+}
+QVector<SlideLook> MainWindow::resolveLooks(QVector<SlideLook> looks) const {
+    for (auto &look : looks)
+        if (look.id > 0 && look.settings.background == PresentationLook::Background::Image)
+            look.backgroundPath = resolveBackground(look.settings.backgroundPath);
+    return looks;
+}
+
 QVector<int> MainWindow::selectedSlideOrder() const {
     QVector<int> order;
     for (int i = 0; i < slides_->count(); ++i) order.append(slides_->item(i)->data(Qt::UserRole).toInt());
@@ -884,12 +1321,14 @@ QPixmap MainWindow::backgroundPixmap(const QString &absolutePath) const {
 bool MainWindow::showSelectedService(int selectSlide, bool reportFailure) {
     if (rebuilding_) return true;
     browsingLibrary_ = false;
+    browsingMedia_ = false;
     return showSelectedPresentation(selectSlide, reportFailure);
 }
 
 bool MainWindow::showSelectedLibrary(int selectSlide, bool reportFailure) {
     if (rebuilding_) return true;
     browsingLibrary_ = true;
+    browsingMedia_ = false;
     return showSelectedPresentation(selectSlide, reportFailure);
 }
 
@@ -899,14 +1338,11 @@ void MainWindow::updateSlideDragMode() {
 }
 
 bool MainWindow::showSelectedPresentation(int selectSlide, bool reportFailure) {
-    Song song;
+    const Song song = workspaceSource();
     QVector<int> order;
-    if (workspaceSongId()) {
-        song = library_.song(workspaceSongId());
-        if (!library_.lastError().isEmpty()) {
-            if (reportFailure) reportError(library_.lastError());
-            return false;
-        }
+    if (!library_.lastError().isEmpty()) {
+        if (reportFailure) reportError(library_.lastError());
+        return false;
     }
     if (song.id && !browsingLibrary_) {
         const auto entries = library_.service(currentServiceId_);
@@ -924,6 +1360,10 @@ bool MainWindow::showSelectedPresentation(int selectSlide, bool reportFailure) {
             }
         }
     }
+    songSections_->setEnabled(song.id > 0 && std::all_of(song.media.cbegin(), song.media.cend(),
+        [](const SlideMedia &media) { return media.kind == MediaKind::None; }));
+    presentationSettings_->setEnabled(song.id > 0);
+    looksButton_->setEnabled(song.id > 0);
     selectedBackgroundPath_ = resolveBackground(song.backgroundPath);
     selectedBackground_ = backgroundPixmap(selectedBackgroundPath_);
     const auto settings = song.settings.resolvedWithDefaults(programSettings_);
@@ -938,13 +1378,14 @@ bool MainWindow::showSelectedPresentation(int selectSlide, bool reportFailure) {
     const QString backgroundName = song.backgroundPath.isEmpty() ? QStringLiteral("Default background")
         : QStringLiteral("Background: %1%2").arg(includedTitle.isEmpty() ? QFileInfo(song.backgroundPath).completeBaseName() : includedTitle,
             selectedBackground_.isNull() ? QStringLiteral(" (missing)") : QString());
-    selectedTimingInfo_->setText(song.id ? QStringLiteral("%1 • %2 (%3)\n%4").arg(timing, transition,
-        song.settings.overrideTransition ? QStringLiteral("presentation override") : QStringLiteral("global default"), backgroundName) : QString());
+    selectedTimingSummary_ = song.id ? QStringLiteral("%1 • %2 (%3)\n%4").arg(timing, transition,
+        song.settings.overrideTransition ? QStringLiteral("presentation override") : QStringLiteral("global default"), backgroundName) : QString();
+    selectedTimingInfo_->setText(selectedTimingSummary_);
     const QSignalBlocker block(slides_);
     rebuilding_ = true;
     slides_->clear();
-    if (song.id) {
-        if (order.isEmpty()) for (int i = 0; i < song.slides.size(); ++i) order.append(i);
+    if (song.id || song.mediaAssetId) {
+        if (order.isEmpty()) order = song.playbackOrder();
         for (const int sourceIndex : order) {
             if (sourceIndex < 0 || sourceIndex >= song.slides.size()) continue;
             auto *item = new QListWidgetItem(slides_);
@@ -953,7 +1394,9 @@ bool MainWindow::showSelectedPresentation(int selectSlide, bool reportFailure) {
             item->setData(Qt::UserRole + 4, song.richText.value(sourceIndex));
             const SlideMedia media = song.media.value(sourceIndex);
             item->setData(Qt::UserRole + 3, QVariant::fromValue(media));
-            item->setToolTip(media.kind == MediaKind::None ? song.slides.at(sourceIndex)
+            item->setData(Qt::UserRole + 5, song.structure.slideLabel(sourceIndex));
+            item->setData(Qt::UserRole + 6, QVariant::fromValue(resolveLooks({song.looks.value(sourceIndex)}).first()));
+            item->setToolTip(media.kind == MediaKind::None ? song.structure.slideLabel(sourceIndex) + QLatin1Char('\n') + song.slides.at(sourceIndex)
                 : QStringLiteral("%1\n%2").arg(media.name, resolveMedia(media).path));
         }
         selectedInfo_->setText(QStringLiteral("%1 • %2 %3").arg(song.title).arg(slides_->count())
@@ -974,9 +1417,14 @@ void MainWindow::showSelectedSlide() {
     const auto *item = slides_->currentItem();
     editSlide_->setEnabled(item && workspaceSongId());
     const SlideMedia media = item ? item->data(Qt::UserRole + 3).value<SlideMedia>() : SlideMedia{};
-    selectedPreview_->setSlide(previewState(item ? item->data(Qt::UserRole + 1).toString() : QString(), resolveMedia(media),
-                                           item ? item->data(Qt::UserRole + 4).toString() : QString()),
-                               selectedBackground_, mediaThumbnail(media));
+    const auto style = item ? item->data(Qt::UserRole + 6).value<SlideLook>() : SlideLook{};
+    const QString text = item ? item->data(Qt::UserRole + 1).toString() : QString();
+    const QString html = item ? item->data(Qt::UserRole + 4).toString() : QString();
+    const QPixmap background = style.id > 0 && style.settings.background == PresentationLook::Background::Image
+        ? backgroundPixmap(style.backgroundPath) : selectedBackground_;
+    selectedPreview_->setSlide(previewState(text, resolveMedia(media), html, style), background, mediaThumbnail(media));
+    selectedTimingInfo_->setText(selectedTimingSummary_ + (style.id > 0 && !style.fitText && RichTextSupport::overflows(text, html, style)
+        ? QStringLiteral("\nText overflow • output uses safety fitting. Open Looks / Reflow to review.") : QString()));
 }
 
 void MainWindow::createService() {
@@ -1014,8 +1462,9 @@ void MainWindow::chooseMediaFiles() {
     QStringList patterns;
     for (const auto &ext : MediaManager::supportedImageExtensions()) patterns.append(QStringLiteral("*.") + ext);
     for (const auto &ext : MediaManager::supportedVideoExtensions()) patterns.append(QStringLiteral("*.") + ext);
-    const QStringList files = QFileDialog::getOpenFileNames(this, QStringLiteral("Import pictures and videos"), {},
-        QStringLiteral("Pictures and Videos (%1);;All Files (*)").arg(patterns.join(QLatin1Char(' '))));
+    for (const auto &ext : MediaManager::supportedAudioExtensions()) patterns.append(QStringLiteral("*.") + ext);
+    const QStringList files = QFileDialog::getOpenFileNames(this, QStringLiteral("Import media"), {},
+        QStringLiteral("Media (%1);;All Files (*)").arg(patterns.join(QLatin1Char(' '))));
     importMediaFiles(files);
 }
 
@@ -1032,7 +1481,8 @@ bool MainWindow::importMediaFiles(const QStringList &paths) {
     if (sorted.size() == 1) dialog.setPresentationTitle(QFileInfo(sorted.first()).completeBaseName());
     if (dialog.exec() != QDialog::Accepted) return false;
     importTitle_ = dialog.title();
-    importServiceId_ = currentServiceId_;
+    importAsPresentation_ = dialog.createPresentation();
+    importServiceId_ = dialog.addToService() ? currentServiceId_ : 0;
     importProgress_ = new QProgressDialog(QStringLiteral("Copying media into WorshipCue…"), QStringLiteral("Cancel"), 0, sorted.size(), this);
     importProgress_->setWindowTitle(QStringLiteral("Importing Media"));
     importProgress_->setWindowModality(Qt::NonModal);
@@ -1045,6 +1495,7 @@ bool MainWindow::importMediaFiles(const QStringList &paths) {
         return false;
     }
     importButton_->setEnabled(false);
+    mediaImportButton_->setEnabled(false);
     importAction_->setEnabled(false);
     statusBar()->showMessage(QStringLiteral("Importing media. Presentation controls remain available."));
     return true;
@@ -1085,7 +1536,7 @@ void MainWindow::renameMediaPresentation(int id) {
 
 void MainWindow::updatePlaybackUi() {
     if (!mediaStatus_) return;
-    const bool video = playback_.isVideo();
+    const bool video = playback_.isPlayable();
     mediaStatus_->setVisible(controller_.state().currentMedia().kind != MediaKind::None);
     pauseVideo_->setVisible(video);
     restartVideo_->setVisible(video);
@@ -1093,16 +1544,19 @@ void MainWindow::updatePlaybackUi() {
     pauseVideo_->setEnabled(video && playback_.errorString().isEmpty());
     restartVideo_->setEnabled(video && playback_.errorString().isEmpty());
     muteVideo_->setText(playback_.muted() ? QStringLiteral("Unmute") : QStringLiteral("Mute"));
-    pauseVideo_->setText(playback_.isPaused() ? QStringLiteral("Play Video") : QStringLiteral("Pause Video"));
+    pauseVideo_->setText(playback_.isAudio()
+        ? (playback_.isPaused() ? QStringLiteral("Play Audio") : QStringLiteral("Pause Audio"))
+        : (playback_.isPaused() ? QStringLiteral("Play Video") : QStringLiteral("Pause Video")));
     mediaStatus_->setText(playback_.errorString().isEmpty() ? playback_.status() : playback_.errorString());
     mediaStatus_->setStyleSheet(playback_.errorString().isEmpty() ? QStringLiteral("color: #a5b2c5;") : QStringLiteral("color: #ff9d9d;"));
 }
 
 void MainWindow::createSong() {
-    SlideEditorDialog dialog(Song{}, 0, this);
+    SongStructureDialog dialog({}, this);
     if (dialog.exec() != QDialog::Accepted) return;
     QString error;
-    if (!library_.createSong(dialog.title(), dialog.slides(), &error, {}, {}, dialog.richText())) return reportError(error);
+    const Song song = dialog.draft();
+    if (!library_.createSong(song.title, song.slides, &error, {}, {}, song.richText, song.structure)) return reportError(error);
     reloadSongs();
     markSaved();
 }
@@ -1114,7 +1568,10 @@ void MainWindow::importLyrics() {
     QString error;
     if (!dialog.importLyricsFile(path, &error)) return reportError(error);
     if (dialog.exec() != QDialog::Accepted) return;
-    if (!library_.createSong(dialog.title(), dialog.slides(), &error)) return reportError(error);
+    QStringList sources;
+    const auto structure = dialog.songStructure(&sources);
+    const int imported = library_.createTextPresentation(dialog.title(), sources, &error, {}, {}, {}, structure);
+    if (!imported || !library_.recordPresentationImport(imported, &error)) return reportError(error);
     search_->clear();
     reloadSongs();
     for (int i = 0; i < songs_->count(); ++i)
@@ -1125,6 +1582,47 @@ void MainWindow::importLyrics() {
 void MainWindow::editSong() {
     editPresentation(selectedSongId());
 }
+void MainWindow::editSongStructure() {
+    const Song song = workspaceSource();
+    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    if (!song.id) return;
+    for (const auto &media : song.media) if (media.kind != MediaKind::None) {
+        statusBar()->showMessage(QStringLiteral("Choose a text song to edit its sections and arrangements."), 6000);
+        return;
+    }
+    SongStructureDialog dialog(song, this);
+    if (dialog.exec() != QDialog::Accepted) return;
+    QString error;
+    if (!library_.updateSongStructure(dialog.original(), dialog.draft(), &error)) return reportError(error);
+    refreshStructuredSong(song.id);
+    reloadSongs();
+    reloadService(selectedEntryId(), slides_->currentRow());
+    markSaved();
+}
+
+void MainWindow::refreshStructuredSong(int songId) {
+    const auto song = library_.song(songId);
+    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    if (!song.structure.isEmpty())
+        controller_.refreshSongText(songId, song.structure.slideKeys(), song.slides, song.richText, resolveLooks(song.looks));
+}
+
+void MainWindow::configureLooks() {
+    const auto original = workspaceSource();
+    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+    if (!original.id || !slides_->currentItem()) return;
+    const int source = slides_->currentItem()->data(Qt::UserRole).toInt();
+    PresentationLookDialog dialog(&library_, original, source, this);
+    if (dialog.exec() != QDialog::Accepted) return;
+    QString error;
+    if (!library_.updatePresentationDraft(original, dialog.draft(), dialog.sourceIndices(), &error)) return reportError(error);
+    const int row = slides_->currentRow();
+    reloadSongs();
+    reloadService(selectedEntryId(), row);
+    markSaved();
+    statusBar()->showMessage(QStringLiteral("Look and reflow saved. Take a slide live to present this draft."), 8000);
+}
+
 void MainWindow::editSelectedSlide() {
     if (!slides_->currentItem()) return;
     editPresentation(workspaceSongId(), slides_->currentItem()->data(Qt::UserRole).toInt());
@@ -1139,15 +1637,23 @@ void MainWindow::editPresentation(int songId, int sourceSlide) {
         frames.append(mediaThumbnail(media));
         media = resolveMedia(media);
     }
+    song.looks = resolveLooks(song.looks);
     SlideEditorDialog dialog(song, sourceSlide, this, backgroundPixmap(resolveBackground(song.backgroundPath)), frames);
     if (dialog.exec() != QDialog::Accepted) return;
     QString error;
-    if (!library_.updatePresentationText(songId, dialog.title(), dialog.slides(), dialog.richText(), &error)) return reportError(error);
+    auto overrides = song.appearance.richTextOverrides;
+    const auto html = dialog.richText();
+    for (int i = 0; i < html.size(); ++i)
+        if (song.looks.value(i).id > 0 && html.at(i) != song.richText.value(i)) overrides[i] = true;
+    if (!library_.updatePresentationText(songId, dialog.title(), dialog.slides(), html, &error, overrides)) return reportError(error);
     const int row = slides_->currentRow();
+    refreshStructuredSong(songId);
     reloadSongs();
     reloadService(selectedEntryId(), row);
     markSaved();
-    statusBar()->showMessage(QStringLiteral("Slide text and formatting saved. Take a slide live to present your changes."), 8000);
+    statusBar()->showMessage(song.structure.isEmpty()
+        ? QStringLiteral("Slide text and formatting saved. Take a slide live to present your changes.")
+        : QStringLiteral("Shared song text saved and updated across all arranged occurrences."), 8000);
 }
 void MainWindow::duplicateSong() {
     const Song song = library_.song(selectedSongId());
@@ -1155,8 +1661,8 @@ void MainWindow::duplicateSong() {
     QString error;
     const QString title = song.title + QStringLiteral(" (Copy)");
     const bool hasMedia = std::any_of(song.media.cbegin(), song.media.cend(), [](const SlideMedia &m) { return m.kind != MediaKind::None; });
-    if (hasMedia ? !library_.createPresentation(title, song.slides, song.media, &error, song.settings, song.backgroundPath, song.richText)
-                 : !library_.createSong(title, song.slides, &error, song.settings, song.backgroundPath, song.richText)) return reportError(error);
+    if (hasMedia ? !library_.createPresentation(title, song.slides, song.media, &error, song.settings, song.backgroundPath, song.richText, song.appearance)
+                 : !library_.createSong(title, song.slides, &error, song.settings, song.backgroundPath, song.richText, song.structure, song.appearance)) return reportError(error);
     reloadSongs();
     markSaved();
 }
@@ -1179,6 +1685,7 @@ void MainWindow::appendSong() {
     if (!library_.appendToService(currentServiceId_, id, &error)) return reportError(error);
     const auto entries = library_.service(currentServiceId_);
     browsingLibrary_ = false;
+    browsingMedia_ = false;
     reloadService(entries.isEmpty() ? 0 : entries.last().id);
     markSaved();
 }
@@ -1254,37 +1761,130 @@ void MainWindow::resetSlideOrder() {
     markSaved();
 }
 
+PresentationItem MainWindow::midiSnapshot(const Song &song, const QVector<int> &order, int entryId) const {
+    PresentationItem item;
+    item.entryId = entryId; item.title = song.title; item.songId = song.id; item.mediaAssetId = song.mediaAssetId;
+    item.settings = song.settings.resolvedWithDefaults(programSettings_);
+    item.backgroundPath = resolveBackground(song.backgroundPath);
+    item.sourceSlideKeys = arrangedSourceKeys(song, order);
+    for (int source : order) {
+        item.slides.append(song.slides.value(source)); item.richText.append(song.richText.value(source));
+        item.media.append(resolveMedia(song.media.value(source)));
+        item.looks.append(song.looks.value(source)); item.sourceSlideIds.append(song.slideIds.value(source));
+        item.midiActions.append(song.midiActions.value(source));
+    }
+    item.looks = resolveLooks(item.looks);
+    return item;
+}
+bool MainWindow::takeSavedService(int serviceId, int entryId, int row, QString *error) {
+    QVector<PresentationItem> items;
+    const auto entries = library_.service(serviceId);
+    if (!library_.lastError().isEmpty()) { *error = library_.lastError(); return false; }
+    bool found = false;
+    for (const auto &entry : entries) {
+        const auto song = library_.entrySource(entry.id);
+        if (!library_.lastError().isEmpty()) { *error = library_.lastError(); return false; }
+        auto item = midiSnapshot(song, entry.slideOrder.isEmpty() ? song.playbackOrder() : entry.slideOrder, entry.id);
+        if (entry.id == entryId) found = row >= 0 && row < item.slides.size();
+        items.append(item);
+    }
+    if (!found) { *error = QStringLiteral("The MIDI target is no longer in this saved service arrangement."); return false; }
+    if (!prepareCleanupSnapshot(items, error)) return false;
+    liveLibrarySongId_ = 0; liveLibraryMediaId_ = 0;
+    controller_.takeServiceLive(serviceId, items, entryId, row);
+    return true;
+}
 void MainWindow::goLive() {
+    if (slides_->currentRow() < 0) return;
     if (browsingLibrary_) {
-        if (!workspaceSongId() || slides_->currentRow() < 0) return;
-        const Song song = library_.song(workspaceSongId());
+        const auto song = workspaceSource();
         if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
-        liveLibrarySongId_ = song.id;
-        controller_.takeLive(PresentationItem{0, song.title, selectedSlides(), selectedMedia(),
-            song.settings.resolvedWithDefaults(programSettings_), selectedBackgroundPath_, selectedRichText()}, slides_->currentRow());
-        slides_->setFocus();
+        liveLibrarySongId_ = song.id; liveLibraryMediaId_ = song.mediaAssetId;
+        const auto item = midiSnapshot(song, selectedSlideOrder()); QString error;
+        if (!prepareCleanupSnapshot({item}, &error)) return reportError(error);
+        controller_.takeLive(item, slides_->currentRow());
+    } else {
+        QString error;
+        if (!takeSavedService(currentServiceId_, selectedEntryId(), slides_->currentRow(), &error)) return reportError(error);
+    }
+    slides_->setFocus();
+}
+void MainWindow::reloadMidiBindings() {
+    const auto bindings = library_.midiBindings();
+    QString error = library_.lastError();
+    if (!error.isEmpty()) { midi_.setBindings({}); midi_.record(error); return; }
+    if (!midi_.setBindings(bindings, &error)) midi_.record(error);
+}
+void MainWindow::configureMidiSlide() {
+    const auto source = workspaceSource();
+    const auto order = selectedSlideOrder();
+    const int row = slides_->currentRow();
+    if (row < 0 || row >= order.size() || !library_.lastError().isEmpty()) return;
+    const int canonical = order.at(row);
+    MidiBinding target; target.name = source.title + QStringLiteral(" — slide %1").arg(row + 1);
+    target.command = MidiCommand::TakeSlide; target.songId = source.id; target.assetId = source.mediaAssetId;
+    target.slideId = source.slideIds.value(canonical); target.entryId = browsingLibrary_ ? 0 : selectedEntryId();
+    for (int i = 0; i < row; ++i) if (order.at(i) == canonical) ++target.occurrence;
+    const auto type = source.mediaAssetId ? (target.entryId ? MidiOwnerType::Entry : MidiOwnerType::Asset) : MidiOwnerType::Slide;
+    const qint64 owner = type == MidiOwnerType::Slide ? target.slideId : type == MidiOwnerType::Entry ? target.entryId : target.assetId;
+    editMidiSlide(this, midi_, library_, type, owner, target);
+    reloadMidiBindings();
+}
+void MainWindow::dispatchMidi(const MidiBinding &binding) {
+    if (mode_->currentIndex() != 0 || QApplication::activeModalWidget() || QApplication::activePopupWidget()) return;
+    const auto current = library_.midiBinding(binding.id);
+    if (!current.id || !current.enabled || current.toJson() != binding.toJson()) {
+        midi_.record(QStringLiteral("Skipped stale MIDI mapping; reloading saved mappings.")); reloadMidiBindings(); return;
+    }
+    switch (binding.command) {
+    case MidiCommand::Next: advance(); return;
+    case MidiCommand::Previous: rewind(); return;
+    case MidiCommand::Blackout: controller_.toggleBlackout(); return;
+    case MidiCommand::ClearText: controller_.toggleClear(); return;
+    case MidiCommand::Restore: controller_.restoreOutput(); return;
+    case MidiCommand::PauseAutoAdvance: controller_.toggleAutoAdvancePaused(); return;
+    case MidiCommand::PauseMedia: playback_.togglePause(); return;
+    case MidiCommand::RestartMedia: playback_.restart(); return;
+    case MidiCommand::MuteMedia: playback_.toggleMute(); return;
+    case MidiCommand::ReleaseNotes: midi_.releaseNotes(); return;
+    default: break;
+    }
+    QString error;
+    Song song;
+    int serviceId = 0;
+    QVector<int> order;
+    if (binding.entryId) {
+        serviceId = library_.entryServiceId(binding.entryId);
+        song = library_.entrySource(binding.entryId);
+        for (const auto &entry : library_.service(serviceId)) if (entry.id == binding.entryId) order = entry.slideOrder;
+    } else if (binding.assetId) {
+        const auto asset = library_.mediaAsset(binding.assetId);
+        if (asset.id) { song.title = asset.media.name; song.mediaAssetId = asset.id; song.slides = {QStringLiteral("")}; song.media = {asset.media}; song.slideIds = {0}; song.midiActions = {library_.midiActions(MidiOwnerType::Asset, asset.id)}; }
+    } else song = library_.song(binding.songId);
+    if (!library_.lastError().isEmpty()) error = library_.lastError();
+    if ((binding.songId && song.id != binding.songId) || (binding.assetId && song.mediaAssetId != binding.assetId) || (binding.entryId && !serviceId)) error = QStringLiteral("The saved MIDI target no longer exists.");
+    if (order.isEmpty()) order = song.playbackOrder();
+    int row = 0;
+    if (binding.command == MidiCommand::TakeSlide && binding.slideId) {
+        row = -1; int occurrence = 0;
+        for (int i = 0; i < order.size(); ++i) if (song.slideIds.value(order.at(i)) == binding.slideId && occurrence++ == binding.occurrence) { row = i; break; }
+    }
+    if (row < 0 || row >= order.size()) error = QStringLiteral("The MIDI slide occurrence is no longer in the saved arrangement.");
+    if (!error.isEmpty()) { midi_.record(error); statusBar()->showMessage(error, 5000); return; }
+    if (binding.command == MidiCommand::SelectPresentation) {
+        if (serviceId) { browsingLibrary_ = false; browsingMedia_ = false; sidebarTabs_->setCurrentIndex(1); reloadServices(serviceId, binding.entryId, row, false); }
+        else { sidebarTabs_->setCurrentIndex(0); search_->clear(); reloadSongs(false); for (int i=0;i<songs_->count();++i) if(songs_->item(i)->data(Qt::UserRole).toInt()==song.id) { songs_->setCurrentRow(i); showSelectedLibrary(row, false); break; } }
         return;
     }
-    if (!selectedEntryId() || slides_->currentRow() < 0) return;
-    QVector<PresentationItem> items;
-    const auto entries = library_.service(currentServiceId_);
-    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
-    for (const auto &entry : entries) {
-        const Song song = library_.song(entry.songId);
-        if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
-        const auto texts = library_.entrySlides(entry.id);
-        if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
-        auto media = library_.entryMedia(entry.id);
-        if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
-        const auto html = library_.entryRichText(entry.id);
-        if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
-        for (auto &asset : media) asset = resolveMedia(asset);
-        items.append({entry.id, song.title, texts, media, song.settings.resolvedWithDefaults(programSettings_), resolveBackground(song.backgroundPath), html});
+    if (serviceId) {
+        if (!takeSavedService(serviceId, binding.entryId, row, &error)) { midi_.record(error); return; }
+    } else {
+        liveLibrarySongId_ = song.id; liveLibraryMediaId_ = song.mediaAssetId;
+        const auto item = midiSnapshot(song, order);
+        if (!prepareCleanupSnapshot({item}, &error)) { midi_.record(error); return; }
+        controller_.takeLive(item, row);
     }
-    if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
-    liveLibrarySongId_ = 0;
-    controller_.takeServiceLive(currentServiceId_, items, selectedEntryId(), slides_->currentRow());
-    slides_->setFocus();
+    revealLiveCue(); syncLiveSelection();
 }
 void MainWindow::advance() {
     if (controller_.state().index < 0) goLive();
@@ -1299,8 +1899,8 @@ void MainWindow::rewind() {
 void MainWindow::syncLiveSelection() {
     const auto &state = controller_.state();
     if (browsingLibrary_) {
-        if (state.serviceId == 0 && liveLibrarySongId_ == selectedSongId()
-            && selectedSlides() == state.slides && selectedRichText() == state.richText
+        if (state.serviceId == 0 && (browsingMedia_ ? liveLibraryMediaId_ == selectedMediaAssetId() : liveLibrarySongId_ == selectedSongId())
+            && selectedSlides() == state.slides && selectedRichText() == state.richText && selectedLooks() == state.looks
             && sameMediaContent(selectedMedia(), state.media) && selectedBackgroundPath_ == state.backgroundPath)
             slides_->setCurrentRow(state.index);
         return;
@@ -1310,7 +1910,7 @@ void MainWindow::syncLiveSelection() {
         if (service_->item(i)->data(Qt::UserRole).toInt() != state.entryId) continue;
         if (service_->currentRow() != i) service_->setCurrentRow(i);
         // Edits may have changed the saved arrangement; never imply it is the live snapshot.
-        if (selectedSlides() == state.slides && selectedRichText() == state.richText && sameMediaContent(selectedMedia(), state.media)
+        if (selectedSlides() == state.slides && selectedRichText() == state.richText && selectedLooks() == state.looks && sameMediaContent(selectedMedia(), state.media)
             && selectedBackgroundPath_ == state.backgroundPath) {
             slides_->setCurrentRow(state.index);
             if (slides_->currentItem()) slides_->scrollToItem(slides_->currentItem());
@@ -1323,32 +1923,36 @@ void MainWindow::refreshThumbnails() {
     const auto &background = selectedBackground_;
     const bool backgroundChanged = thumbnailBackgroundKey_ != background.cacheKey();
     thumbnailBackgroundKey_ = background.cacheKey();
-    const bool sameSource = browsingLibrary_ ? state.serviceId == 0 && liveLibrarySongId_ == selectedSongId()
+    const bool sameSource = browsingLibrary_ ? state.serviceId == 0 && (browsingMedia_ ? liveLibraryMediaId_ == selectedMediaAssetId() : liveLibrarySongId_ == selectedSongId())
         : state.serviceId == currentServiceId_ && state.entryId == selectedEntryId();
     const bool same = sameSource
-                      && selectedSlides() == state.slides && selectedRichText() == state.richText && sameMediaContent(selectedMedia(), state.media)
+                      && selectedSlides() == state.slides && selectedRichText() == state.richText && selectedLooks() == state.looks && sameMediaContent(selectedMedia(), state.media)
                       && selectedBackgroundPath_ == state.backgroundPath;
     for (int i = 0; i < slides_->count(); ++i) {
         auto *item = slides_->item(i);
         const auto media = item->data(Qt::UserRole + 3).value<SlideMedia>();
+        const auto style = item->data(Qt::UserRole + 6).value<SlideLook>();
+        const QPixmap slideBackground = style.id > 0 && style.settings.background == PresentationLook::Background::Image
+            ? backgroundPixmap(style.backgroundPath) : background;
         const bool missing = media.kind != MediaKind::None && !QFileInfo::exists(resolveMedia(media).path);
         const bool live = same && state.index == i;
         QPixmap image = item->data(Qt::UserRole + 2).value<QPixmap>();
         if (image.isNull() || backgroundChanged) {
             if (media.kind == MediaKind::None) {
-                image = SlideRenderer::thumbnail(item->data(Qt::UserRole + 1).toString(), QSize(320, 180), background,
-                                                 item->data(Qt::UserRole + 4).toString());
+                image = SlideRenderer::thumbnail(item->data(Qt::UserRole + 1).toString(), QSize(320, 180), slideBackground,
+                                                 item->data(Qt::UserRole + 4).toString(), style);
             } else {
                 image = QPixmap(320, 180);
                 image.fill(Qt::black);
                 QPainter painter(&image);
                 const QPixmap frame = mediaThumbnail(media);
                 SlideRenderer::paintAudience(painter, image.rect(), previewState(item->data(Qt::UserRole + 1).toString(), resolveMedia(media),
-                                                                               item->data(Qt::UserRole + 4).toString()), background, frame);
+                                                                               item->data(Qt::UserRole + 4).toString(), style), slideBackground, frame);
                 if (media.kind == MediaKind::Video || missing || frame.isNull()) {
                     painter.setPen(missing ? QColor(QStringLiteral("#ff9d9d")) : Qt::white);
                     painter.drawText(image.rect().adjusted(10, 10, -10, -10), Qt::AlignCenter | Qt::TextWordWrap,
                         missing ? QStringLiteral("MISSING MEDIA\n%1").arg(media.name)
+                        : media.kind == MediaKind::Audio ? QStringLiteral("AUDIO\n%1").arg(media.name)
                         : media.kind == MediaKind::Video ? QStringLiteral("▶ VIDEO\n%1").arg(media.name)
                                                        : QStringLiteral("Loading image…"));
                 }
@@ -1361,23 +1965,28 @@ void MainWindow::refreshThumbnails() {
             p.drawRect(image.rect().adjusted(3, 3, -3, -3));
         }
         item->setIcon(QIcon(image));
-        const QString label = media.kind == MediaKind::None ? QString::number(i + 1) : QStringLiteral("%1 • %2").arg(i + 1).arg(media.name);
+        const auto sectionName = item->data(Qt::UserRole + 5).toString();
+        const QString label = media.kind == MediaKind::None ? (sectionName.isEmpty() ? QString::number(i + 1)
+            : QStringLiteral("%1 • %2").arg(i + 1).arg(sectionName)) : QStringLiteral("%1 • %2").arg(i + 1).arg(media.name);
         item->setText(label + (live ? QStringLiteral("  • LIVE") : QString()) + (missing ? QStringLiteral(" • MISSING") : QString()));
         item->setForeground(missing ? QColor(QStringLiteral("#ff9d9d")) : live ? QColor(QStringLiteral("#62e8ac")) : QColor(QStringLiteral("#eaf0f8")));
     }
 }
 void MainWindow::updateLiveUi() {
     const auto &state = controller_.state();
-    returnToLive_->setEnabled(state.index >= 0 && (liveLibrarySongId_ > 0 || (state.serviceId > 0 && state.entryId > 0)));
+    returnToLive_->setEnabled(state.index >= 0 && (liveLibrarySongId_ > 0 || liveLibraryMediaId_ > 0 || (state.serviceId > 0 && state.entryId > 0)));
     const QString status = state.blackout ? QStringLiteral("BLACKOUT") : state.clear ? QStringLiteral("BACKGROUND ONLY") : QStringLiteral("LIVE");
     liveInfo_->setText(state.index < 0 ? QStringLiteral("%1 • Ready").arg(status)
         : QStringLiteral("%1 • %2 • %3/%4").arg(status, state.title).arg(state.index + 1).arg(state.slides.size()));
+    const auto look = state.currentLook();
+    if (state.index >= 0 && look.id > 0 && !look.fitText && RichTextSupport::overflows(state.currentText(), state.currentRichText(), look))
+        liveInfo_->setText(liveInfo_->text() + QStringLiteral(" • Text overflow • safety fit"));
     livePreview_->setSlide(state, outputs_.audience().backgroundPixmap(), playback_.frame());
     const QString next = state.nextText();
     const auto media = state.nextMedia();
     nextInfo_->setText(state.nextTitle().isEmpty() ? QStringLiteral("UP NEXT • End of service")
                                     : QStringLiteral("UP NEXT • %1").arg(state.nextTitle()));
-    nextPreview_->setSlide(previewState(next, media, state.nextRichText()), backgroundPixmap(state.nextBackgroundPath()), mediaThumbnail(media));
+    nextPreview_->setSlide(previewState(next, media, state.nextRichText(), state.nextLook()), backgroundPixmap(state.nextBackgroundPath()), mediaThumbnail(media));
     blackoutButton_->setChecked(state.blackout);
     clearButton_->setChecked(state.clear);
     for (int i = 0; i < service_->count(); ++i) {
@@ -1404,6 +2013,76 @@ void MainWindow::configurePresentation(int songId) {
     showSelectedPresentation(row);
     markSaved();
     statusBar()->showMessage(QStringLiteral("Timing and transitions saved. Take a slide live to use the updated settings."), 8000);
+}
+
+void MainWindow::updateTransitionActions() {
+    if (!bulkTransitions_) return;
+    bulkTransitions_->setEnabled(!service_->selectedItems().isEmpty());
+    undoTransitions_->setEnabled(!transitionUndo_.isEmpty());
+    redoTransitions_->setEnabled(!transitionRedo_.isEmpty());
+}
+
+void MainWindow::configureSelectedTransitions() {
+    QVector<TransitionChange> changes;
+    QSet<QString> targets;
+    int count = 0;
+    for (int row = 0; row < service_->count(); ++row) {
+        auto *item = service_->item(row);
+        if (!item->isSelected()) continue;
+        ++count;
+        const int entryId = item->data(Qt::UserRole).toInt();
+        const Song source = library_.entrySource(entryId);
+        if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
+        if (!source.id && !source.mediaAssetId) return reportError(QStringLiteral("A selected service item no longer exists."));
+        const bool media = source.mediaAssetId > 0;
+        const int id = media ? entryId : source.id;
+        const QString key = QString::number(media) + QLatin1Char(':') + QString::number(id);
+        if (targets.contains(key)) continue;
+        targets.insert(key);
+        changes.append({media ? TransitionChange::Target::MediaEntry : TransitionChange::Target::Presentation, id, source.settings, {}});
+    }
+    if (changes.isEmpty()) return;
+    PresentationSettings initial = changes.first().before;
+    const bool mixed = std::any_of(changes.cbegin(), changes.cend(), [&](const TransitionChange &change) {
+        return !change.before.sameTransition(initial);
+    });
+    PresentationSettingsDialog dialog(QStringLiteral("%1 selected service item%2%3").arg(count)
+        .arg(count == 1 ? QString() : QStringLiteral("s"))
+        .arg(mixed ? QStringLiteral(" • Mixed transitions") : QString()), initial, this, programSettings_, false, true);
+    if (dialog.exec() != QDialog::Accepted) return;
+    const auto selected = dialog.settings();
+    for (auto &change : changes) {
+        change.after = change.before;
+        change.after.transition = selected.transition;
+        change.after.transitionDurationMs = selected.transitionDurationMs;
+        change.after.overrideTransition = selected.overrideTransition;
+    }
+    changes.erase(std::remove_if(changes.begin(), changes.end(), [](const TransitionChange &change) {
+        return change.before.sameTransition(change.after);
+    }), changes.end());
+    if (changes.isEmpty()) return;
+    QString error;
+    if (!library_.updateTransitions(changes, &error)) return reportError(error);
+    transitionUndo_.append(changes);
+    transitionRedo_.clear();
+    reloadService(selectedEntryId(), slides_->currentRow());
+    updateTransitionActions();
+    markSaved();
+    statusBar()->showMessage(QStringLiteral("Transitions saved for %1 selected items. Take a slide live to use them. Undo is available in the service playlist.").arg(count), 8000);
+}
+
+void MainWindow::undoTransitions(bool redo) {
+    auto &source = redo ? transitionRedo_ : transitionUndo_;
+    auto &destination = redo ? transitionUndo_ : transitionRedo_;
+    if (source.isEmpty()) return;
+    auto changes = source.last();
+    if (!redo) for (auto &change : changes) std::swap(change.before, change.after);
+    QString error;
+    if (!library_.updateTransitions(changes, &error)) return reportError(error);
+    destination.append(source.takeLast());
+    reloadService(selectedEntryId(), slides_->currentRow());
+    updateTransitionActions();
+    markSaved();
 }
 
 void MainWindow::updateTimingUi() {
@@ -1453,7 +2132,7 @@ void MainWindow::saveProgramTransitions() {
     controller_.setGlobalTransitionDefaults(programSettings_);
     updateProgramTransitionUi();
     showSelectedPresentation(slides_->currentRow());
-    statusBar()->showMessage(QStringLiteral("Global transition saved. Applies to the next cue; presentation overrides take priority."), 8000);
+    statusBar()->showMessage(QStringLiteral("Global transition saved. Applies to the next cue or audience output control; presentation overrides take priority."), 8000);
 }
 
 void MainWindow::updateSlideView() {
@@ -1480,6 +2159,20 @@ void MainWindow::updateSlideView() {
 
 void MainWindow::revealLiveCue() {
     const auto &state = controller_.state();
+    if (state.serviceId == 0 && liveLibraryMediaId_) {
+        mediaSearch_->clear();
+        mediaFolders_->setCurrentIndex(0);
+        for (int i = 0; i < mediaAssets_->count(); ++i) {
+            if (mediaAssets_->item(i)->data(Qt::UserRole).toInt() != liveLibraryMediaId_) continue;
+            sidebarTabs_->setCurrentIndex(2);
+            mediaAssets_->setCurrentRow(i);
+            showSelectedMedia();
+            slides_->setFocus();
+            return;
+        }
+        statusBar()->showMessage(QStringLiteral("The live media item was removed from the Media Library."), 6000);
+        return;
+    }
     if (state.serviceId == 0 && liveLibrarySongId_) {
         search_->clear();
         for (int i = 0; i < songs_->count(); ++i) {
@@ -1506,7 +2199,7 @@ void MainWindow::revealLiveCue() {
         statusBar()->showMessage(QStringLiteral("The live entry was removed from the saved service. Live output is still running."), 6000);
         return;
     }
-    if (selectedSlides() != state.slides || selectedRichText() != state.richText || !sameMediaContent(selectedMedia(), state.media)
+    if (selectedSlides() != state.slides || selectedRichText() != state.richText || selectedLooks() != state.looks || !sameMediaContent(selectedMedia(), state.media)
         || selectedBackgroundPath_ != state.backgroundPath)
         statusBar()->showMessage(QStringLiteral("Saved slides have changed since going live. Live output keeps its original copy."), 6000);
     slides_->setFocus();
@@ -1516,6 +2209,7 @@ void MainWindow::assignBackground(int songId) {
     const Song song = library_.song(songId);
     if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
     BackgroundLibraryDialog dialog(library_.databaseDirectory(), song.backgroundPath, this);
+    connect(&dialog, &BackgroundLibraryDialog::fileImported, this, [this](const QString &path) { QString error; if (!library_.recordManagedImport(path, &error)) statusBar()->showMessage(error, 5000); });
     dialog.setAssignmentEnabled(song.id > 0);
     if (song.id) dialog.setWindowTitle(QStringLiteral("Background Library — Assign to %1").arg(song.title));
     if (dialog.exec() != QDialog::Accepted) return;
@@ -1539,7 +2233,9 @@ void MainWindow::refreshOutputOptions() {
     updateOutputStatus();
 }
 void MainWindow::updateOutputStatus() {
-    outputInfo_->setText(QStringLiteral("Audience: %1     •     Stage: %2").arg(outputs_.status(DisplayWindow::Kind::Audience), outputs_.status(DisplayWindow::Kind::Stage)));
+    QStringList statuses;
+    for (auto id : outputIds) statuses.append(QStringLiteral("%1: %2").arg(outputName(id), outputs_.status(id)));
+    outputInfo_->setText(statuses.join(QStringLiteral("   •   ")));
 }
 void MainWindow::focusOperator() {
     show();
@@ -1553,7 +2249,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
     auto *widget = qobject_cast<QWidget *>(watched);
     if (!widget) return false;
     QWidget *window = widget->window();
-    if (window != this && window != &outputs_.audience() && window != &outputs_.stage()) return false;
+    if (window != this && !outputs_.ownsWindow(window)) return false;
     auto *key = static_cast<QKeyEvent *>(event);
     if (key->key() == Qt::Key_Escape && key->modifiers() == Qt::NoModifier) {
         focusOperator();
@@ -1572,8 +2268,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
     if (pressed == clearShortcut_) { if (!key->isAutoRepeat()) controller_.toggleClear(); return true; }
     if (key->modifiers() != Qt::NoModifier || mode_->currentIndex() != 0) return false;
     switch (key->key()) {
-    case Qt::Key_Right: case Qt::Key_Space: case Qt::Key_PageDown: advance(); return true;
-    case Qt::Key_Left: case Qt::Key_PageUp: rewind(); return true;
+    case Qt::Key_Right: case Qt::Key_Down: case Qt::Key_Space: case Qt::Key_PageDown: advance(); return true;
+    case Qt::Key_Left: case Qt::Key_Up: case Qt::Key_PageUp: rewind(); return true;
     default: return false;
     }
 }
@@ -1681,6 +2377,7 @@ void MainWindow::configureMcp() {
 }
 
 void MainWindow::markSaved() {
+    reloadMidiBindings();
     saveInfo_->setText(QStringLiteral("✓ All service changes saved"));
 }
 void MainWindow::reportError(const QString &error) {
@@ -1695,7 +2392,49 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     settings.setValue(QStringLiteral("workspace/slideView"), slideViewMode_->currentIndex());
     settings.setValue(QStringLiteral("workspace/slideSize"), slideSize_->value());
     settings.setValue(QStringLiteral("workspace/previewTab"), previewTabs_->currentIndex());
-    outputs_.audience().hide();
-    outputs_.stage().hide();
+    midi_.shutdown();
+    outputs_.shutdown();
+    if (cleanupLeaseTimer_) cleanupLeaseTimer_->stop();
+    library_.clearCleanupLease(cleanupLeaseOwner_);
     QMainWindow::closeEvent(event);
+}
+
+
+QString MainWindow::managedCleanupPath(const QString &path) const {
+    if (path.isEmpty() || path.startsWith(QLatin1Char(':')) || library_.databaseDirectory().isEmpty()) return {};
+    const auto relative = QDir::isAbsolutePath(path) ? QDir(library_.databaseDirectory()).relativeFilePath(path) : path;
+    return (relative.startsWith("media/") || relative.startsWith("backgrounds/")) && QDir::cleanPath(relative) == relative ? relative : QString();
+}
+CleanupProtection MainWindow::cleanupProtection(const QVector<PresentationItem> &items) const {
+    CleanupProtection result;
+    const auto add = [this,&result](const QString &path) { const auto relative=managedCleanupPath(path); if (!relative.isEmpty()) result.paths.insert(relative); };
+    for (const auto &item:items) {
+        if (item.songId) result.songs.insert(item.songId);
+        if (item.mediaAssetId) result.assets.insert(item.mediaAssetId);
+        for (const auto &media:item.media) add(media.path);
+        add(item.backgroundPath);
+        for (const auto &look:item.looks) add(look.backgroundPath);
+    }
+    return result;
+}
+bool MainWindow::prepareCleanupSnapshot(const QVector<PresentationItem> &items, QString *error) {
+    auto next=cleanupProtection(items);const auto current=cleanupProtection(controller_.snapshotItems());
+    next.songs.unite(current.songs);next.assets.unite(current.assets);next.paths.unite(current.paths);
+    return library_.replaceCleanupLease(cleanupLeaseOwner_,next,error);
+}
+void MainWindow::recordLiveUsage() {
+    const auto &state=controller_.state();if(state.index<0){library_.clearCleanupLease(cleanupLeaseOwner_);usageRevision_=0;return;}
+    QString error;
+    if(!library_.replaceCleanupLease(cleanupLeaseOwner_,cleanupProtection(controller_.snapshotItems()),&error)) { statusBar()->showMessage(error,5000); return; }
+    if(usageRevision_==state.cueRevision)return;
+    QSet<QString> paths;const auto media=managedCleanupPath(state.currentMedia().path),background=managedCleanupPath(state.currentBackgroundPath());
+    if(!media.isEmpty())paths.insert(media);if(!background.isEmpty())paths.insert(background);
+    const auto *item=controller_.liveItem();QSet<int> assets;if(item&&item->mediaAssetId)assets.insert(item->mediaAssetId);
+    if(!library_.recordUsage(item?item->songId:0,assets,paths,&error)){statusBar()->showMessage(error,5000);return;}
+    usageRevision_=state.cueRevision;
+}
+void MainWindow::configureCleanup() {
+    if(mediaManager_&&mediaManager_->busy()){statusBar()->showMessage(QStringLiteral("Wait for the current import to finish before cleaning up the library."),5000);return;}
+    editLibraryCleanup(this,library_,[this]{return cleanupProtection(controller_.snapshotItems());});
+    reloadSongs();reloadMedia();reloadServices(currentServiceId_,selectedEntryId(),slides_->currentRow());reloadMidiBindings();
 }

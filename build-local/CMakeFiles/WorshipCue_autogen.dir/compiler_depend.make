@@ -833,7 +833,11 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationSettings.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/main.cpp \
@@ -853,6 +857,8 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationSettingsDialog.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationSettingsDialog.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/ReorderListWidget.cpp \
@@ -861,18 +867,23 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideTextDelegate.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideTextDelegate.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongEditorDialog.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongEditorDialog.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QCache \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QElapsedTimer \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QFutureWatcher \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QMetaType \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QObject \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QPointer \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QRectF \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QSet \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QString \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QStringList \
@@ -881,6 +892,7 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QKeySequence \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QPainter \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QPixmap \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QUndoStack \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtSql/QSqlDatabase \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtWidgets/QDialog \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtWidgets/QListWidget \
@@ -1069,6 +1081,7 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtguiexports.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtguiglobal.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtransform.h \
+  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qundostack.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qvalidator.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qwindowdefs.h \
   /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtSql.framework/Versions/A/Headers/qsqldatabase.h \
@@ -1569,8 +1582,6 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginConfig.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginAdditionalTargetInfo.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendCertOnlyPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendCertOnlyPluginAdditionalTargetInfo.cmake:
@@ -1701,8 +1712,6 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICNSPluginAdditionalTargetInfo.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QGifPluginTargets.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QGifPluginAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginTargets.cmake:
@@ -1755,13 +1764,9 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsTargets.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsConfig.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginDependencies.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginAdditionalTargetInfo.cmake:
 
@@ -1942,6 +1947,8 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtWidgets.framework/Versions/A/Headers/qabstractitemview.h:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qwindowdefs.h:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qundostack.h:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtransform.h:
 
@@ -2197,6 +2204,10 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtWidgets/QListWidget:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QGifPluginTargets.cmake:
+
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QUndoStack:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendCertOnlyPluginTargets.cmake:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QPixmap:
@@ -2221,9 +2232,15 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QCache:
 
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.h:
+
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongEditorDialog.cpp:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.cpp:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginConfig.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.cpp:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.h:
 
@@ -2237,6 +2254,10 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationSettingsDialog.h:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsConfig.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.h:
+
 /opt/homebrew/share/cmake/Modules/CMakeSystemSpecificInformation.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginTargets.cmake:
@@ -2248,6 +2269,8 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.h:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.cpp:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.cpp:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MainWindow.cpp:
 
@@ -2272,6 +2295,14 @@ WorshipCue_autogen/timestamp: /Applications/Xcode.app/Contents/Developer/Platfor
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginAdditionalTargetInfo.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h:
 
@@ -2392,6 +2423,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_u_char.h:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICOPluginAdditionalTargetInfo.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.cpp:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_sigset_t.h:
 
@@ -2557,6 +2590,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/string.h:
 
+/opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QRectF:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/cwctype:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_copy.h:
@@ -2614,6 +2649,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtextoption.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fsblkcnt_t.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/functional:
 
@@ -2916,6 +2953,8 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginTargets-release.cmake:
 
 /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtSql.framework/Versions/A/Headers/qtsqlexports.h:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_reference_wrapper.h:
 

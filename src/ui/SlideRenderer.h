@@ -13,6 +13,7 @@ class QPainter;
 // at projection, preview, and thumbnail sizes.
 class SlideRenderer {
 public:
+    static QPixmap backgroundImage(const QString &path);
     static void paintAudience(QPainter &painter, const QRect &destination,
                               const LivePresentation &state,
                               const QPixmap &background = {},
@@ -23,10 +24,10 @@ public:
                                 const QPixmap &outgoing, const QPixmap &incoming,
                                 SlideTransitionType type, qreal progress);
     static QPixmap thumbnail(const QString &text, const QSize &size,
-                             const QPixmap &background = {}, const QString &richText = {});
+                             const QPixmap &background = {}, const QString &richText = {}, const SlideLook &look = {});
     // For thumbnails only: a bounded, cached still decode or a video label.
     // paintAudience never accesses the filesystem.
     static QPixmap thumbnail(const QString &text, const SlideMedia &media,
                              const QSize &size, const QPixmap &background = {},
-                             const QString &richText = {});
+                             const QString &richText = {}, const SlideLook &look = {});
 };

@@ -1,4 +1,5 @@
 #include "../src/media/MediaManager.h"
+#include "fixtures/AudioFixture.h"
 #include <QDir>
 #include <QFile>
 #include <QImage>
@@ -18,6 +19,22 @@ class MediaImportTest : public QObject {
         return qvariant_cast<MediaImportResult>(spy.takeFirst().at(0));
     }
 private slots:
+    void audioImportsAsAStandalonePlayableAsset() {
+        QTemporaryDir source;
+        QTemporaryDir library;
+        const QString path = source.filePath(QStringLiteral("music.wav"));
+        QVERIFY(writeAudioFixture(path));
+        MediaManager manager(library.path());
+        QSignalSpy finished(&manager, &MediaManager::importFinished);
+        QVERIFY(manager.importFiles({path}, {QStringLiteral("Prelude.wav")}, true));
+        QTRY_COMPARE(finished.count(), 1);
+        const auto imported = result(finished);
+        QVERIFY2(imported.error.isEmpty(), qPrintable(imported.error));
+        QCOMPARE(imported.media.size(), 1);
+        QCOMPARE(imported.media.first().kind, MediaKind::Audio);
+        QVERIFY(imported.media.first().loop);
+        QCOMPARE(QFileInfo(manager.absolutePath(imported.media.first().path)).size(), QFileInfo(path).size());
+    }
     void copiesReadableNamesWithoutChangingSources() {
         QTemporaryDir source;
         QTemporaryDir library;

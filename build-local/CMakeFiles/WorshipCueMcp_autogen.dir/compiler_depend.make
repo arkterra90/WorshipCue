@@ -6,6 +6,10 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
   CMakeFiles/4.4.5/CMakeSystem.cmake \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpCreationTools.cpp \
@@ -398,33 +402,59 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
   /opt/homebrew/share/cmake/Modules/Platform/UnixPaths.cmake
 
 
-/opt/homebrew/share/cmake/Modules/Platform/UnixPaths.cmake:
+/opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang.cmake:
 
 /opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang-CXX.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsTargetsPrecheck.cmake:
+
 /opt/homebrew/share/cmake/Modules/Platform/Apple-Clang-CXX.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkConfig.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginConfig.cmake:
+
 /opt/homebrew/share/cmake/Modules/Platform/Apple-AppleClang-CXX.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginConfig.cmake:
 
 /opt/homebrew/share/cmake/Modules/MacroAddFileDependencies.cmake:
 
 /opt/homebrew/share/cmake/Modules/Linker/AppleClang-CXX.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWebpPluginAdditionalTargetInfo.cmake:
+
 /opt/homebrew/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsConfigVersion.cmake:
+
+/opt/homebrew/share/cmake/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake:
 
 /opt/homebrew/share/cmake/Modules/FindPackageMessage.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentTargets.cmake:
+
 /opt/homebrew/share/cmake/Modules/FindThreads.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinLocationPermissionPluginDependencies.cmake:
 
 /opt/homebrew/share/cmake/Modules/FindPackageHandleStandardArgs.cmake:
 
 /opt/homebrew/share/cmake/Modules/FindOpenGL.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginDependencies.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfigVersionImpl.cmake:
+
 /opt/homebrew/share/cmake/Modules/Compiler/GNU.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaVersionlessAliasTargets.cmake:
 
 /opt/homebrew/share/cmake/Modules/Compiler/Clang.cmake:
 
 /opt/homebrew/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsVersionlessTargets.cmake:
 
 /opt/homebrew/share/cmake/Modules/CMakeInitializeConfigs.cmake:
 
@@ -442,13 +472,19 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsVersionlessAliasTargets.cmake:
 
+/opt/homebrew/lib/cmake/Qt6/QtPublicExternalProjectHelpers.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsTargets-release.cmake:
 
+/opt/homebrew/share/cmake/Modules/Platform/Darwin-Initialize.cmake:
+
 /opt/homebrew/share/cmake/Modules/CheckIncludeFileCXX.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsPlugins.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkPlugins.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginTargets.cmake:
 
@@ -456,23 +492,33 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginConfig.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QOffscreenIntegrationPluginAdditionalTargetInfo.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlDependencies.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiTargetsPrecheck.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlConfigVersion.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsTargets-release.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginTargetsPrecheck.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginTargets-release.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginTargets-release.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginTargetsPrecheck.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginTargets.cmake:
+/opt/homebrew/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginConfig.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginTargets.cmake:
 
 /opt/homebrew/share/cmake/Modules/CheckCXXCompilerFlag.cmake:
 
@@ -480,11 +526,11 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginTargetsPrecheck.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginTargets.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginTargets-release.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginConfig.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacHeifPluginAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkVersionlessAliasTargets.cmake:
 
@@ -492,19 +538,19 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkTargets-release.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkConfigVersionImpl.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsTargetsPrecheck.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkConfigVersionImpl.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkConfigVersion.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsTargets-release.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6QDarwinMediaPluginTargets-release.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsConfigVersion.cmake:
+/opt/homebrew/lib/cmake/Qt6/FindWrapVulkanHeaders.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginTargets-release.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinContactsPermissionPluginDependencies.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsConfigVersion.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6QDarwinMediaPluginAdditionalTargetInfo.cmake:
 
@@ -512,13 +558,15 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QGlibNetworkInformationPluginAdditionalTargetInfo.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginAdditionalTargetInfo.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTiffPluginTargetsPrecheck.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaVersionlessAliasTargets.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginAdditionalTargetInfo.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCalendarPermissionPluginConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaTargets.cmake:
 
@@ -538,11 +586,17 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfigVersion.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentConfigVersion.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigExtras.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWebpPluginTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaConfig.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWebpPluginAdditionalTargetInfo.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTgaPluginAdditionalTargetInfo.cmake:
+
+/opt/homebrew/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWbmpPluginTargets.cmake:
 
@@ -554,13 +608,13 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QVirtualKeyboardPluginTargetsPrecheck.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CorePlugins.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QVirtualKeyboardPluginTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QVirtualKeyboardPluginConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTuioTouchPluginTargets.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTiffPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTiffPluginTargets.cmake:
 
@@ -568,15 +622,23 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaConfigVersionImpl.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginTargets-release.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTiffPluginTargets-release.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendCertOnlyPluginTargets-release.cmake:
 
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTiffPluginAdditionalTargetInfo.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCameraPermissionPluginTargets-release.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QGlibNetworkInformationPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTgaPluginTargets.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6DBusTools/Qt6DBusToolsConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTgaPluginTargets-release.cmake:
 
@@ -590,7 +652,7 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QSvgIconPluginTargets-release.cmake:
 
-/opt/homebrew/share/cmake/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsConfigVersionImpl.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlVersionlessAliasTargets.cmake:
 
@@ -602,11 +664,13 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/share/cmake/Modules/Compiler/AppleClang-CXX.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWbmpPluginTargetsPrecheck.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QPdfPluginAdditionalTargetInfo.cmake:
 
-/opt/homebrew/share/cmake/Modules/Platform/Darwin-Initialize.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QOffscreenIntegrationPluginTargets.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTiffPluginConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendCertOnlyPluginTargetsPrecheck.cmake:
 
@@ -616,11 +680,21 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMinimalIntegrationPluginAdditionalTargetInfo.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacHeifPluginTargets.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBusTools/Qt6DBusToolsConfigVersionImpl.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacHeifPluginTargets-release.cmake:
 
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginAdditionalTargetInfo.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTgaPluginTargetsPrecheck.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICOPluginConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeVersionHelpers.cmake:
 
@@ -633,6 +707,12 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICOPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacHeifPluginConfig.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWebpPluginTargetsPrecheck.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/QtPublicPluginHelpers.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiDependencies.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWebpPluginConfig.cmake:
 
@@ -648,21 +728,15 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QGifPluginConfig.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWbmpPluginTargetsPrecheck.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QGifPluginAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginTargetsPrecheck.cmake:
-
-/opt/homebrew/share/cmake/Modules/Platform/Linker/Apple-AppleClang.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiVersionlessAliasTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsTargets-release.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6DBusTools/Qt6DBusToolsConfig.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICOPluginTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiTargets.cmake:
 
@@ -671,12 +745,6 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiPlugins.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6QDarwinMediaPluginTargetsPrecheck.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCameraPermissionPluginTargets-release.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacHeifPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiConfigVersionImpl.cmake:
 
@@ -694,11 +762,11 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QGifPluginTargets-release.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiTargetsPrecheck.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBus/Qt6DBusVersionlessAliasTargets.cmake:
 
-/opt/homebrew/share/cmake/Modules/Internal/CMakeCommonLinkerInformation.cmake:
+CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsVersionlessTargets.cmake:
 
@@ -714,8 +782,6 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBus/Qt6DBusConfigVersionImpl.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTgaPluginAdditionalTargetInfo.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBus/Qt6DBusConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTuioTouchPluginTargets-release.cmake:
@@ -730,49 +796,55 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsDependencies.cmake:
 
+/opt/homebrew/lib/cmake/Qt6/QtPublicSbomBuildToolHelpers.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaAdditionalTargetInfo.cmake:
 
-/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h:
+/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeHelpers.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsConfigVersion.cmake:
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.h:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginTargets.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6DBusTools/Qt6DBusToolsAdditionalTargetInfo.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkAdditionalTargetInfo.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6QMacStylePluginAdditionalTargetInfo.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginAdditionalTargetInfo.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMinimalIntegrationPluginTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginDependencies.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginConfig.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6VersionlessAliasTargets.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkPlugins.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinLocationPermissionPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWebpPluginTargets-release.cmake:
 
+/opt/homebrew/lib/cmake/Qt6/QtPublicToolHelpers.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinLocationPermissionPluginTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkTargets.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkConfig.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinLocationPermissionPluginTargets-release.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsConfigVersionImpl.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinLocationPermissionPluginDependencies.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginAdditionalTargetInfo.cmake:
+/opt/homebrew/share/cmake/Modules/CheckCXXSourceCompiles.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigVersionImpl.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinLocationPermissionPluginTargets-release.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginAdditionalTargetInfo.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBusTools/Qt6DBusToolsVersionlessTargets.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinContactsPermissionPluginTargetsPrecheck.cmake:
 
@@ -780,21 +852,27 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinContactsPermissionPluginTargets-release.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsDependencies.cmake:
+/opt/homebrew/lib/cmake/Qt6/FindWrapOpenGL.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiDependencies.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCameraPermissionPluginDependencies.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsDependencies.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QSvgPluginTargetsPrecheck.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinContactsPermissionPluginDependencies.cmake:
+/opt/homebrew/lib/cmake/Qt6/QtPublicSbomLicenseHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCameraPermissionPluginTargetsPrecheck.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCameraPermissionPluginDependencies.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeHelpers.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacJp2PluginConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBus/Qt6DBusTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginAdditionalTargetInfo.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/QtPublicSbomGenerationCycloneDXHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6ConfigExtras.cmake:
 
@@ -806,41 +884,33 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinContactsPermissionPluginTargets.cmake:
 
+/opt/homebrew/share/cmake/Modules/Platform/UnixPaths.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QVirtualKeyboardPluginAdditionalTargetInfo.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacHeifPluginAdditionalTargetInfo.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsAdditionalTargetInfo.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicPluginHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCalendarPermissionPluginDependencies.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QGlibNetworkInformationPluginTargets-release.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6Targets.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QPdfPluginTargets-release.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacJp2PluginTargetsPrecheck.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginConfig.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCalendarPermissionPluginConfig.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBus/Qt6DBusMacros.cmake:
 
-/opt/homebrew/share/cmake/Modules/Internal/CheckFlagCommonConfig.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsAdditionalTargetInfo.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QPdfPluginTargetsPrecheck.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacJp2PluginTargets.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiConfigVersion.cmake:
+/opt/homebrew/lib/cmake/Qt6/QtPublicTestHelpers.cmake:
 
-/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpCreationTools.cpp:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginTargetsPrecheck.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfigVersionImpl.cmake:
+/opt/homebrew/lib/cmake/Qt6/QtPublicSbomPythonHelpers.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCalendarPermissionPluginTargetsPrecheck.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginDependencies.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsTargetsPrecheck.cmake:
 
@@ -854,23 +924,21 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICOPluginAdditionalTargetInfo.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CorePlugins.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QSvgPluginAdditionalTargetInfo.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMinimalIntegrationPluginTargets.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreDependencies.cmake:
 
 /opt/homebrew/lib/cmake/Qt6/QtFeature.cmake:
 
-/opt/homebrew/lib/cmake/Qt6/QtPublicSbomLicenseHelpers.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginConfig.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginTargets-release.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QOffscreenIntegrationPluginConfig.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigExtras.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsTargets.cmake:
 
@@ -882,13 +950,11 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentConfigVersionImpl.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacJp2PluginConfig.cmake:
+/opt/homebrew/lib/cmake/Qt6/QtPublicJsonHelpers.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfig.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsConfigVersionImpl.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsVersionlessTargets.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreAdditionalTargetInfo.cmake:
 
@@ -896,21 +962,7 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlTargets-release.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICOPluginTargets.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentTargets.cmake:
-
-/opt/homebrew/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake:
-
-/opt/homebrew/share/cmake/Modules/CheckCXXSourceCompiles.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginTargets.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTuioTouchPluginAdditionalTargetInfo.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicSbomBuildToolHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6DBusTools/Qt6DBusToolsTargetsPrecheck.cmake:
+/opt/homebrew/lib/cmake/Qt6/QtPublicSbomRelationshipHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMinimalIntegrationPluginTargetsPrecheck.cmake:
 
@@ -932,16 +984,6 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6TargetsPrecheck.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsConfigVersion.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeIncludeGuardHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTuioTouchPluginConfig.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6ConfigVersion.cmake:
-
 /opt/homebrew/share/cmake/Modules/CheckLibraryExists.cmake:
 
 /opt/homebrew/lib/cmake/Qt6/QtPublicWindowsHelpers.cmake:
@@ -950,49 +992,53 @@ WorshipCueMcp_autogen/timestamp: /Users/jeremykuehn/Documents/GitHub/WorshipCue/
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsMacros.cmake:
 
-/opt/homebrew/lib/cmake/Qt6/QtPublicToolHelpers.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake:
-
 /opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentTargetsPrecheck.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTiffPluginConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6Dependencies.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6QDarwinMediaPluginConfig.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargetsPrecheck.cmake:
-
-CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
-
 /opt/homebrew/lib/cmake/Qt6/QtPublicSbomDepHelpers.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicTestHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlConfig.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinLocationPermissionPluginConfig.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlTargets.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicSbomGenerationCycloneDXHelpers.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/FindWrapOpenGL.cmake:
-
 /opt/homebrew/lib/cmake/Qt6/QtPublicSbomQtEntityHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBus/Qt6DBusConfigVersion.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicSbomPythonHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinContactsPermissionPluginConfig.cmake:
 
 /opt/homebrew/lib/cmake/Qt6/QtPublicSbomPurlHelpers.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Widgets/Qt6WidgetsConfig.cmake:
+/opt/homebrew/share/cmake/Modules/Internal/CheckCompilerFlag.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginTargets-release.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QSvgIconPluginTargets.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/QtPublicAppleHelpers.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/QtPublicFindPackageHelpers.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentVersionlessAliasTargets.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICNSPluginTargets-release.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiAdditionalTargetInfo.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeEarlyPolicyHelpers.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICOPluginTargets-release.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinLocationPermissionPluginAdditionalTargetInfo.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6Config.cmake:
+
+/opt/homebrew/share/cmake/Modules/Internal/CheckCommon.cmake:
+
+/opt/homebrew/share/cmake/Modules/GNUInstallDirs.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/QtPublicSbomOpsHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaDependencies.cmake:
 
@@ -1010,27 +1056,11 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /opt/homebrew/lib/cmake/Qt6/QtPublicSbomFileHelpers.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsTargetsPrecheck.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6MultimediaConfigVersion.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMinimalIntegrationPluginConfig.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicSbomRelationshipHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinLocationPermissionPluginAdditionalTargetInfo.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICOPluginTargets-release.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtFeatureCommon.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6DBus/Qt6DBusDependencies.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginAdditionalTargetInfo.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacJp2PluginTargets-release.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiTargets-release.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/macos/Info.plist.app.in:
 
 /opt/homebrew/lib/cmake/Qt6/QtPublicSbomAttributionHelpers.cmake:
 
@@ -1040,71 +1070,119 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6DBusTools/Qt6DBusToolsTargets-release.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6NetworkAdditionalTargetInfo.cmake:
-
 /opt/homebrew/lib/cmake/Qt6/QtPublicSbomCpeHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginConfig.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginTargets-release.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreTargets-release.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QPdfPluginConfig.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicSbomCommonGenerationHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreConfigVersion.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginConfig.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreTargets-release.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginTargets-release.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6CoreVersionlessAliasTargets.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6VersionlessAliasTargets.cmake:
+/opt/homebrew/lib/cmake/Qt6/QtPublicFinalizerHelpers.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QPdfPluginTargets.cmake:
 
 /opt/homebrew/lib/cmake/Qt6/QtPublicSbomSystemDepHelpers.cmake:
 
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTuioTouchPluginAdditionalTargetInfo.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6DBusTools/Qt6DBusToolsTargetsPrecheck.cmake:
+
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QOffscreenIntegrationPluginTargetsPrecheck.cmake:
 
 /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/PlanningCenterClient.h:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinMicrophonePermissionPluginTargets-release.cmake:
-
 /opt/homebrew/bin/cmake:
 
-/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/main.cpp:
+/opt/homebrew/opt/qt/lib/cmake/Qt6DBus/Qt6DBusDependencies.cmake:
 
-/opt/homebrew/lib/cmake/Qt6/QtPublicJsonHelpers.cmake:
+/opt/homebrew/lib/cmake/Qt6/QtFeatureCommon.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/main.cpp:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentAdditionalTargetInfo.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsAdditionalTargetInfo.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QOffscreenIntegrationPluginAdditionalTargetInfo.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6DBusTools/Qt6DBusToolsAdditionalTargetInfo.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6Targets.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinCalendarPermissionPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/lib/cmake/Qt6/QtPublicGitHelpers.cmake:
 
-/opt/homebrew/lib/cmake/Qt6/QtPublicFinalizerHelpers.cmake:
+/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeVersionHelpers.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICOPluginConfig.cmake:
+/opt/homebrew/lib/cmake/Qt6/FindWrapAtomic.cmake:
 
-/opt/homebrew/share/cmake/Modules/Internal/CheckCompilerFlag.cmake:
+/opt/homebrew/share/cmake/Modules/Internal/CheckFlagCommonConfig.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QSvgIconPluginTargets.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QPdfPluginTargetsPrecheck.cmake:
 
-/opt/homebrew/lib/cmake/Qt6/QtPublicFindPackageHelpers.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiConfigVersion.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentVersionlessAliasTargets.cmake:
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpCreationTools.cpp:
 
-/opt/homebrew/lib/cmake/Qt6/QtPublicAppleHelpers.cmake:
+/opt/homebrew/share/cmake/Modules/Platform/Apple-Clang.cmake:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfig.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6ConfigVersionImpl.cmake:
 
-/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/PlanningCenterClient.cpp:
+/opt/homebrew/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpServer.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlConfigVersionImpl.cmake:
+
+/opt/homebrew/share/cmake/Modules/Linker/AppleClang.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/QtPublicSbomGenerationHelpers.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginTargets.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/QtPublicSbomCycloneDXHelpers.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QOffscreenIntegrationPluginTargets-release.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsConfigVersion.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeIncludeGuardHelpers.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QTuioTouchPluginConfig.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6ConfigVersion.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.h:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginAdditionalTargetInfo.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacJp2PluginTargets-release.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiTargets-release.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/macos/Info.plist.app.in:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginTargets.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QPdfPluginConfig.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QGlibNetworkInformationPluginTargets.cmake:
+
+/opt/homebrew/lib/cmake/Qt6/QtPublicSbomCommonGenerationHelpers.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QGlibNetworkInformationPluginConfig.cmake:
+
+/opt/homebrew/share/cmake/Modules/Internal/CMakeCXXLinkerInformation.cmake:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QCocoaIntegrationPluginTargets.cmake:
+
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp:
+
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QGifPluginTargetsPrecheck.cmake:
+
+CMakeFiles/4.4.5/CMakeSystem.cmake:
 
 /opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QJpegPluginTargets-release.cmake:
 
@@ -1112,78 +1190,12 @@ CMakeFiles/4.4.5/CMakeCXXCompiler.cmake:
 
 /opt/homebrew/lib/cmake/Qt6/QtPublicAndroidHelpers.cmake:
 
-/opt/homebrew/lib/cmake/Qt6/FindWrapAtomic.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6GuiTools/Qt6GuiToolsConfig.cmake:
 
-/opt/homebrew/share/cmake/Modules/Platform/Apple-Clang.cmake:
+/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/PlanningCenterClient.cpp:
 
-/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6ConfigVersionImpl.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Multimedia/Qt6QDarwinMediaPluginTargetsPrecheck.cmake:
 
-/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeVersionHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginAdditionalTargetInfo.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicExternalProjectHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsAdditionalTargetInfo.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacJp2PluginTargets.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginTargetsPrecheck.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacHeifPluginTargets.cmake:
-
-/opt/homebrew/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake:
-
-/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpServer.h:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Concurrent/Qt6ConcurrentConfigVersion.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QICNSPluginTargets-release.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6GuiAdditionalTargetInfo.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6/Qt6Config.cmake:
-
-/opt/homebrew/share/cmake/Modules/Internal/CheckCommon.cmake:
-
-/opt/homebrew/share/cmake/Modules/GNUInstallDirs.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicSbomOpsHelpers.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Sql/Qt6SqlConfigVersionImpl.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6CoreTools/Qt6CoreToolsTargetsPrecheck.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicSbomCycloneDXHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginTargets.cmake:
-
-/opt/homebrew/share/cmake/Modules/Linker/AppleClang.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Core/Qt6QDarwinBluetoothPermissionPluginConfig.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/QtPublicSbomGenerationHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6/QtPublicCMakeEarlyPolicyHelpers.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QWebpPluginTargetsPrecheck.cmake:
-
-/opt/homebrew/lib/cmake/Qt6/FindWrapVulkanHeaders.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QOffscreenIntegrationPluginTargets-release.cmake:
-
-/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h:
-
-/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QGlibNetworkInformationPluginTargets.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QGifPluginTargetsPrecheck.cmake:
-
-/opt/homebrew/opt/qt/lib/cmake/Qt6Network/Qt6QGlibNetworkInformationPluginConfig.cmake:
-
-CMakeFiles/4.4.5/CMakeSystem.cmake:
+/opt/homebrew/opt/qt/lib/cmake/Qt6Gui/Qt6QMacHeifPluginTargetsPrecheck.cmake:
 
 /opt/homebrew/lib/cmake/Qt6/QtPublicSbomHelpers.cmake:

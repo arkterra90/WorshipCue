@@ -100,10 +100,38 @@ CMakeFiles/WorshipCueMcp.dir/src/mcp/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/WorshipCueMcp.dir/src/mcp/main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/main.cpp -o CMakeFiles/WorshipCueMcp.dir/src/mcp/main.cpp.s
 
+CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o: CMakeFiles/WorshipCueMcp.dir/flags.make
+CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp
+CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o: CMakeFiles/WorshipCueMcp.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o -MF CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o.d -o CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp
+
+CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp > CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.i
+
+CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp -o CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.s
+
+CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o: CMakeFiles/WorshipCueMcp.dir/flags.make
+CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp
+CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o: CMakeFiles/WorshipCueMcp.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o -MF CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o.d -o CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp
+
+CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp > CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.i
+
+CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp -o CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.s
+
 CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o: CMakeFiles/WorshipCueMcp.dir/flags.make
 CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp
 CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o: CMakeFiles/WorshipCueMcp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o -MF CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o.d -o CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp
 
 CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.i: cmake_force
@@ -117,7 +145,7 @@ CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.s: cmake_force
 CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o: CMakeFiles/WorshipCueMcp.dir/flags.make
 CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpServer.cpp
 CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o: CMakeFiles/WorshipCueMcp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o -MF CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o.d -o CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpServer.cpp
 
 CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.i: cmake_force
@@ -131,7 +159,7 @@ CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.s: cmake_force
 CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o: CMakeFiles/WorshipCueMcp.dir/flags.make
 CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpCreationTools.cpp
 CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o: CMakeFiles/WorshipCueMcp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o -MF CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o.d -o CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpCreationTools.cpp
 
 CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.i: cmake_force
@@ -145,7 +173,7 @@ CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.s: cmake_force
 CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o: CMakeFiles/WorshipCueMcp.dir/flags.make
 CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/PlanningCenterClient.cpp
 CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o: CMakeFiles/WorshipCueMcp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o -MF CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o.d -o CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/PlanningCenterClient.cpp
 
 CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.i: cmake_force
@@ -159,7 +187,7 @@ CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.s: cmake_force
 CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o: CMakeFiles/WorshipCueMcp.dir/flags.make
 CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o: /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp
 CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o: CMakeFiles/WorshipCueMcp.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o -MF CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o.d -o CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o -c /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp
 
 CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.i: cmake_force
@@ -174,6 +202,8 @@ CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.s: cmake_force
 WorshipCueMcp_OBJECTS = \
 "CMakeFiles/WorshipCueMcp.dir/WorshipCueMcp_autogen/mocs_compilation.cpp.o" \
 "CMakeFiles/WorshipCueMcp.dir/src/mcp/main.cpp.o" \
+"CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o" \
+"CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o" \
 "CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o" \
 "CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o" \
 "CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o" \
@@ -185,17 +215,20 @@ WorshipCueMcp_EXTERNAL_OBJECTS =
 
 WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/WorshipCueMcp_autogen/mocs_compilation.cpp.o
 WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/src/mcp/main.cpp.o
+WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o
+WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o
 WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o
 WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o
 WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o
 WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/src/mcp/PlanningCenterClient.cpp.o
 WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o
 WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/build.make
+WorshipCueMcp: libWorshipCueMidiModel.a
 WorshipCueMcp: /opt/homebrew/opt/qt/lib/QtSql.framework/Versions/A/QtSql
 WorshipCueMcp: /opt/homebrew/opt/qt/lib/QtNetwork.framework/Versions/A/QtNetwork
 WorshipCueMcp: /opt/homebrew/opt/qt/lib/QtCore.framework/Versions/A/QtCore
 WorshipCueMcp: CMakeFiles/WorshipCueMcp.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable WorshipCueMcp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX executable WorshipCueMcp"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/WorshipCueMcp.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

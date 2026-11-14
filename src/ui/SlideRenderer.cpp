@@ -55,6 +55,10 @@ void drawLyrics(QPainter &painter, const QString &text) {
 }
 }
 
+QPixmap SlideRenderer::backgroundImage(const QString &path) {
+    return path.isEmpty() ? QPixmap{} : thumbnailImage(path);
+}
+
 void SlideRenderer::paintAudience(QPainter &painter, const QRect &destination,
                                   const LivePresentation &state,
                                   const QPixmap &background,
@@ -81,7 +85,10 @@ void SlideRenderer::paintAudience(QPainter &painter, const QRect &destination,
 
     // A presentation background is a separate layer. Pictures and video sit
     // above it, so fitted media can reveal the background around its edges.
-    if (!background.isNull()) {
+    const auto look = state.currentLook();
+    if (look.id > 0 && look.settings.background == PresentationLook::Background::Color) {
+        painter.fillRect(canvas, QColor(look.settings.backgroundColor));
+    } else if (!background.isNull()) {
         const qreal coverScale = qMax(CanvasWidth / qreal(background.width()),
                                       CanvasHeight / qreal(background.height()));
         const QSizeF cover(background.width() * coverScale, background.height() * coverScale);
@@ -108,20 +115,22 @@ void SlideRenderer::paintAudience(QPainter &painter, const QRect &destination,
     }
 
     if (!state.clear) {
-        if (state.currentRichText().isEmpty()) drawLyrics(painter, state.currentText());
+        if (look.id > 0) RichTextSupport::paint(painter, look.settings.textRect(), state.currentText(), state.currentRichText(), look);
+        else if (state.currentRichText().isEmpty()) drawLyrics(painter, state.currentText());
         else RichTextSupport::paint(painter, QRectF(154, 130, 1612, 820), state.currentText(), state.currentRichText());
     }
     painter.restore();
 }
 
 QPixmap SlideRenderer::thumbnail(const QString &text, const QSize &size,
-                                 const QPixmap &background, const QString &richText) {
+                                 const QPixmap &background, const QString &richText, const SlideLook &look) {
     if (size.isEmpty()) return {};
     QPixmap result(size);
     result.fill(Qt::black);
     LivePresentation state;
     state.slides = {text};
     state.richText = {richText};
+    state.looks = {look};
     state.index = 0;
     QPainter painter(&result);
     paintAudience(painter, result.rect(), state, background);
@@ -164,14 +173,15 @@ void SlideRenderer::paintTransition(QPainter &painter, const QRect &destination,
 
 QPixmap SlideRenderer::thumbnail(const QString &text, const SlideMedia &media,
                                  const QSize &size, const QPixmap &background,
-                                 const QString &richText) {
-    if (media.kind == MediaKind::None) return thumbnail(text, size, background, richText);
+                                 const QString &richText, const SlideLook &look) {
+    if (media.kind == MediaKind::None) return thumbnail(text, size, background, richText, look);
     if (size.isEmpty()) return {};
     QPixmap result(size);
     result.fill(Qt::black);
     LivePresentation state;
     state.slides = {text};
     state.richText = {richText};
+    state.looks = {look};
     state.media = {media};
     state.index = 0;
     const QPixmap frame = media.kind == MediaKind::Image ? thumbnailImage(media.path) : QPixmap{};
@@ -184,7 +194,8 @@ QPixmap SlideRenderer::thumbnail(const QString &text, const SlideMedia &media,
         painter.setFont(font);
         painter.setPen(QColor(180, 195, 214));
         painter.drawText(result.rect().adjusted(10, 10, -10, -10), Qt::AlignCenter | Qt::TextWordWrap,
-                         QStringLiteral("%1\n%2").arg(media.kind == MediaKind::Video ? QStringLiteral("VIDEO")
+                         QStringLiteral("%1\n%2").arg(media.kind == MediaKind::Audio ? QStringLiteral("AUDIO")
+                             : media.kind == MediaKind::Video ? QStringLiteral("VIDEO")
                                                                                   : QStringLiteral("MISSING PICTURE"), media.name));
     }
     return result;

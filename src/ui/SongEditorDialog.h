@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../data/LibraryRepository.h"
+#include "../core/LyricsImporter.h"
 #include <QDialog>
 
 class QLineEdit;
@@ -12,10 +13,12 @@ public:
     explicit SongEditorDialog(QWidget *parent = nullptr, const Song &song = {});
     QString title() const;
     QStringList slides() const;
+    SongStructure songStructure(QStringList *sourceSlides) const;
     bool importLyricsFile(const QString &path, QString *error = nullptr);
     void importLyricsText(const QString &text, const QString &suggestedTitle = {});
 
 private:
+    ImportedLyrics imported_;
     QLineEdit *titleEdit_ = nullptr;
     QPlainTextEdit *slidesEdit_ = nullptr;
     void chooseLyricsFile();

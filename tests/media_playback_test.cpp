@@ -1,6 +1,7 @@
 #include "../src/media/MediaPlayback.h"
 #include "../src/ui/DisplayWindow.h"
 #include "../src/ui/SlideRenderer.h"
+#include "fixtures/AudioFixture.h"
 
 #include <QAudioOutput>
 #include <QFile>
@@ -17,6 +18,86 @@ class MediaPlaybackTest : public QObject {
         controller.takeServiceLive(1, {{1, QStringLiteral("Media presentation"), {QString{}}, {media}}}, 1);
     }
 private slots:
+    void clearFadeKeepsTheCurrentVideoFrameAndPlayhead() {
+        const auto path = QFINDTESTDATA("fixtures/media-colors.mov");
+        QVERIFY(!path.isEmpty());
+        PresentationController controller;
+        MediaPlayback playback(&controller);
+        DisplayWindow audience(DisplayWindow::Kind::Audience, &controller);
+        audience.setMediaPlayback(&playback);
+        DisplayWindow secondAudience(DisplayWindow::Kind::Audience, &controller, nullptr, &audience);
+        QVERIFY(secondAudience.sharesAudienceWith(&audience));
+        controller.takeLive(PresentationItem{0, QStringLiteral("Video with lyrics"), {QStringLiteral("Overlay")},
+            {{MediaKind::Video, path, QStringLiteral("Colors.mov"), false}}});
+        QTRY_VERIFY_WITH_TIMEOUT(!playback.frame().isNull() || !playback.errorString().isEmpty(), 5000);
+        QVERIFY2(playback.errorString().isEmpty(), qPrintable(playback.errorString()));
+        QTRY_VERIFY(playback.position() > 100);
+        controller.setGlobalTransitionDefaults({0, false, SlideTransitionType::Fade, 10000});
+        const auto revision = controller.state().cueRevision;
+        QSignalSpy sources(playback.findChild<QMediaPlayer *>(), &QMediaPlayer::sourceChanged);
+        controller.toggleClear();
+        QTRY_VERIFY_WITH_TIMEOUT(playback.position() > 1700, 5000);
+        QTRY_VERIFY(playback.frame().toImage().pixelColor(10, 10).green() > 200);
+        QImage rendered(320, 180, QImage::Format_ARGB32_Premultiplied);
+        { QPainter painter(&rendered); audience.paintAudience(painter, rendered.rect()); }
+        QImage mirrored(rendered.size(), rendered.format());
+        { QPainter painter(&mirrored); secondAudience.paintOutput(painter, mirrored.rect()); }
+        QCOMPARE(mirrored, rendered);
+        const auto color = rendered.pixelColor(10, 10);
+        QVERIFY(color.green() > 200);
+        const auto decoded = playback.frame().toImage().pixelColor(10, 10);
+        QVERIFY2(qAbs(color.red() - decoded.red()) < 5, qPrintable(QStringLiteral("Rendered %1, decoded %2").arg(color.name(), decoded.name())));
+        QCOMPARE(sources.count(), 0);
+        QCOMPARE(controller.state().cueRevision, revision);
+        QCOMPARE(controller.state().index, 0);
+        QVERIFY(controller.state().clear);
+    }
+
+    void audioUsesSharedTransportAndDoesNotWaitForVideoFrames() {
+        QTemporaryDir directory;
+        const auto path = directory.filePath(QStringLiteral("silence.wav"));
+        QVERIFY(writeAudioFixture(path));
+        PresentationController controller;
+        MediaPlayback playback(&controller);
+        DisplayWindow audience(DisplayWindow::Kind::Audience, &controller);
+        audience.setMediaPlayback(&playback);
+        controller.takeLive(QStringLiteral("Text"), {QStringLiteral("Before audio")});
+        PresentationItem item{1, QStringLiteral("Prelude"), {QStringLiteral("")},
+                              {{MediaKind::Audio, path, QStringLiteral("Prelude.wav"), true}},
+                              {0, false, SlideTransitionType::Fade, 120, true}};
+        controller.takeLive(item);
+        QVERIFY(playback.isAudio());
+        QVERIFY(!playback.isVideo());
+        QTRY_VERIFY_WITH_TIMEOUT(playback.duration() > 0 || !playback.errorString().isEmpty(), 5000);
+        QVERIFY2(playback.errorString().isEmpty(), qPrintable(playback.errorString()));
+        QTRY_VERIFY(playback.position() > 100);
+        QVERIFY(playback.frame().isNull());
+        QPixmap actual(1920, 1080), expected(1920, 1080);
+        expected.fill(Qt::black);
+        {
+            QPainter painter(&expected);
+            SlideRenderer::paintAudience(painter, expected.rect(), controller.state(), audience.backgroundPixmap());
+        }
+        QTest::qWait(200);
+        {
+            QPainter painter(&actual);
+            audience.paintAudience(painter, actual.rect());
+        }
+        QCOMPARE(actual.toImage(), expected.toImage());
+        auto *audio = playback.findChild<QAudioOutput *>();
+        QVERIFY(audio);
+        controller.toggleBlackout();
+        QVERIFY(audio->isMuted());
+        controller.restoreOutput();
+        QVERIFY(!audio->isMuted());
+        playback.togglePause();
+        QTRY_VERIFY(playback.isPaused());
+        playback.restart();
+        QTRY_VERIFY(!playback.isPaused());
+        controller.takeLive(QStringLiteral("Song"), {QStringLiteral("After audio")});
+        QVERIFY(!playback.isPlayable());
+        QCOMPARE(playback.findChild<QMediaPlayer *>()->playbackState(), QMediaPlayer::StoppedState);
+    }
     void stillsDecodeAsynchronouslyAndRespectSnapshotChanges() {
         QTemporaryDir directory;
         QVERIFY(directory.isValid());

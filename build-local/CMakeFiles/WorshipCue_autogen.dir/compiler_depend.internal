@@ -834,7 +834,11 @@
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/MediaSlide.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.h
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationSettings.h
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/main.cpp
@@ -854,6 +858,8 @@
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.h
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.cpp
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationSettingsDialog.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationSettingsDialog.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/ReorderListWidget.cpp
@@ -862,18 +868,23 @@
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideEditorDialog.h
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.cpp
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideGridDelegate.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideTextDelegate.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideTextDelegate.h
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongEditorDialog.cpp
  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongEditorDialog.h
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.cpp
+ /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.h
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QCache
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QElapsedTimer
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QFutureWatcher
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QMetaType
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QObject
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QPointer
+ /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QRectF
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QSet
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QString
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtCore/QStringList
@@ -882,6 +893,7 @@
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QKeySequence
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QPainter
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QPixmap
+ /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtGui/QUndoStack
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtSql/QSqlDatabase
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtWidgets/QDialog
  /opt/homebrew/Cellar/qtbase/6.12.0_2/include/QtWidgets/QListWidget
@@ -1070,6 +1082,7 @@
  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtguiexports.h
  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtguiglobal.h
  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qtransform.h
+ /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qundostack.h
  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qvalidator.h
  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtGui.framework/Versions/A/Headers/qwindowdefs.h
  /opt/homebrew/Cellar/qtbase/6.12.0_2/lib/QtSql.framework/Versions/A/Headers/qsqldatabase.h

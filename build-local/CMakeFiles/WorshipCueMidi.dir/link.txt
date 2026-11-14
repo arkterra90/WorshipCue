@@ -1,0 +1,2 @@
+/usr/bin/ar qc libWorshipCueMidi.a CMakeFiles/WorshipCueMidi.dir/WorshipCueMidi_autogen/mocs_compilation.cpp.o CMakeFiles/WorshipCueMidi.dir/src/midi/MidiBackend.cpp.o CMakeFiles/WorshipCueMidi.dir/src/midi/MidiEngine.cpp.o CMakeFiles/WorshipCueMidi.dir/src/midi/MidiBackend_mac.mm.o
+/usr/bin/ranlib libWorshipCueMidi.a

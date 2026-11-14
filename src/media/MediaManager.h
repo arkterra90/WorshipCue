@@ -35,6 +35,7 @@ public:
     QPixmap thumbnail(const QString &relativePath);
     static QStringList supportedImageExtensions();
     static QStringList supportedVideoExtensions();
+    static QStringList supportedAudioExtensions();
 
 signals:
     void importFinished(const MediaImportResult &result);

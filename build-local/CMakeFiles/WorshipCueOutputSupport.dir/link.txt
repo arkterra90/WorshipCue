@@ -1,0 +1,2 @@
+/usr/bin/ar qc libWorshipCueOutputSupport.a CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o
+/usr/bin/ranlib libWorshipCueOutputSupport.a

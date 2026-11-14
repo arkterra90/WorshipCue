@@ -13,6 +13,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/.qt/rcc/qrc_app_icons.cpp" "CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_app_icons.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/build-local/.qt/rcc/qrc_app_icons.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp" "CMakeFiles/WorshipCue.dir/src/core/LyricsImporter.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/core/LyricsImporter.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationController.cpp" "CMakeFiles/WorshipCue.dir/src/core/PresentationController.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/core/PresentationController.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp" "CMakeFiles/WorshipCue.dir/src/core/PresentationLook.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/core/PresentationLook.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp" "CMakeFiles/WorshipCue.dir/src/core/SongStructure.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/core/SongStructure.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp" "CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/data/LibraryRepository.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/main.cpp" "CMakeFiles/WorshipCue.dir/src/main.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/main.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/media/BatchRenamer.cpp" "CMakeFiles/WorshipCue.dir/src/media/BatchRenamer.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/media/BatchRenamer.cpp.o.d"
@@ -22,7 +24,10 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/DisplayWindow.cpp" "CMakeFiles/WorshipCue.dir/src/ui/DisplayWindow.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/DisplayWindow.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MainWindow.cpp" "CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/MainWindow.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MediaImportDialog.cpp" "CMakeFiles/WorshipCue.dir/src/ui/MediaImportDialog.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/MediaImportDialog.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/MidiDialogs.cpp" "CMakeFiles/WorshipCue.dir/src/ui/MidiDialogs.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/MidiDialogs.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputManager.cpp" "CMakeFiles/WorshipCue.dir/src/ui/OutputManager.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/OutputManager.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/OutputSettingsDialog.cpp" "CMakeFiles/WorshipCue.dir/src/ui/OutputSettingsDialog.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/OutputSettingsDialog.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationLookDialog.cpp" "CMakeFiles/WorshipCue.dir/src/ui/PresentationLookDialog.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/PresentationLookDialog.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/PresentationSettingsDialog.cpp" "CMakeFiles/WorshipCue.dir/src/ui/PresentationSettingsDialog.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/PresentationSettingsDialog.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/ReorderListWidget.cpp" "CMakeFiles/WorshipCue.dir/src/ui/ReorderListWidget.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/ReorderListWidget.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.cpp" "CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o.d"
@@ -31,6 +36,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideRenderer.cpp" "CMakeFiles/WorshipCue.dir/src/ui/SlideRenderer.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/SlideRenderer.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SlideTextDelegate.cpp" "CMakeFiles/WorshipCue.dir/src/ui/SlideTextDelegate.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/SlideTextDelegate.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongEditorDialog.cpp" "CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/SongStructureDialog.cpp" "CMakeFiles/WorshipCue.dir/src/ui/SongStructureDialog.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/SongStructureDialog.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/StageLayoutDialog.cpp" "CMakeFiles/WorshipCue.dir/src/ui/StageLayoutDialog.cpp.o" "gcc" "CMakeFiles/WorshipCue.dir/src/ui/StageLayoutDialog.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

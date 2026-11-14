@@ -54,6 +54,56 @@ QByteArray encoded(const QJsonObject &value) {
 class McpServerTest : public QObject {
     Q_OBJECT
 private slots:
+    void inspectsSharedSongArrangementsAndPreviewsTheirExpandedCount() {
+        LibraryRepository library;
+        QString error;
+        QVERIFY(library.open(&error, QStringLiteral(":memory:")));
+        SongStructure structure;
+        structure.sections = {{"v", "Verse", 1}, {"c", "Chorus", 2}};
+        structure.arrangements = {{"full", "Full", {"v", "c", "c"}}};
+        structure.activeArrangementId = QStringLiteral("full");
+        const int id = library.createTextPresentation(QStringLiteral("Arranged song"), {"Verse", "Chorus A", "Chorus B"},
+                                                       &error, {}, {}, {"", "", ""}, structure);
+        QVERIFY(id > 0);
+        QVERIFY(library.appendToService(1, id, &error));
+        McpServer server(library);
+        const auto service = data(call(server, QStringLiteral("get_service"), {{QStringLiteral("service_id"), 1}}));
+        const auto item = service.value(QStringLiteral("items")).toArray().last().toObject();
+        QCOMPARE(item.value(QStringLiteral("song_arrangement_id")).toString(), QStringLiteral("full"));
+        QCOMPARE(item.value(QStringLiteral("slide_count")).toInt(), 5);
+        const auto slides = item.value(QStringLiteral("slides")).toArray();
+        QCOMPARE(slides.at(1).toObject().value(QStringLiteral("text")), slides.at(3).toObject().value(QStringLiteral("text")));
+        const auto presentation = data(call(server, QStringLiteral("get_presentation"), {{QStringLiteral("song_id"), id}}));
+        QCOMPARE(presentation.value(QStringLiteral("slide_count")).toInt(), 3);
+        QCOMPARE(presentation.value(QStringLiteral("song_structure")).toObject().value(QStringLiteral("sections")).toArray().size(), 2);
+        const auto preview = data(call(server, QStringLiteral("create_service_order"), {
+            {QStringLiteral("name"), QStringLiteral("Preview")}, {QStringLiteral("dry_run"), true},
+            {QStringLiteral("items"), QJsonArray{QJsonObject{{QStringLiteral("song_id"), id}}}}}));
+        QCOMPARE(preview.value(QStringLiteral("items")).toArray().first().toObject().value(QStringLiteral("slide_count")).toInt(), 5);
+    }
+
+    void inspectsMixedMediaServicesWithoutInventingPresentations() {
+        LibraryRepository library;
+        QString error;
+        QVERIFY(library.open(&error, QStringLiteral(":memory:")));
+        const auto count = library.songs().size();
+        const auto ids = library.registerMediaAssets({{MediaKind::Audio, QStringLiteral("media/session/prelude.wav"),
+                                                      QStringLiteral("Prelude.wav"), false}}, &error);
+        QCOMPARE(ids.size(), 1);
+        QVERIFY(library.appendMediaToService(1, ids.first(), &error));
+        McpServer server(library);
+        const auto response = call(server, QStringLiteral("get_service"), {{QStringLiteral("service_id"), 1}});
+        QVERIFY(!toolFailed(response));
+        const auto item = data(response).value(QStringLiteral("items")).toArray().last().toObject();
+        QCOMPARE(item.value(QStringLiteral("kind")).toString(), QStringLiteral("media"));
+        QCOMPARE(item.value(QStringLiteral("media_asset_id")).toInt(), ids.first());
+        QVERIFY(item.value(QStringLiteral("song_id")).isNull());
+        QCOMPARE(item.value(QStringLiteral("slide_count")).toInt(), 1);
+        QCOMPARE(item.value(QStringLiteral("slides")).toArray().first().toObject()
+                     .value(QStringLiteral("media_kind")).toString(), QStringLiteral("audio"));
+        QCOMPARE(library.songs().size(), count);
+    }
+
     void createsStandaloneSongAndSermonPresentations() {
         LibraryRepository library;
         QString error;

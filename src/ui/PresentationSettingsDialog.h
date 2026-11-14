@@ -13,7 +13,7 @@ public:
     PresentationSettingsDialog(const QString &title, const PresentationSettings &settings,
                                QWidget *parent = nullptr,
                                const PresentationSettings &programDefaults = {},
-                               bool programMode = false);
+                               bool programMode = false, bool bulkMode = false);
     PresentationSettings settings() const;
 
 private:
@@ -23,5 +23,6 @@ private:
     QComboBox *transition_;
     QDoubleSpinBox *duration_;
     QCheckBox *overrideTransition_;
+    PresentationSettings initialSettings_;
     bool programMode_ = false;
 };

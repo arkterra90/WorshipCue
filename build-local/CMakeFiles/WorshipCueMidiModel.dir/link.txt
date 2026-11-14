@@ -1,0 +1,2 @@
+/usr/bin/ar qc libWorshipCueMidiModel.a CMakeFiles/WorshipCueMidiModel.dir/WorshipCueMidiModel_autogen/mocs_compilation.cpp.o CMakeFiles/WorshipCueMidiModel.dir/src/core/MidiTypes.cpp.o
+/usr/bin/ranlib libWorshipCueMidiModel.a

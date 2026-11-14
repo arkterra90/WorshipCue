@@ -1,4 +1,5 @@
 #include "PresentationController.h"
+#include <QHash>
 #include <QtGlobal>
 
 PresentationController::PresentationController(QObject *parent) : QObject(parent) {
@@ -25,14 +26,17 @@ void PresentationController::takeLive(const QString &title, const QStringList &s
 
 void PresentationController::takeLive(const PresentationItem &item, int slideIndex) {
     const PresentationItem snapshot = item;
-    serviceSnapshot_.clear();
-    itemIndex_ = -1;
+    serviceSnapshot_ = {snapshot};
+    itemIndex_ = 0;
     state_ = {};
     state_.title = snapshot.title;
     state_.slides = snapshot.slides;
     state_.media = snapshot.media;
     state_.backgroundPath = snapshot.backgroundPath;
     state_.richText = snapshot.richText;
+    state_.looks = snapshot.looks;
+    state_.sourceSlideIds = snapshot.sourceSlideIds;
+    state_.midiActions = snapshot.midiActions;
     state_.settings = effectiveSettings(snapshot.settings);
     state_.index = snapshot.slides.isEmpty() ? -1 : qBound(0, slideIndex, int(snapshot.slides.size()) - 1);
     state_.blackout = false;
@@ -41,6 +45,41 @@ void PresentationController::takeLive(const PresentationItem &item, int slideInd
     autoAdvanceManuallyPaused_ = false;
     resetAutoAdvance();
     emit stateChanged();
+}
+
+bool PresentationController::refreshSongText(int songId, const QStringList &keys,
+    const QStringList &texts, const QStringList &richText, const QVector<SlideLook> &looks) {
+    if (songId <= 0 || keys.isEmpty() || keys.size() != texts.size() || keys.size() != richText.size()) return false;
+    QHash<QString, int> positions;
+    for (int i = 0; i < keys.size(); ++i) positions.insert(keys.at(i), i);
+    if (positions.size() != keys.size() || (!looks.isEmpty() && looks.size() != keys.size())) return false;
+    bool changed = false;
+    for (auto &item : serviceSnapshot_) {
+        if (item.songId != songId || item.sourceSlideKeys.size() != item.slides.size()) continue;
+        if (item.richText.isEmpty()) item.richText.resize(item.slides.size());
+        if (item.richText.size() != item.slides.size()) continue;
+        for (int i = 0; i < item.sourceSlideKeys.size(); ++i) {
+            const auto found = positions.constFind(item.sourceSlideKeys.at(i));
+            if (found == positions.cend()) continue;
+            const int source = found.value();
+            changed = changed || item.slides.at(i) != texts.at(source) || item.richText.at(i) != richText.at(source);
+            item.slides[i] = texts.at(source);
+            item.richText[i] = richText.at(source);
+            if (!looks.isEmpty() && item.looks.size() == item.slides.size() && item.looks.at(i).id == looks.at(source).id) {
+                changed = changed || item.looks.at(i) != looks.at(source);
+                item.looks[i] = looks.at(source);
+            }
+        }
+    }
+    if (!changed) return false;
+    if (itemIndex_ >= 0 && itemIndex_ < serviceSnapshot_.size()) {
+        state_.slides = serviceSnapshot_.at(itemIndex_).slides;
+        state_.richText = serviceSnapshot_.at(itemIndex_).richText;
+        state_.looks = serviceSnapshot_.at(itemIndex_).looks;
+        updateUpcoming();
+    }
+    emit stateChanged();
+    return true;
 }
 
 void PresentationController::takeServiceLive(int serviceId, const QVector<PresentationItem> &items,
@@ -68,6 +107,9 @@ void PresentationController::activateItem(int itemIndex, int slideIndex) {
     state_.settings = effectiveSettings(item.settings);
     state_.backgroundPath = item.backgroundPath;
     state_.richText = item.richText;
+    state_.looks = item.looks;
+    state_.sourceSlideIds = item.sourceSlideIds;
+    state_.midiActions = item.midiActions;
     state_.index = qBound(0, slideIndex, int(item.slides.size()) - 1);
     state_.blackout = false;
     state_.clear = false;
@@ -83,6 +125,7 @@ void PresentationController::updateUpcoming() {
     state_.upcomingMedia = {};
     state_.upcomingBackgroundPath.clear();
     state_.upcomingRichText.clear();
+    state_.upcomingLook = {};
     for (int i = itemIndex_ + 1; i < serviceSnapshot_.size(); ++i) {
         const auto &item = serviceSnapshot_.at(i);
         if (item.slides.isEmpty()) continue;
@@ -91,6 +134,7 @@ void PresentationController::updateUpcoming() {
         state_.upcomingMedia = item.media.isEmpty() ? SlideMedia{} : item.media.first();
         state_.upcomingBackgroundPath = item.backgroundPath;
         state_.upcomingRichText = item.richText.value(0);
+        state_.upcomingLook = item.looks.value(0);
         return;
     }
 }
@@ -129,6 +173,7 @@ bool PresentationController::previous() {
 }
 
 void PresentationController::toggleBlackout() {
+    state_.settings = effectiveSettings(state_.settings);
     state_.blackout = !state_.blackout;
     if (state_.blackout) state_.clear = false;
     syncAutoAdvancePause();
@@ -136,6 +181,7 @@ void PresentationController::toggleBlackout() {
 }
 
 void PresentationController::toggleClear() {
+    state_.settings = effectiveSettings(state_.settings);
     state_.clear = !state_.clear;
     if (state_.clear) state_.blackout = false;
     syncAutoAdvancePause();
@@ -144,6 +190,7 @@ void PresentationController::toggleClear() {
 
 void PresentationController::restoreOutput() {
     if (!state_.blackout && !state_.clear) return;
+    state_.settings = effectiveSettings(state_.settings);
     state_.blackout = false;
     state_.clear = false;
     syncAutoAdvancePause();

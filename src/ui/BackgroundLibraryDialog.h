@@ -20,6 +20,9 @@ public:
     bool importFiles(const QStringList &paths, QString *error);
     void setAssignmentEnabled(bool enabled);
 
+signals:
+    void fileImported(const QString &managedPath);
+
 private:
     QString directory_;
     QListWidget *backgrounds_ = nullptr;

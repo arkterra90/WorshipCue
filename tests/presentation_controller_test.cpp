@@ -5,6 +5,50 @@
 class PresentationControllerTest : public QObject {
     Q_OBJECT
 private slots:
+    void sharedSectionEditsRefreshEveryOccurrenceWithoutChangingLivePosition() {
+        PresentationController controller;
+        PresentationItem song{12, QStringLiteral("Song"), {"Verse", "Chorus", "Second chorus page", "Chorus", "Second chorus page"}};
+        song.songId = 7;
+        song.sourceSlideKeys = {"verse/0", "chorus/0", "chorus/1", "chorus/0", "chorus/1"};
+        song.richText = {"", "", "", "", ""};
+        song.settings.autoAdvanceMs = 5000;
+        PresentationItem repeat = song;
+        repeat.entryId = 13;
+        controller.takeServiceLive(2, {song, repeat, {14, "Closing", {"End"}}}, 12, 1);
+        controller.setAutoAdvancePaused(true);
+        controller.toggleClear();
+        const auto revision = controller.state().cueRevision;
+        const auto remaining = controller.autoAdvanceRemainingMs();
+        QVERIFY(controller.refreshSongText(7, {"verse/0", "chorus/0", "chorus/1"},
+            {"Verse", "Shared edit", "Page two"}, {"", "<p><b>Shared edit</b></p>", ""}));
+        QCOMPARE(controller.state().index, 1);
+        QCOMPARE(controller.state().entryId, 12);
+        QCOMPARE(controller.state().cueRevision, revision);
+        QCOMPARE(controller.autoAdvanceRemainingMs(), remaining);
+        QVERIFY(controller.state().clear);
+        QCOMPARE(controller.state().slides.at(1), QStringLiteral("Shared edit"));
+        QCOMPARE(controller.state().slides.at(3), QStringLiteral("Shared edit"));
+        controller.restoreOutput();
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().currentText(), QStringLiteral("Page two"));
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().currentText(), QStringLiteral("Shared edit"));
+        QVERIFY(controller.next());
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().entryId, 13);
+        QVERIFY(controller.next());
+        QCOMPARE(controller.state().currentText(), QStringLiteral("Shared edit"));
+        QVERIFY(controller.previous());
+        QVERIFY(controller.previous());
+        QCOMPARE(controller.state().entryId, 12);
+        QCOMPARE(controller.state().currentText(), QStringLiteral("Page two"));
+        controller.takeLive(song, 1);
+        QVERIFY(controller.refreshSongText(7, {"verse/0", "chorus/0", "chorus/1"},
+            {"Verse", "Standalone shared edit", "Second chorus page"}, {"", "", ""}));
+        QCOMPARE(controller.state().currentText(), QStringLiteral("Standalone shared edit"));
+        QVERIFY(!controller.refreshSongText(7, {"duplicate", "duplicate"}, {"a", "b"}, {"", ""}));
+    }
+
     void standalonePresentationKeepsMediaFormattingAndBackgroundSnapshot() {
         PresentationController controller;
         controller.takeServiceLive(4, {{11, "Service item", {"Service text"}},

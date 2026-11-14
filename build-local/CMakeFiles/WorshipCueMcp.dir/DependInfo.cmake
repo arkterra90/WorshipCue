@@ -10,6 +10,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/build-local/WorshipCueMcp_autogen/mocs_compilation.cpp" "CMakeFiles/WorshipCueMcp.dir/WorshipCueMcp_autogen/mocs_compilation.cpp.o" "gcc" "CMakeFiles/WorshipCueMcp.dir/WorshipCueMcp_autogen/mocs_compilation.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/LyricsImporter.cpp" "CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o" "gcc" "CMakeFiles/WorshipCueMcp.dir/src/core/LyricsImporter.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/PresentationLook.cpp" "CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o" "gcc" "CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o.d"
+  "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/core/SongStructure.cpp" "CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o" "gcc" "CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/data/LibraryRepository.cpp" "CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o" "gcc" "CMakeFiles/WorshipCueMcp.dir/src/data/LibraryRepository.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpCreationTools.cpp" "CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o" "gcc" "CMakeFiles/WorshipCueMcp.dir/src/mcp/McpCreationTools.cpp.o.d"
   "/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/McpServer.cpp" "CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o" "gcc" "CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o.d"

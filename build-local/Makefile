@@ -162,6 +162,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named WorshipCueMidiModel
+
+# Build rule for target.
+WorshipCueMidiModel: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMidiModel
+.PHONY : WorshipCueMidiModel
+
+# fast build rule for target.
+WorshipCueMidiModel/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidiModel.dir/build.make CMakeFiles/WorshipCueMidiModel.dir/build
+.PHONY : WorshipCueMidiModel/fast
+
+#=============================================================================
 # Target rules for targets named WorshipCueMcp
 
 # Build rule for target.
@@ -173,6 +186,32 @@ WorshipCueMcp: cmake_check_build_system
 WorshipCueMcp/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/build
 .PHONY : WorshipCueMcp/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueOutputSupport
+
+# Build rule for target.
+WorshipCueOutputSupport: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueOutputSupport
+.PHONY : WorshipCueOutputSupport
+
+# fast build rule for target.
+WorshipCueOutputSupport/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/build
+.PHONY : WorshipCueOutputSupport/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueMidi
+
+# Build rule for target.
+WorshipCueMidi: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMidi
+.PHONY : WorshipCueMidi
+
+# fast build rule for target.
+WorshipCueMidi/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/build
+.PHONY : WorshipCueMidi/fast
 
 #=============================================================================
 # Target rules for targets named WorshipCue
@@ -201,6 +240,32 @@ WorshipCueMcpBundle/fast:
 .PHONY : WorshipCueMcpBundle/fast
 
 #=============================================================================
+# Target rules for targets named WorshipCueMidiModel_autogen_timestamp_deps
+
+# Build rule for target.
+WorshipCueMidiModel_autogen_timestamp_deps: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMidiModel_autogen_timestamp_deps
+.PHONY : WorshipCueMidiModel_autogen_timestamp_deps
+
+# fast build rule for target.
+WorshipCueMidiModel_autogen_timestamp_deps/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidiModel_autogen_timestamp_deps.dir/build.make CMakeFiles/WorshipCueMidiModel_autogen_timestamp_deps.dir/build
+.PHONY : WorshipCueMidiModel_autogen_timestamp_deps/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueMidiModel_autogen
+
+# Build rule for target.
+WorshipCueMidiModel_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMidiModel_autogen
+.PHONY : WorshipCueMidiModel_autogen
+
+# fast build rule for target.
+WorshipCueMidiModel_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidiModel_autogen.dir/build.make CMakeFiles/WorshipCueMidiModel_autogen.dir/build
+.PHONY : WorshipCueMidiModel_autogen/fast
+
+#=============================================================================
 # Target rules for targets named WorshipCueMcp_autogen_timestamp_deps
 
 # Build rule for target.
@@ -225,6 +290,58 @@ WorshipCueMcp_autogen: cmake_check_build_system
 WorshipCueMcp_autogen/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp_autogen.dir/build.make CMakeFiles/WorshipCueMcp_autogen.dir/build
 .PHONY : WorshipCueMcp_autogen/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueOutputSupport_autogen_timestamp_deps
+
+# Build rule for target.
+WorshipCueOutputSupport_autogen_timestamp_deps: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueOutputSupport_autogen_timestamp_deps
+.PHONY : WorshipCueOutputSupport_autogen_timestamp_deps
+
+# fast build rule for target.
+WorshipCueOutputSupport_autogen_timestamp_deps/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport_autogen_timestamp_deps.dir/build.make CMakeFiles/WorshipCueOutputSupport_autogen_timestamp_deps.dir/build
+.PHONY : WorshipCueOutputSupport_autogen_timestamp_deps/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueOutputSupport_autogen
+
+# Build rule for target.
+WorshipCueOutputSupport_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueOutputSupport_autogen
+.PHONY : WorshipCueOutputSupport_autogen
+
+# fast build rule for target.
+WorshipCueOutputSupport_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport_autogen.dir/build.make CMakeFiles/WorshipCueOutputSupport_autogen.dir/build
+.PHONY : WorshipCueOutputSupport_autogen/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueMidi_autogen_timestamp_deps
+
+# Build rule for target.
+WorshipCueMidi_autogen_timestamp_deps: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMidi_autogen_timestamp_deps
+.PHONY : WorshipCueMidi_autogen_timestamp_deps
+
+# fast build rule for target.
+WorshipCueMidi_autogen_timestamp_deps/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi_autogen_timestamp_deps.dir/build.make CMakeFiles/WorshipCueMidi_autogen_timestamp_deps.dir/build
+.PHONY : WorshipCueMidi_autogen_timestamp_deps/fast
+
+#=============================================================================
+# Target rules for targets named WorshipCueMidi_autogen
+
+# Build rule for target.
+WorshipCueMidi_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WorshipCueMidi_autogen
+.PHONY : WorshipCueMidi_autogen
+
+# fast build rule for target.
+WorshipCueMidi_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi_autogen.dir/build.make CMakeFiles/WorshipCueMidi_autogen.dir/build
+.PHONY : WorshipCueMidi_autogen/fast
 
 #=============================================================================
 # Target rules for targets named WorshipCue_autogen_timestamp_deps
@@ -275,6 +392,78 @@ WorshipCueMcp_autogen/mocs_compilation.s: WorshipCueMcp_autogen/mocs_compilation
 WorshipCueMcp_autogen/mocs_compilation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/WorshipCueMcp_autogen/mocs_compilation.cpp.s
 .PHONY : WorshipCueMcp_autogen/mocs_compilation.cpp.s
+
+WorshipCueMidiModel_autogen/mocs_compilation.o: WorshipCueMidiModel_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueMidiModel_autogen/mocs_compilation.o
+
+# target to build an object file
+WorshipCueMidiModel_autogen/mocs_compilation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidiModel.dir/build.make CMakeFiles/WorshipCueMidiModel.dir/WorshipCueMidiModel_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueMidiModel_autogen/mocs_compilation.cpp.o
+
+WorshipCueMidiModel_autogen/mocs_compilation.i: WorshipCueMidiModel_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueMidiModel_autogen/mocs_compilation.i
+
+# target to preprocess a source file
+WorshipCueMidiModel_autogen/mocs_compilation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidiModel.dir/build.make CMakeFiles/WorshipCueMidiModel.dir/WorshipCueMidiModel_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueMidiModel_autogen/mocs_compilation.cpp.i
+
+WorshipCueMidiModel_autogen/mocs_compilation.s: WorshipCueMidiModel_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueMidiModel_autogen/mocs_compilation.s
+
+# target to generate assembly for a file
+WorshipCueMidiModel_autogen/mocs_compilation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidiModel.dir/build.make CMakeFiles/WorshipCueMidiModel.dir/WorshipCueMidiModel_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueMidiModel_autogen/mocs_compilation.cpp.s
+
+WorshipCueMidi_autogen/mocs_compilation.o: WorshipCueMidi_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueMidi_autogen/mocs_compilation.o
+
+# target to build an object file
+WorshipCueMidi_autogen/mocs_compilation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/WorshipCueMidi_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueMidi_autogen/mocs_compilation.cpp.o
+
+WorshipCueMidi_autogen/mocs_compilation.i: WorshipCueMidi_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueMidi_autogen/mocs_compilation.i
+
+# target to preprocess a source file
+WorshipCueMidi_autogen/mocs_compilation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/WorshipCueMidi_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueMidi_autogen/mocs_compilation.cpp.i
+
+WorshipCueMidi_autogen/mocs_compilation.s: WorshipCueMidi_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueMidi_autogen/mocs_compilation.s
+
+# target to generate assembly for a file
+WorshipCueMidi_autogen/mocs_compilation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/WorshipCueMidi_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueMidi_autogen/mocs_compilation.cpp.s
+
+WorshipCueOutputSupport_autogen/mocs_compilation.o: WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueOutputSupport_autogen/mocs_compilation.o
+
+# target to build an object file
+WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o
+.PHONY : WorshipCueOutputSupport_autogen/mocs_compilation.cpp.o
+
+WorshipCueOutputSupport_autogen/mocs_compilation.i: WorshipCueOutputSupport_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueOutputSupport_autogen/mocs_compilation.i
+
+# target to preprocess a source file
+WorshipCueOutputSupport_autogen/mocs_compilation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.i
+.PHONY : WorshipCueOutputSupport_autogen/mocs_compilation.cpp.i
+
+WorshipCueOutputSupport_autogen/mocs_compilation.s: WorshipCueOutputSupport_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueOutputSupport_autogen/mocs_compilation.s
+
+# target to generate assembly for a file
+WorshipCueOutputSupport_autogen/mocs_compilation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/WorshipCueOutputSupport_autogen/mocs_compilation.cpp.s
+.PHONY : WorshipCueOutputSupport_autogen/mocs_compilation.cpp.s
 
 WorshipCue_autogen/mocs_compilation.o: WorshipCue_autogen/mocs_compilation.cpp.o
 .PHONY : WorshipCue_autogen/mocs_compilation.o
@@ -375,6 +564,30 @@ src/core/LyricsImporter.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/LyricsImporter.cpp.s
 .PHONY : src/core/LyricsImporter.cpp.s
 
+src/core/MidiTypes.o: src/core/MidiTypes.cpp.o
+.PHONY : src/core/MidiTypes.o
+
+# target to build an object file
+src/core/MidiTypes.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidiModel.dir/build.make CMakeFiles/WorshipCueMidiModel.dir/src/core/MidiTypes.cpp.o
+.PHONY : src/core/MidiTypes.cpp.o
+
+src/core/MidiTypes.i: src/core/MidiTypes.cpp.i
+.PHONY : src/core/MidiTypes.i
+
+# target to preprocess a source file
+src/core/MidiTypes.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidiModel.dir/build.make CMakeFiles/WorshipCueMidiModel.dir/src/core/MidiTypes.cpp.i
+.PHONY : src/core/MidiTypes.cpp.i
+
+src/core/MidiTypes.s: src/core/MidiTypes.cpp.s
+.PHONY : src/core/MidiTypes.s
+
+# target to generate assembly for a file
+src/core/MidiTypes.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidiModel.dir/build.make CMakeFiles/WorshipCueMidiModel.dir/src/core/MidiTypes.cpp.s
+.PHONY : src/core/MidiTypes.cpp.s
+
 src/core/PresentationController.o: src/core/PresentationController.cpp.o
 .PHONY : src/core/PresentationController.o
 
@@ -398,6 +611,60 @@ src/core/PresentationController.s: src/core/PresentationController.cpp.s
 src/core/PresentationController.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/PresentationController.cpp.s
 .PHONY : src/core/PresentationController.cpp.s
+
+src/core/PresentationLook.o: src/core/PresentationLook.cpp.o
+.PHONY : src/core/PresentationLook.o
+
+# target to build an object file
+src/core/PresentationLook.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/PresentationLook.cpp.o
+.PHONY : src/core/PresentationLook.cpp.o
+
+src/core/PresentationLook.i: src/core/PresentationLook.cpp.i
+.PHONY : src/core/PresentationLook.i
+
+# target to preprocess a source file
+src/core/PresentationLook.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/PresentationLook.cpp.i
+.PHONY : src/core/PresentationLook.cpp.i
+
+src/core/PresentationLook.s: src/core/PresentationLook.cpp.s
+.PHONY : src/core/PresentationLook.s
+
+# target to generate assembly for a file
+src/core/PresentationLook.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/core/PresentationLook.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/PresentationLook.cpp.s
+.PHONY : src/core/PresentationLook.cpp.s
+
+src/core/SongStructure.o: src/core/SongStructure.cpp.o
+.PHONY : src/core/SongStructure.o
+
+# target to build an object file
+src/core/SongStructure.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/SongStructure.cpp.o
+.PHONY : src/core/SongStructure.cpp.o
+
+src/core/SongStructure.i: src/core/SongStructure.cpp.i
+.PHONY : src/core/SongStructure.i
+
+# target to preprocess a source file
+src/core/SongStructure.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/SongStructure.cpp.i
+.PHONY : src/core/SongStructure.cpp.i
+
+src/core/SongStructure.s: src/core/SongStructure.cpp.s
+.PHONY : src/core/SongStructure.s
+
+# target to generate assembly for a file
+src/core/SongStructure.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMcp.dir/build.make CMakeFiles/WorshipCueMcp.dir/src/core/SongStructure.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/core/SongStructure.cpp.s
+.PHONY : src/core/SongStructure.cpp.s
 
 src/data/LibraryRepository.o: src/data/LibraryRepository.cpp.o
 .PHONY : src/data/LibraryRepository.o
@@ -618,6 +885,62 @@ src/media/MediaPlayback.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/media/MediaPlayback.cpp.s
 .PHONY : src/media/MediaPlayback.cpp.s
 
+src/midi/MidiBackend.o: src/midi/MidiBackend.cpp.o
+.PHONY : src/midi/MidiBackend.o
+
+# target to build an object file
+src/midi/MidiBackend.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/src/midi/MidiBackend.cpp.o
+.PHONY : src/midi/MidiBackend.cpp.o
+
+src/midi/MidiBackend.i: src/midi/MidiBackend.cpp.i
+.PHONY : src/midi/MidiBackend.i
+
+# target to preprocess a source file
+src/midi/MidiBackend.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/src/midi/MidiBackend.cpp.i
+.PHONY : src/midi/MidiBackend.cpp.i
+
+src/midi/MidiBackend.s: src/midi/MidiBackend.cpp.s
+.PHONY : src/midi/MidiBackend.s
+
+# target to generate assembly for a file
+src/midi/MidiBackend.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/src/midi/MidiBackend.cpp.s
+.PHONY : src/midi/MidiBackend.cpp.s
+
+src/midi/MidiBackend_mac.o: src/midi/MidiBackend_mac.mm.o
+.PHONY : src/midi/MidiBackend_mac.o
+
+# target to build an object file
+src/midi/MidiBackend_mac.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/src/midi/MidiBackend_mac.mm.o
+.PHONY : src/midi/MidiBackend_mac.mm.o
+
+src/midi/MidiEngine.o: src/midi/MidiEngine.cpp.o
+.PHONY : src/midi/MidiEngine.o
+
+# target to build an object file
+src/midi/MidiEngine.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/src/midi/MidiEngine.cpp.o
+.PHONY : src/midi/MidiEngine.cpp.o
+
+src/midi/MidiEngine.i: src/midi/MidiEngine.cpp.i
+.PHONY : src/midi/MidiEngine.i
+
+# target to preprocess a source file
+src/midi/MidiEngine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/src/midi/MidiEngine.cpp.i
+.PHONY : src/midi/MidiEngine.cpp.i
+
+src/midi/MidiEngine.s: src/midi/MidiEngine.cpp.s
+.PHONY : src/midi/MidiEngine.s
+
+# target to generate assembly for a file
+src/midi/MidiEngine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueMidi.dir/build.make CMakeFiles/WorshipCueMidi.dir/src/midi/MidiEngine.cpp.s
+.PHONY : src/midi/MidiEngine.cpp.s
+
 src/ui/BackgroundLibraryDialog.o: src/ui/BackgroundLibraryDialog.cpp.o
 .PHONY : src/ui/BackgroundLibraryDialog.o
 
@@ -714,6 +1037,86 @@ src/ui/MediaImportDialog.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/MediaImportDialog.cpp.s
 .PHONY : src/ui/MediaImportDialog.cpp.s
 
+src/ui/MidiDialogs.o: src/ui/MidiDialogs.cpp.o
+.PHONY : src/ui/MidiDialogs.o
+
+# target to build an object file
+src/ui/MidiDialogs.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/MidiDialogs.cpp.o
+.PHONY : src/ui/MidiDialogs.cpp.o
+
+src/ui/MidiDialogs.i: src/ui/MidiDialogs.cpp.i
+.PHONY : src/ui/MidiDialogs.i
+
+# target to preprocess a source file
+src/ui/MidiDialogs.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/MidiDialogs.cpp.i
+.PHONY : src/ui/MidiDialogs.cpp.i
+
+src/ui/MidiDialogs.s: src/ui/MidiDialogs.cpp.s
+.PHONY : src/ui/MidiDialogs.s
+
+# target to generate assembly for a file
+src/ui/MidiDialogs.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/MidiDialogs.cpp.s
+.PHONY : src/ui/MidiDialogs.cpp.s
+
+src/ui/NativeDisplayModes.o: src/ui/NativeDisplayModes.cpp.o
+.PHONY : src/ui/NativeDisplayModes.o
+
+# target to build an object file
+src/ui/NativeDisplayModes.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.o
+.PHONY : src/ui/NativeDisplayModes.cpp.o
+
+src/ui/NativeDisplayModes.i: src/ui/NativeDisplayModes.cpp.i
+.PHONY : src/ui/NativeDisplayModes.i
+
+# target to preprocess a source file
+src/ui/NativeDisplayModes.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.i
+.PHONY : src/ui/NativeDisplayModes.cpp.i
+
+src/ui/NativeDisplayModes.s: src/ui/NativeDisplayModes.cpp.s
+.PHONY : src/ui/NativeDisplayModes.s
+
+# target to generate assembly for a file
+src/ui/NativeDisplayModes.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes.cpp.s
+.PHONY : src/ui/NativeDisplayModes.cpp.s
+
+src/ui/NativeDisplayModes_mac.o: src/ui/NativeDisplayModes_mac.mm.o
+.PHONY : src/ui/NativeDisplayModes_mac.o
+
+# target to build an object file
+src/ui/NativeDisplayModes_mac.mm.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/NativeDisplayModes_mac.mm.o
+.PHONY : src/ui/NativeDisplayModes_mac.mm.o
+
+src/ui/OutputConfiguration.o: src/ui/OutputConfiguration.cpp.o
+.PHONY : src/ui/OutputConfiguration.o
+
+# target to build an object file
+src/ui/OutputConfiguration.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.o
+.PHONY : src/ui/OutputConfiguration.cpp.o
+
+src/ui/OutputConfiguration.i: src/ui/OutputConfiguration.cpp.i
+.PHONY : src/ui/OutputConfiguration.i
+
+# target to preprocess a source file
+src/ui/OutputConfiguration.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.i
+.PHONY : src/ui/OutputConfiguration.cpp.i
+
+src/ui/OutputConfiguration.s: src/ui/OutputConfiguration.cpp.s
+.PHONY : src/ui/OutputConfiguration.s
+
+# target to generate assembly for a file
+src/ui/OutputConfiguration.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/OutputConfiguration.cpp.s
+.PHONY : src/ui/OutputConfiguration.cpp.s
+
 src/ui/OutputManager.o: src/ui/OutputManager.cpp.o
 .PHONY : src/ui/OutputManager.o
 
@@ -737,6 +1140,54 @@ src/ui/OutputManager.s: src/ui/OutputManager.cpp.s
 src/ui/OutputManager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/OutputManager.cpp.s
 .PHONY : src/ui/OutputManager.cpp.s
+
+src/ui/OutputSettingsDialog.o: src/ui/OutputSettingsDialog.cpp.o
+.PHONY : src/ui/OutputSettingsDialog.o
+
+# target to build an object file
+src/ui/OutputSettingsDialog.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/OutputSettingsDialog.cpp.o
+.PHONY : src/ui/OutputSettingsDialog.cpp.o
+
+src/ui/OutputSettingsDialog.i: src/ui/OutputSettingsDialog.cpp.i
+.PHONY : src/ui/OutputSettingsDialog.i
+
+# target to preprocess a source file
+src/ui/OutputSettingsDialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/OutputSettingsDialog.cpp.i
+.PHONY : src/ui/OutputSettingsDialog.cpp.i
+
+src/ui/OutputSettingsDialog.s: src/ui/OutputSettingsDialog.cpp.s
+.PHONY : src/ui/OutputSettingsDialog.s
+
+# target to generate assembly for a file
+src/ui/OutputSettingsDialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/OutputSettingsDialog.cpp.s
+.PHONY : src/ui/OutputSettingsDialog.cpp.s
+
+src/ui/PresentationLookDialog.o: src/ui/PresentationLookDialog.cpp.o
+.PHONY : src/ui/PresentationLookDialog.o
+
+# target to build an object file
+src/ui/PresentationLookDialog.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/PresentationLookDialog.cpp.o
+.PHONY : src/ui/PresentationLookDialog.cpp.o
+
+src/ui/PresentationLookDialog.i: src/ui/PresentationLookDialog.cpp.i
+.PHONY : src/ui/PresentationLookDialog.i
+
+# target to preprocess a source file
+src/ui/PresentationLookDialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/PresentationLookDialog.cpp.i
+.PHONY : src/ui/PresentationLookDialog.cpp.i
+
+src/ui/PresentationLookDialog.s: src/ui/PresentationLookDialog.cpp.s
+.PHONY : src/ui/PresentationLookDialog.s
+
+# target to generate assembly for a file
+src/ui/PresentationLookDialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/PresentationLookDialog.cpp.s
+.PHONY : src/ui/PresentationLookDialog.cpp.s
 
 src/ui/PresentationSettingsDialog.o: src/ui/PresentationSettingsDialog.cpp.o
 .PHONY : src/ui/PresentationSettingsDialog.o
@@ -930,6 +1381,78 @@ src/ui/SongEditorDialog.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.s
 .PHONY : src/ui/SongEditorDialog.cpp.s
 
+src/ui/SongStructureDialog.o: src/ui/SongStructureDialog.cpp.o
+.PHONY : src/ui/SongStructureDialog.o
+
+# target to build an object file
+src/ui/SongStructureDialog.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/SongStructureDialog.cpp.o
+.PHONY : src/ui/SongStructureDialog.cpp.o
+
+src/ui/SongStructureDialog.i: src/ui/SongStructureDialog.cpp.i
+.PHONY : src/ui/SongStructureDialog.i
+
+# target to preprocess a source file
+src/ui/SongStructureDialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/SongStructureDialog.cpp.i
+.PHONY : src/ui/SongStructureDialog.cpp.i
+
+src/ui/SongStructureDialog.s: src/ui/SongStructureDialog.cpp.s
+.PHONY : src/ui/SongStructureDialog.s
+
+# target to generate assembly for a file
+src/ui/SongStructureDialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/SongStructureDialog.cpp.s
+.PHONY : src/ui/SongStructureDialog.cpp.s
+
+src/ui/StageLayout.o: src/ui/StageLayout.cpp.o
+.PHONY : src/ui/StageLayout.o
+
+# target to build an object file
+src/ui/StageLayout.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.o
+.PHONY : src/ui/StageLayout.cpp.o
+
+src/ui/StageLayout.i: src/ui/StageLayout.cpp.i
+.PHONY : src/ui/StageLayout.i
+
+# target to preprocess a source file
+src/ui/StageLayout.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.i
+.PHONY : src/ui/StageLayout.cpp.i
+
+src/ui/StageLayout.s: src/ui/StageLayout.cpp.s
+.PHONY : src/ui/StageLayout.s
+
+# target to generate assembly for a file
+src/ui/StageLayout.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCueOutputSupport.dir/build.make CMakeFiles/WorshipCueOutputSupport.dir/src/ui/StageLayout.cpp.s
+.PHONY : src/ui/StageLayout.cpp.s
+
+src/ui/StageLayoutDialog.o: src/ui/StageLayoutDialog.cpp.o
+.PHONY : src/ui/StageLayoutDialog.o
+
+# target to build an object file
+src/ui/StageLayoutDialog.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/StageLayoutDialog.cpp.o
+.PHONY : src/ui/StageLayoutDialog.cpp.o
+
+src/ui/StageLayoutDialog.i: src/ui/StageLayoutDialog.cpp.i
+.PHONY : src/ui/StageLayoutDialog.i
+
+# target to preprocess a source file
+src/ui/StageLayoutDialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/StageLayoutDialog.cpp.i
+.PHONY : src/ui/StageLayoutDialog.cpp.i
+
+src/ui/StageLayoutDialog.s: src/ui/StageLayoutDialog.cpp.s
+.PHONY : src/ui/StageLayoutDialog.s
+
+# target to generate assembly for a file
+src/ui/StageLayoutDialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WorshipCue.dir/build.make CMakeFiles/WorshipCue.dir/src/ui/StageLayoutDialog.cpp.s
+.PHONY : src/ui/StageLayoutDialog.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -945,13 +1468,31 @@ help:
 	@echo "... WorshipCueMcpBundle"
 	@echo "... WorshipCueMcp_autogen"
 	@echo "... WorshipCueMcp_autogen_timestamp_deps"
+	@echo "... WorshipCueMidiModel_autogen"
+	@echo "... WorshipCueMidiModel_autogen_timestamp_deps"
+	@echo "... WorshipCueMidi_autogen"
+	@echo "... WorshipCueMidi_autogen_timestamp_deps"
+	@echo "... WorshipCueOutputSupport_autogen"
+	@echo "... WorshipCueOutputSupport_autogen_timestamp_deps"
 	@echo "... WorshipCue_autogen"
 	@echo "... WorshipCue_autogen_timestamp_deps"
 	@echo "... WorshipCue"
 	@echo "... WorshipCueMcp"
+	@echo "... WorshipCueMidi"
+	@echo "... WorshipCueMidiModel"
+	@echo "... WorshipCueOutputSupport"
 	@echo "... WorshipCueMcp_autogen/mocs_compilation.o"
 	@echo "... WorshipCueMcp_autogen/mocs_compilation.i"
 	@echo "... WorshipCueMcp_autogen/mocs_compilation.s"
+	@echo "... WorshipCueMidiModel_autogen/mocs_compilation.o"
+	@echo "... WorshipCueMidiModel_autogen/mocs_compilation.i"
+	@echo "... WorshipCueMidiModel_autogen/mocs_compilation.s"
+	@echo "... WorshipCueMidi_autogen/mocs_compilation.o"
+	@echo "... WorshipCueMidi_autogen/mocs_compilation.i"
+	@echo "... WorshipCueMidi_autogen/mocs_compilation.s"
+	@echo "... WorshipCueOutputSupport_autogen/mocs_compilation.o"
+	@echo "... WorshipCueOutputSupport_autogen/mocs_compilation.i"
+	@echo "... WorshipCueOutputSupport_autogen/mocs_compilation.s"
 	@echo "... WorshipCue_autogen/mocs_compilation.o"
 	@echo "... WorshipCue_autogen/mocs_compilation.i"
 	@echo "... WorshipCue_autogen/mocs_compilation.s"
@@ -964,9 +1505,18 @@ help:
 	@echo "... src/core/LyricsImporter.o"
 	@echo "... src/core/LyricsImporter.i"
 	@echo "... src/core/LyricsImporter.s"
+	@echo "... src/core/MidiTypes.o"
+	@echo "... src/core/MidiTypes.i"
+	@echo "... src/core/MidiTypes.s"
 	@echo "... src/core/PresentationController.o"
 	@echo "... src/core/PresentationController.i"
 	@echo "... src/core/PresentationController.s"
+	@echo "... src/core/PresentationLook.o"
+	@echo "... src/core/PresentationLook.i"
+	@echo "... src/core/PresentationLook.s"
+	@echo "... src/core/SongStructure.o"
+	@echo "... src/core/SongStructure.i"
+	@echo "... src/core/SongStructure.s"
 	@echo "... src/data/LibraryRepository.o"
 	@echo "... src/data/LibraryRepository.i"
 	@echo "... src/data/LibraryRepository.s"
@@ -994,6 +1544,13 @@ help:
 	@echo "... src/media/MediaPlayback.o"
 	@echo "... src/media/MediaPlayback.i"
 	@echo "... src/media/MediaPlayback.s"
+	@echo "... src/midi/MidiBackend.o"
+	@echo "... src/midi/MidiBackend.i"
+	@echo "... src/midi/MidiBackend.s"
+	@echo "... src/midi/MidiBackend_mac.o"
+	@echo "... src/midi/MidiEngine.o"
+	@echo "... src/midi/MidiEngine.i"
+	@echo "... src/midi/MidiEngine.s"
 	@echo "... src/ui/BackgroundLibraryDialog.o"
 	@echo "... src/ui/BackgroundLibraryDialog.i"
 	@echo "... src/ui/BackgroundLibraryDialog.s"
@@ -1006,9 +1563,25 @@ help:
 	@echo "... src/ui/MediaImportDialog.o"
 	@echo "... src/ui/MediaImportDialog.i"
 	@echo "... src/ui/MediaImportDialog.s"
+	@echo "... src/ui/MidiDialogs.o"
+	@echo "... src/ui/MidiDialogs.i"
+	@echo "... src/ui/MidiDialogs.s"
+	@echo "... src/ui/NativeDisplayModes.o"
+	@echo "... src/ui/NativeDisplayModes.i"
+	@echo "... src/ui/NativeDisplayModes.s"
+	@echo "... src/ui/NativeDisplayModes_mac.o"
+	@echo "... src/ui/OutputConfiguration.o"
+	@echo "... src/ui/OutputConfiguration.i"
+	@echo "... src/ui/OutputConfiguration.s"
 	@echo "... src/ui/OutputManager.o"
 	@echo "... src/ui/OutputManager.i"
 	@echo "... src/ui/OutputManager.s"
+	@echo "... src/ui/OutputSettingsDialog.o"
+	@echo "... src/ui/OutputSettingsDialog.i"
+	@echo "... src/ui/OutputSettingsDialog.s"
+	@echo "... src/ui/PresentationLookDialog.o"
+	@echo "... src/ui/PresentationLookDialog.i"
+	@echo "... src/ui/PresentationLookDialog.s"
 	@echo "... src/ui/PresentationSettingsDialog.o"
 	@echo "... src/ui/PresentationSettingsDialog.i"
 	@echo "... src/ui/PresentationSettingsDialog.s"
@@ -1033,6 +1606,15 @@ help:
 	@echo "... src/ui/SongEditorDialog.o"
 	@echo "... src/ui/SongEditorDialog.i"
 	@echo "... src/ui/SongEditorDialog.s"
+	@echo "... src/ui/SongStructureDialog.o"
+	@echo "... src/ui/SongStructureDialog.i"
+	@echo "... src/ui/SongStructureDialog.s"
+	@echo "... src/ui/StageLayout.o"
+	@echo "... src/ui/StageLayout.i"
+	@echo "... src/ui/StageLayout.s"
+	@echo "... src/ui/StageLayoutDialog.o"
+	@echo "... src/ui/StageLayoutDialog.i"
+	@echo "... src/ui/StageLayoutDialog.s"
 .PHONY : help
 
 

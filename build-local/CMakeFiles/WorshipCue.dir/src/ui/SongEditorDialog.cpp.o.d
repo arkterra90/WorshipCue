@@ -902,19 +902,22 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/map \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
   /opt/homebrew/opt/qt/include/QtCore/QString \
-  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/../core/PresentationSettings.h \
-  /opt/homebrew/opt/qt/include/QtSql/QSqlDatabase \
-  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qsqldatabase.h \
-  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsqlglobal.h \
-  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsql-config.h \
-  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsqlexports.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetaobject.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/../core/MidiTypes.h \
+  /opt/homebrew/opt/qt/include/QtCore/QByteArray \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonObject \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonobject.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborcommon.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatetime.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcalendar.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlocale.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvariant.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdebug.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtextstream.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcontiguouscache.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsharedpointer.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsharedpointer_impl.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/chrono \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/file_clock.h \
@@ -937,9 +940,32 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobject.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobject_impl.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbindingstorage.h \
-  /opt/homebrew/opt/qt/include/QtCore/QStringList \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qregularexpression.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/quuid.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
   /opt/homebrew/opt/qt/include/QtCore/QVector \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/../core/PresentationLook.h \
+  /opt/homebrew/opt/qt/include/QtCore/QRectF \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrect.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcheckedint_impl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmargins.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsize.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpoint.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/../core/SongStructure.h \
+  /opt/homebrew/opt/qt/include/QtCore/QStringList \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../data/../core/PresentationSettings.h \
+  /opt/homebrew/opt/qt/include/QtSql/QSqlDatabase \
+  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qsqldatabase.h \
+  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsqlglobal.h \
+  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsql-config.h \
+  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsqlexports.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetaobject.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/LyricsImporter.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/SongStructure.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QDialog \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qdialog.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgetsglobal.h \
@@ -950,16 +976,11 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qtwidgetsexports.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qwidget.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qwindowdefs.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmargins.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcheckedint_impl.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qaction.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qkeysequence.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qicon.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsize.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpixmap.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpaintdevice.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrect.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpoint.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcolor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgb.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgba64.h \
@@ -975,14 +996,12 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpalette.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbrush.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontmetrics.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontinfo.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontvariableaxis.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qsizepolicy.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcursor.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qbitmap.h \
-  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/LyricsImporter.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QApplication \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qapplication.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcoreapplication.h \
@@ -995,7 +1014,6 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcoreapplication_platform.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qguiapplication.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qinputmethod.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlocale.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qguiapplication_platform.h \
   /opt/homebrew/opt/qt/include/QtGui/QClipboard \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qclipboard.h \
@@ -1042,11 +1060,8 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qfiledialog.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdir.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdirlisting.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatetime.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcalendar.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfileinfo.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtimezone.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
   /opt/homebrew/opt/qt/include/QtCore/QFileInfo \
   /opt/homebrew/opt/qt/include/QtWidgets/QHBoxLayout \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qboxlayout.h \
@@ -1093,6 +1108,5 @@ CMakeFiles/WorshipCue.dir/src/ui/SongEditorDialog.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qpushbutton.h \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qabstractbutton.h \
   /opt/homebrew/opt/qt/include/QtCore/QRegularExpression \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qregularexpression.h \
   /opt/homebrew/opt/qt/include/QtCore/QStringConverter \
   /opt/homebrew/opt/qt/include/QtWidgets/QVBoxLayout

@@ -87,6 +87,7 @@ bool SongEditorDialog::importLyricsFile(const QString &path, QString *error) {
         if (error) *error = QStringLiteral("This file contains no lyrics to import.");
         return false;
     }
+    imported_ = imported;
     titleEdit_->setText(imported.title);
     slidesEdit_->setPlainText(imported.slides.join(QStringLiteral("\n---\n")));
     return true;
@@ -95,6 +96,7 @@ bool SongEditorDialog::importLyricsFile(const QString &path, QString *error) {
 void SongEditorDialog::importLyricsText(const QString &text, const QString &suggestedTitle) {
     const auto imported = LyricsImporter::parse(text, suggestedTitle.isEmpty() ? title() : suggestedTitle);
     if (imported.slides.isEmpty()) return;
+    imported_ = imported;
     titleEdit_->setText(imported.title);
     slidesEdit_->setPlainText(imported.slides.join(QStringLiteral("\n---\n")));
 }
@@ -137,6 +139,13 @@ QStringList SongEditorDialog::slides() const {
         if (!trimmed.isEmpty()) result.append(trimmed);
     }
     return result;
+}
+
+SongStructure SongEditorDialog::songStructure(QStringList *sourceSlides) const {
+    if (slides() == imported_.slides) return imported_.songStructure(sourceSlides);
+    ImportedLyrics edited;
+    edited.slides = slides();
+    return edited.songStructure(sourceSlides);
 }
 
 void SongEditorDialog::validateAndAccept() {

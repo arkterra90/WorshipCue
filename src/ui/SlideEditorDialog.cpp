@@ -219,7 +219,7 @@ SlideEditorDialog::SlideEditorDialog(const Song &song, int sourceSlide, QWidget 
     formatRow->addWidget(fontFamily_, 1);
     fontSize_ = new QSpinBox(this);
     fontSize_->setObjectName(QStringLiteral("slideEditorFontSize"));
-    fontSize_->setRange(8, 400);
+    fontSize_->setRange(8, 512);
     fontSize_->setSuffix(QStringLiteral(" px"));
     fontSize_->setToolTip(QStringLiteral("Font size on the 1920 × 1080 slide"));
     fontSize_->setMinimumWidth(95);
@@ -373,8 +373,9 @@ SlideEditorDialog::Draft SlideEditorDialog::createDraft(const QString &plain, co
     draft.document = new TextOnlyDocument(this);
     draft.document->setObjectName(QStringLiteral("slideEditorDocument%1").arg(drafts_.size()));
     draft.document->setUndoRedoEnabled(false);
-    RichTextSupport::load(draft.document, plain, html);
-    if (html.isEmpty()) {
+    const auto look = source_.looks.value(drafts_.size());
+    RichTextSupport::load(draft.document, plain, html, look);
+    if (html.isEmpty() && look.id == 0) {
         // Start legacy plain slides at the font size their audience renderer
         // already uses, rather than showing a differently wrapped 112px draft.
         QFont font = RichTextSupport::defaultFont();
@@ -391,7 +392,7 @@ SlideEditorDialog::Draft SlideEditorDialog::createDraft(const QString &plain, co
         format.setProperty(QTextFormat::FontPixelSize, font.pixelSize());
         cursor.mergeCharFormat(format);
     }
-    draft.document->setTextWidth(1612);
+    draft.document->setTextWidth(look.id > 0 ? look.settings.textRect().width() : 1612);
     draft.document->setUndoRedoEnabled(true);
     draft.originalHtml = html;
     auto *document = draft.document;
@@ -438,11 +439,15 @@ void SlideEditorDialog::loadSlide(int index) {
     state.slides = {QString()};
     state.index = 0;
     state.media = {source_.media.value(index)};
+    state.looks = {source_.looks.value(index)};
     state.clear = true;
     QPixmap image(1920, 1080);
     image.fill(Qt::black);
     QPainter painter(&image);
-    SlideRenderer::paintAudience(painter, image.rect(), state, background_, mediaFrames_.value(index));
+    const auto style = source_.looks.value(index);
+    const auto background = style.id > 0 && style.settings.background == PresentationLook::Background::Image
+        ? SlideRenderer::backgroundImage(style.backgroundPath) : background_;
+    SlideRenderer::paintAudience(painter, image.rect(), state, background, mediaFrames_.value(index));
     painter.end();
     backgroundItem_->setPixmap(image);
     textItem_->setDocument(drafts_.at(index).document);
@@ -458,10 +463,23 @@ void SlideEditorDialog::loadSlide(int index) {
 
 void SlideEditorDialog::updateTextGeometry() {
     if (!currentDocument()) return;
-    const qreal height = qMax(qreal(1), currentDocument()->size().height());
-    const qreal scale = qMin(qreal(1), qreal(820) / height);
+    auto style = source_.looks.value(activeSlide_);
+    const QRectF area = style.id > 0 ? style.settings.textRect() : QRectF(154, 130, 1612, 820);
+    style.richTextOverrides = true;
+    const auto measured = style.id > 0
+        ? RichTextSupport::measuredSize(currentDocument()->toPlainText(), currentDocument()->toHtml(), style)
+        : currentDocument()->size();
+    const qreal height = qMax(qreal(1), measured.height());
+    const qreal scale = qMin(qreal(1), qMin(area.height() / height, area.width() / qMax(qreal(1), measured.width())));
+    const int horizontal = style.id > 0 ? style.settings.horizontalAlignment : 1;
+    const int vertical = style.id > 0 ? style.settings.verticalAlignment : 1;
+    const qreal x = horizontal == 0 ? 0 : horizontal == 2 ? area.width() - area.width() * scale : (area.width() - area.width() * scale) / 2;
+    const qreal y = vertical == 0 ? 0 : vertical == 2 ? area.height() - height * scale : (area.height() - height * scale) / 2;
     textItem_->setScale(scale);
-    textItem_->setPos(154 + (1612 - 1612 * scale) / 2, 130 + (820 - height * scale) / 2);
+    textItem_->setPos(area.x() + x, area.y() + y);
+    if (style.id > 0) slideInfo_->setText(QStringLiteral("Slide %1 of %2%3").arg(activeSlide_ + 1).arg(drafts_.size())
+        .arg(RichTextSupport::overflows(currentDocument()->toPlainText(), currentDocument()->toHtml(), style)
+            ? QStringLiteral(" • Text overflow • safety fit active. Use Looks / Reflow after saving.") : QString()));
 }
 
 void SlideEditorDialog::updateFormatControls() {
@@ -528,11 +546,16 @@ void SlideEditorDialog::refreshThumbnail(int index) {
     state.slides = {draft.document->toPlainText()};
     state.richText = {draft.changed ? RichTextSupport::sanitize(draft.document->toHtml()) : draft.originalHtml};
     state.media = {source_.media.value(index)};
+    auto style = source_.looks.value(index);
+    if (draft.changed) style.richTextOverrides = true;
+    state.looks = {style};
     state.index = 0;
     QPixmap thumbnail(144, 81);
     thumbnail.fill(Qt::black);
     QPainter painter(&thumbnail);
-    SlideRenderer::paintAudience(painter, thumbnail.rect(), state, background_, mediaFrames_.value(index));
+    const auto background = style.id > 0 && style.settings.background == PresentationLook::Background::Image
+        ? SlideRenderer::backgroundImage(style.backgroundPath) : background_;
+    SlideRenderer::paintAudience(painter, thumbnail.rect(), state, background, mediaFrames_.value(index));
     painter.end();
     auto *item = navigator_->item(index);
     item->setIcon(QIcon(thumbnail));

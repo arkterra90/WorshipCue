@@ -1,9 +1,9 @@
 CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o: \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.cpp \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.h \
-  /opt/homebrew/opt/qt/include/QtGui/QFont \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcompare.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/PresentationLook.h \
+  /opt/homebrew/opt/qt/include/QtCore/QMetaType \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetatype.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qglobal.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/type_traits \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__config \
@@ -703,6 +703,10 @@ CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtresource.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qttranslation.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qversiontagging.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbytearray.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrefcount.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qnamespace.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcompare.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstdlibdetection.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcomparehelpers.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/functional \
@@ -835,14 +839,6 @@ CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fsfilcnt_t.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_nl_item.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/cstdarg \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfloat16.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qhashfunctions.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstring.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qchar.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbytearray.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrefcount.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qnamespace.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtmetamacros.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qarraydata.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpair.h \
@@ -856,7 +852,17 @@ CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q17memory.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbytearrayalgorithms.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbytearrayview.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qchar.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstringfwd.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatastream.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobjectdefs.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobjectdefs_impl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfunctionaltools_impl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiodevicebase.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qscopedpointer.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfloat16.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qhashfunctions.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstring.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlatin1stringview.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstringview.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstringalgorithms.h \
@@ -886,14 +892,14 @@ CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qalgorithms.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q20bit.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtformat_impl.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiglobal.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtgui-config.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiexports.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qwindowdefs.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobjectdefs.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobjectdefs_impl.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfunctionaltools_impl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiterable.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtaggedpointer.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetacontainer.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcontainerinfo.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qscopeguard.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/list \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/map \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
   /opt/homebrew/opt/qt/include/QtCore/QRectF \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrect.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcheckedint_impl.h \
@@ -903,26 +909,24 @@ CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsize.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpoint.h \
   /opt/homebrew/opt/qt/include/QtCore/QString \
-  /opt/homebrew/opt/qt/include/QtGui/QAbstractTextDocumentLayout \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qabstracttextdocumentlayout.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobject.h \
+  /opt/homebrew/opt/qt/include/QtCore/QVector \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlist.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiterator.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qscopeguard.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbytearraylist.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstringlist.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qstringmatcher.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qscopedpointer.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetatype.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatastream.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiodevicebase.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiterable.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtaggedpointer.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetacontainer.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcontainerinfo.h \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/list \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/map \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
+  /opt/homebrew/opt/qt/include/QtGui/QFont \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiglobal.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtgui-config.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiexports.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qwindowdefs.h \
+  /opt/homebrew/opt/qt/include/QtGui/QAbstractTextDocumentLayout \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qabstracttextdocumentlayout.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobject.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobject_impl.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbindingstorage.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/chrono \
@@ -1012,4 +1016,9 @@ CMakeFiles/WorshipCue.dir/src/ui/RichTextSupport.cpp.o: \
   /opt/homebrew/opt/qt/include/QtGui/QTextDocument \
   /opt/homebrew/opt/qt/include/QtGui/QTextFragment \
   /opt/homebrew/opt/qt/include/QtGui/QTextOption \
+  /opt/homebrew/opt/qt/include/QtGui/QTextLayout \
+  /opt/homebrew/opt/qt/include/QtGui/QTextDocumentFragment \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextdocumentfragment.h \
+  /opt/homebrew/opt/qt/include/QtCore/QTextBoundaryFinder \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtextboundaryfinder.h \
   /opt/homebrew/opt/qt/include/QtCore/QVariant

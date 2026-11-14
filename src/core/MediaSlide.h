@@ -3,7 +3,7 @@
 #include <QMetaType>
 #include <QString>
 
-enum class MediaKind { None, Image, Video };
+enum class MediaKind { None, Image, Video, Audio };
 
 // Paths in the repository are relative to the library directory. Presentation
 // snapshots may resolve them to absolute paths before being taken live.

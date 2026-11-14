@@ -983,6 +983,23 @@ CMakeFiles/WorshipCue.dir/src/ui/BackgroundLibraryDialog.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/MediaSlide.h \
   /opt/homebrew/opt/qt/include/QtCore/QMetaType \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/MidiTypes.h \
+  /opt/homebrew/opt/qt/include/QtCore/QByteArray \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonObject \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonobject.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborcommon.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatetime.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcalendar.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlocale.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qregularexpression.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/quuid.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/PresentationLook.h \
+  /opt/homebrew/opt/qt/include/QtCore/QRectF \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/PresentationSettings.h \
   /opt/homebrew/opt/qt/include/QtGui/QPixmap \
   /opt/homebrew/opt/qt/include/QtCore/QRect \
@@ -1028,16 +1045,12 @@ CMakeFiles/WorshipCue.dir/src/ui/BackgroundLibraryDialog.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/path_iterator.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/recursive_directory_iterator.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatetime.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcalendar.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlocale.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfile.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfileinfo.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtimezone.h \
   /opt/homebrew/opt/qt/include/QtCore/QFile \
   /opt/homebrew/opt/qt/include/QtWidgets/QFileDialog \
   /opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers/qfiledialog.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
   /opt/homebrew/opt/qt/include/QtCore/QFileInfo \
   /opt/homebrew/opt/qt/include/QtGui/QImageReader \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qimagereader.h \
@@ -1048,14 +1061,6 @@ CMakeFiles/WorshipCue.dir/src/ui/BackgroundLibraryDialog.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qimageiohandler.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qplugin.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpointer.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonobject.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonvalue.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborvalue.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborcommon.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qregularexpression.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/quuid.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q20algorithm.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfactoryinterface.h \
   /opt/homebrew/opt/qt/include/QtWidgets/QLabel \

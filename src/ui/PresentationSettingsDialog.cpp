@@ -6,15 +6,16 @@
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QLabel>
+#include <QSignalBlocker>
 #include <QVBoxLayout>
 
 PresentationSettingsDialog::PresentationSettingsDialog(const QString &title,
     const PresentationSettings &settings, QWidget *parent,
-    const PresentationSettings &programDefaults, bool programMode)
-    : QDialog(parent), programMode_(programMode) {
-    setObjectName(programMode ? QStringLiteral("programTransitionSettingsDialog")
+    const PresentationSettings &programDefaults, bool programMode, bool bulkMode)
+    : QDialog(parent), initialSettings_(settings), programMode_(programMode) {
+    setObjectName(bulkMode ? QStringLiteral("bulkTransitionSettingsDialog") : programMode ? QStringLiteral("programTransitionSettingsDialog")
                               : QStringLiteral("presentationSettingsDialog"));
-    setWindowTitle(programMode ? QStringLiteral("Global Slide Transitions")
+    setWindowTitle(bulkMode ? QStringLiteral("Transitions for Selected Items") : programMode ? QStringLiteral("Global Slide Transitions")
                                : QStringLiteral("Timing & Transitions"));
     setMinimumWidth(460);
     auto *layout = new QVBoxLayout(this);
@@ -41,26 +42,29 @@ PresentationSettingsDialog::PresentationSettingsDialog(const QString &title,
     interval_->setSingleStep(0.5);
     interval_->setSuffix(QStringLiteral(" seconds"));
     interval_->setValue(settings.autoAdvanceMs > 0 ? settings.autoAdvanceMs / 1000.0 : 5.0);
-    interval_->setEnabled(autoAdvance_->isChecked());
+    interval_->setToolTip(QStringLiteral("Changing the interval turns on automatic advancement."));
     timing->addRow(QStringLiteral("Time per slide"), interval_);
     loop_ = new QCheckBox(QStringLiteral("Loop back to the first slide"), this);
     loop_->setObjectName(QStringLiteral("loopPresentation"));
     loop_->setChecked(settings.loop);
-    loop_->setEnabled(autoAdvance_->isChecked());
+    loop_->setToolTip(QStringLiteral("Enabling looping turns on automatic advancement."));
     timing->addRow(QString(), loop_);
     timingLayout->addLayout(timing);
-    connect(autoAdvance_, &QCheckBox::toggled, interval_, &QWidget::setEnabled);
-    connect(autoAdvance_, &QCheckBox::toggled, loop_, &QWidget::setEnabled);
+    connect(interval_, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+            [this] { autoAdvance_->setChecked(true); });
+    connect(loop_, &QCheckBox::toggled, this,
+            [this](bool checked) { if (checked) autoAdvance_->setChecked(true); });
     auto *timingHint = new QLabel(QStringLiteral(
+        "Changing the interval or enabling looping turns on automatic advancement. Uncheck it for manual slides. "
         "Timing starts when a slide is taken live and includes its transition. "
         "Videos use the same interval. At the end, hold the last slide or loop within this presentation."), this);
     timingHint->setWordWrap(true);
     timingHint->setObjectName(QStringLiteral("hint"));
     timingLayout->addWidget(timingHint);
-    timingWidget->setVisible(!programMode_);
+    timingWidget->setVisible(!programMode_ && !bulkMode);
     layout->addWidget(timingWidget);
 
-    overrideTransition_ = new QCheckBox(QStringLiteral("Override global transition for this presentation"), this);
+    overrideTransition_ = new QCheckBox(bulkMode ? QStringLiteral("Override global transition for selected items") : QStringLiteral("Override global transition for this presentation"), this);
     overrideTransition_->setObjectName(QStringLiteral("overrideProgramTransition"));
     overrideTransition_->setChecked(settings.overrideTransition);
     overrideTransition_->setVisible(!programMode_);
@@ -84,19 +88,37 @@ PresentationSettingsDialog::PresentationSettingsDialog(const QString &title,
     duration_->setSuffix(QStringLiteral(" seconds"));
     duration_->setValue(displayed.transitionDurationMs / 1000.0);
     transitions->addRow(QStringLiteral("Fade / transition time"), duration_);
-    const auto updateTransitionControls = [this] {
-        const bool editable = programMode_ || overrideTransition_->isChecked();
-        transition_->setEnabled(editable);
-        duration_->setEnabled(editable && transition_->currentData().toInt() != int(SlideTransitionType::Cut));
+    const auto useCustomTransition = [this] {
+        if (!programMode_) overrideTransition_->setChecked(true);
     };
-    connect(transition_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, updateTransitionControls);
-    connect(overrideTransition_, &QCheckBox::toggled, this, updateTransitionControls);
-    updateTransitionControls();
+    connect(transition_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, useCustomTransition);
+    connect(duration_, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, useCustomTransition);
+    connect(overrideTransition_, &QCheckBox::toggled, this, [this, programDefaults](bool checked) {
+        if (checked || programMode_) return;
+        const auto inherited = PresentationSettings{}.resolvedWithDefaults(programDefaults);
+        const QSignalBlocker typeBlock(transition_);
+        const QSignalBlocker durationBlock(duration_);
+        transition_->setCurrentIndex(transition_->findData(int(inherited.transition)));
+        duration_->setValue(inherited.transitionDurationMs / 1000.0);
+    });
+    transition_->setToolTip(programMode_ ? QStringLiteral("Default transition for presentations that inherit global settings.")
+        : QStringLiteral("Changing the transition creates an override for this presentation or selection."));
+    duration_->setToolTip(programMode_ ? QStringLiteral("Cut is always instant; other transitions use this time.")
+        : QStringLiteral("Changing the duration creates an override. Cut is always instant; other transitions use this time."));
     layout->addLayout(transitions);
+    auto *transitionHint = new QLabel(programMode_ ? QStringLiteral("Cut is instant. Fade and slide transitions use the selected duration.")
+        : QStringLiteral("Edit type or time directly to override the global transition. Uncheck override to use global settings again. Cut is always instant."), this);
+    transitionHint->setWordWrap(true);
+    transitionHint->setObjectName(QStringLiteral("hint"));
+    layout->addWidget(transitionHint);
 
-    auto *scope = new QLabel(programMode_ ? QStringLiteral(
+    auto *scope = new QLabel(bulkMode ? QStringLiteral(
+        "Applies only transition type, duration, and inheritance. Timing, lyrics, Looks, and media stay as saved. "
+        "Library presentations change across all their service entries; standalone media changes only in the selected service items. "
+        "Mixed selections start with the first item's settings. Uncheck override to inherit global defaults. "
+        "Changes apply on the next take and can be undone from the service playlist.") : programMode_ ? QStringLiteral(
         "The global default applies to all presentations that do not override it. "
-        "Changes take effect on the next slide cue, including in a running service. "
+        "Changes take effect on the next slide cue or Blackout, Clear Text, or Restore operation, including in a running service. "
         "A presentation's explicit override takes precedence.")
         : QStringLiteral(
         "Saved for this library presentation and all its service entries. "
@@ -114,11 +136,13 @@ PresentationSettingsDialog::PresentationSettingsDialog(const QString &title,
 }
 
 PresentationSettings PresentationSettingsDialog::settings() const {
-    PresentationSettings result;
+    PresentationSettings result = initialSettings_;
     result.autoAdvanceMs = autoAdvance_->isChecked() ? qRound(interval_->value() * 1000) : 0;
     result.loop = loop_->isChecked();
-    result.transition = SlideTransitionType(transition_->currentData().toInt());
-    result.transitionDurationMs = qRound(duration_->value() * 1000);
     result.overrideTransition = programMode_ || overrideTransition_->isChecked();
+    if (result.overrideTransition) {
+        result.transition = SlideTransitionType(transition_->currentData().toInt());
+        result.transitionDurationMs = qRound(duration_->value() * 1000);
+    }
     return result;
 }

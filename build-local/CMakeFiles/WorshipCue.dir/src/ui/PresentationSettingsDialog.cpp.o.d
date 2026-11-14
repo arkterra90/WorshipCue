@@ -1006,4 +1006,5 @@ CMakeFiles/WorshipCue.dir/src/ui/PresentationSettingsDialog.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qiodevice.h \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtextdocument.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
+  /opt/homebrew/opt/qt/include/QtCore/QSignalBlocker \
   /opt/homebrew/opt/qt/include/QtWidgets/QVBoxLayout

@@ -902,19 +902,22 @@ CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/map \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
   /opt/homebrew/opt/qt/include/QtCore/QString \
-  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/../data/../core/PresentationSettings.h \
-  /opt/homebrew/opt/qt/include/QtSql/QSqlDatabase \
-  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qsqldatabase.h \
-  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsqlglobal.h \
-  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsql-config.h \
-  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsqlexports.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetaobject.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/../data/../core/MidiTypes.h \
+  /opt/homebrew/opt/qt/include/QtCore/QByteArray \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonObject \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonobject.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborcommon.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatetime.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcalendar.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlocale.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvariant.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdebug.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qtextstream.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcontiguouscache.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsharedpointer.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsharedpointer_impl.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/chrono \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/file_clock.h \
@@ -937,26 +940,32 @@ CMakeFiles/WorshipCueMcp.dir/src/mcp/McpServer.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobject.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qobject_impl.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qbindingstorage.h \
-  /opt/homebrew/opt/qt/include/QtCore/QStringList \
-  /opt/homebrew/opt/qt/include/QtCore/QVector \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
-  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/PlanningCenterClient.h \
-  /opt/homebrew/opt/qt/include/QtCore/QJsonObject \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonobject.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonvalue.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborvalue.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborcommon.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatetime.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcalendar.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlocale.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qregularexpression.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/quuid.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
+  /opt/homebrew/opt/qt/include/QtCore/QVector \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/../data/../core/PresentationLook.h \
+  /opt/homebrew/opt/qt/include/QtCore/QRectF \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrect.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcheckedint_impl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmargins.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsize.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpoint.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/../data/../core/SongStructure.h \
+  /opt/homebrew/opt/qt/include/QtCore/QStringList \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/../data/../core/PresentationSettings.h \
+  /opt/homebrew/opt/qt/include/QtSql/QSqlDatabase \
+  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qsqldatabase.h \
+  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsqlglobal.h \
+  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsql-config.h \
+  /opt/homebrew/opt/qt/lib/QtSql.framework/Headers/qtsqlexports.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmetaobject.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/mcp/PlanningCenterClient.h \
   /opt/homebrew/opt/qt/include/QtCore/QUrl \
-  /opt/homebrew/opt/qt/include/QtCore/QByteArray \
   /opt/homebrew/opt/qt/include/QtCore/QJsonArray \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonarray.h \
   /opt/homebrew/opt/qt/include/QtCore/QJsonDocument \

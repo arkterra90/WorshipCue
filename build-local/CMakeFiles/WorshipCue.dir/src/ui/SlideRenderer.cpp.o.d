@@ -923,44 +923,14 @@ CMakeFiles/WorshipCue.dir/src/ui/SlideRenderer.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvector.h \
   /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/MediaSlide.h \
   /opt/homebrew/opt/qt/include/QtCore/QMetaType \
-  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/PresentationSettings.h \
-  /opt/homebrew/opt/qt/include/QtGui/QPixmap \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpixmap.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiglobal.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtgui-config.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiexports.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpaintdevice.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qwindowdefs.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrect.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcheckedint_impl.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmargins.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q23utility.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q20utility.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsize.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpoint.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcolor.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgb.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgba64.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/MidiTypes.h \
+  /opt/homebrew/opt/qt/include/QtCore/QByteArray \
+  /opt/homebrew/opt/qt/include/QtCore/QJsonObject \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonobject.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborvalue.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborcommon.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qshareddata.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qimage.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpixelformat.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtransform.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpolygon.h \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qregion.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qspan.h \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/cassert \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q20iterator.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qline.h \
-  /opt/homebrew/opt/qt/include/QtCore/QRect \
-  /opt/homebrew/opt/qt/include/QtCore/QSize \
-  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.h \
-  /opt/homebrew/opt/qt/include/QtGui/QFont \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
-  /opt/homebrew/opt/qt/include/QtCore/QRectF \
-  /opt/homebrew/opt/qt/include/QtGui/QFontDatabase \
-  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontdatabase.h \
-  /opt/homebrew/opt/qt/include/QtCore/QDateTime \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qdatetime.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcalendar.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qlocale.h \
@@ -978,6 +948,49 @@ CMakeFiles/WorshipCue.dir/src/ui/SlideRenderer.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qhash.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qvarlengtharray.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qalloc.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q23utility.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q20utility.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qregularexpression.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/quuid.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qendian.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/PresentationLook.h \
+  /opt/homebrew/opt/qt/include/QtCore/QRectF \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qrect.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcheckedint_impl.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qmargins.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qsize.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpoint.h \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/../core/PresentationSettings.h \
+  /opt/homebrew/opt/qt/include/QtGui/QPixmap \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpixmap.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiglobal.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtgui-config.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtguiexports.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpaintdevice.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qwindowdefs.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qcolor.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgb.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qrgba64.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qimage.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpixelformat.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qtransform.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qpolygon.h \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qregion.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qspan.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/cassert \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q20iterator.h \
+  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qline.h \
+  /opt/homebrew/opt/qt/include/QtCore/QRect \
+  /opt/homebrew/opt/qt/include/QtCore/QSize \
+  /Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/src/ui/RichTextSupport.h \
+  /opt/homebrew/opt/qt/include/QtGui/QFont \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfont.h \
+  /opt/homebrew/opt/qt/include/QtGui/QFontDatabase \
+  /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontdatabase.h \
+  /opt/homebrew/opt/qt/include/QtCore/QDateTime \
   /opt/homebrew/opt/qt/include/QtGui/QFontMetrics \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qfontmetrics.h \
   /opt/homebrew/opt/qt/include/QtCore/QFileInfo \
@@ -1028,15 +1041,6 @@ CMakeFiles/WorshipCue.dir/src/ui/SlideRenderer.cpp.o: \
   /opt/homebrew/opt/qt/lib/QtGui.framework/Headers/qimageiohandler.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qplugin.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qpointer.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonobject.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonvalue.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborvalue.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qcborcommon.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qregularexpression.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qurl.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/quuid.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsondocument.h \
-  /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qjsonparseerror.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/q20algorithm.h \
   /opt/homebrew/opt/qt/lib/QtCore.framework/Headers/qfactoryinterface.h \
   /opt/homebrew/opt/qt/include/QtGui/QLinearGradient \

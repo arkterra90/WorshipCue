@@ -8,6 +8,41 @@
 class LyricsImportTest : public QObject {
     Q_OBJECT
 private slots:
+    void repeatedNamedSectionsShareLyricsAndPreserveTheirSlideGroups() {
+        const auto imported = LyricsImporter::parse(QStringLiteral(
+            "[Verse 1]\nFirst verse\n[Chorus]\nFirst chorus page\n\nSecond chorus page\n"
+            "[Verse 2]\nSecond verse\n[Chorus]\nFirst chorus page\n\nSecond chorus page"));
+        QCOMPARE(imported.slides.size(), 6);
+        QStringList sources;
+        const auto structure = imported.songStructure(&sources);
+        QCOMPARE(sources.size(), 4);
+        QCOMPARE(structure.sections.size(), 3);
+        QCOMPARE(structure.sections.at(1).name, QStringLiteral("Chorus"));
+        QCOMPARE(structure.sections.at(1).slideCount, 2);
+        const auto ids = structure.arrangements.first().sectionIds;
+        QCOMPARE(ids.size(), 4);
+        QCOMPARE(ids.at(1), ids.at(3));
+        QCOMPARE(structure.slideOrder(), QVector<int>({0, 1, 2, 3, 1, 2}));
+        QString error;
+        QVERIFY2(structure.validate(int(sources.size()), &error), qPrintable(error));
+        SongEditorDialog editor;
+        editor.importLyricsText(QStringLiteral("[Chorus]\nSing\n[Chorus]\nSing"));
+        const auto draft = editor.songStructure(&sources);
+        QCOMPARE(sources, QStringList({QStringLiteral("Sing")}));
+        QCOMPARE(draft.arrangements.first().sectionIds.size(), 2);
+    }
+
+    void differentlyWordedSectionsWithTheSameHeadingKeepBothVersions() {
+        const auto imported = LyricsImporter::parse(QStringLiteral(
+            "[Chorus]\nVersion A\n[Chorus]\nVersion B\n[Chorus]\nVersion A\n[Chorus]\nVersion B"));
+        QStringList sources;
+        const auto structure = imported.songStructure(&sources);
+        QCOMPARE(sources, QStringList({QStringLiteral("Version A"), QStringLiteral("Version B")}));
+        QCOMPARE(structure.sections.size(), 2);
+        QVERIFY(structure.sections.first().name != structure.sections.last().name);
+        QCOMPARE(structure.slideOrder(), QVector<int>({0, 1, 0, 1}));
+    }
+
     void paragraphsAndSeparatorsProduceEditableSlides() {
         const auto imported = LyricsImporter::parse(
             QStringLiteral("\ufeffFirst line\r\nSecond line\r\n\r\nThird line\r\n---\r\nLast line\r\n"),
