@@ -1,4 +1,3 @@
-- For example they set a certain font and font size for a slide. They should be able to apply that to all the slides in a presentation.
 
 # WorshipCue — Corrections 2
 ## Product Improvements, Licensing, Output Configuration, and Distribution
