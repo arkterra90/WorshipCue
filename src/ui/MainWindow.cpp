@@ -71,7 +71,9 @@
 #include <QToolButton>
 #include <QTimer>
 #include <QVBoxLayout>
+#include <QtConcurrent/QtConcurrentRun>
 #include <algorithm>
+#include <utility>
 
 class SlidePreview : public QWidget {
 public:
@@ -80,9 +82,12 @@ public:
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     }
     QSize sizeHint() const override { return {320, 180}; }
-    void setAudienceSource(DisplayWindow *source) {
-        audienceSource_ = source;
-        connect(source, &DisplayWindow::audienceFrameChanged, this, QOverload<>::of(&QWidget::update));
+    void setOutputSource(DisplayWindow &source) {
+        if (outputSource_ == &source) return;
+        disconnect(outputFrameConnection_);
+        outputSource_ = &source;
+        outputFrameConnection_ = connect(&source, &DisplayWindow::outputFrameChanged, this, QOverload<>::of(&QWidget::update));
+        update();
     }
     void setSlide(const LivePresentation &state, const QPixmap &background, const QPixmap &frame = {}) {
         state_ = state;
@@ -93,8 +98,8 @@ public:
 protected:
     void paintEvent(QPaintEvent *) override {
         QPainter p(this);
-        if (audienceSource_) {
-            audienceSource_->paintOutput(p, rect());
+        if (outputSource_) {
+            outputSource_->paintMonitor(p, rect());
             return;
         }
         SlideRenderer::paintAudience(p, rect(), state_, background_, frame_);
@@ -111,7 +116,8 @@ private:
     QPixmap background_;
     QPixmap frame_;
     bool mediaLabels_;
-    DisplayWindow *audienceSource_ = nullptr;
+    QPointer<DisplayWindow> outputSource_;
+    QMetaObject::Connection outputFrameConnection_;
 };
 
 namespace {
@@ -183,6 +189,20 @@ MainWindow::MainWindow(QWidget *parent, std::unique_ptr<MidiBackend> midiBackend
     if (!programSettings_.isValid()) programSettings_ = {};
     controller_.setGlobalTransitionDefaults(programSettings_);
     buildUi();
+    usageRetry_.setSingleShot(true);
+    usageRetry_.setInterval(1000);
+    connect(&usageRetry_, &QTimer::timeout, this, &MainWindow::flushLiveUsage);
+    connect(&usageWriter_, &QFutureWatcher<QString>::finished, this, [this] {
+        if (writingUsage_.empty()) return;
+        const auto error = usageWriter_.result();
+        if (!error.isEmpty()) {
+            pendingUsage_.merge(writingUsage_);
+            statusBar()->showMessage(QStringLiteral("Could not save usage history. Retrying. %1").arg(error), 5000);
+            usageRetry_.start();
+        }
+        writingUsage_ = {};
+        flushLiveUsage();
+    });
     license_->setParent(this);
     controller_.setLiveAuthorizationCheck([this] { return license_->liveAllowed(); });
     midi_.setLiveAuthorizationCheck([this] { return license_->liveAllowed(); });
@@ -192,7 +212,11 @@ MainWindow::MainWindow(QWidget *parent, std::unique_ptr<MidiBackend> midiBackend
     if (!license_->liveAllowed()) mode_->setCurrentIndex(1);
     updateLicense();
     midi_.setObjectName(QStringLiteral("midiEngine"));
-    midi_.setDispatchGate([this] { return license_->liveAllowed() && mode_->currentIndex() == 0 && !QApplication::activeModalWidget() && !QApplication::activePopupWidget(); });
+    midi_.setDispatchGate([this](MidiCommand command) {
+        return license_->liveAllowed()
+            && (command == MidiCommand::Blackout || (mode_->currentIndex() == 0 && !cueInputSuspended()));
+    });
+    controller_.setAutoAdvanceGate([this] { return !cueInputSuspended(); });
     connect(&midi_, &MidiEngine::commandRequested, this, &MainWindow::dispatchMidi);
     connect(&controller_, &PresentationController::stateChanged, this, [this] {
         const auto &state = controller_.state();
@@ -205,34 +229,39 @@ MainWindow::MainWindow(QWidget *parent, std::unique_ptr<MidiBackend> midiBackend
     connect(&controller_, &PresentationController::autoAdvanceChanged, this, &MainWindow::updateTimingUi);
     auto *countdown = new QTimer(this);
     countdown->setInterval(100);
-    connect(countdown, &QTimer::timeout, this, &MainWindow::updateTimingUi);
+    connect(countdown, &QTimer::timeout, this, [this] {
+        updateCueInputStatus();
+        updateTimingUi();
+    });
     countdown->start();
-    connect(&playback_, &MediaPlayback::frameChanged, this, [this] {
-        livePreview_->setSlide(controller_.state(), outputs_.audience().backgroundPixmap(), playback_.frame());
-    });
     connect(&playback_, &MediaPlayback::statusChanged, this, &MainWindow::updatePlaybackUi);
+    connect(&outputs_, &OutputManager::outputsChanged, this, &MainWindow::refreshMonitorOutputs);
     connect(&outputs_, &OutputManager::targetsChanged, this, &MainWindow::refreshOutputOptions);
-    connect(&outputs_, &OutputManager::statusChanged, this, [this] {
-        refreshOutputOptions();
-        updateOutputStatus();
-    });
+    connect(&outputs_, &OutputManager::statusChanged, this, &MainWindow::updateOutputStatus);
     connect(&outputs_, &OutputManager::operatorFocusRequested, this, &MainWindow::focusOperator);
     restoreGeometry(settings.value(QStringLiteral("control/geometry")).toByteArray());
     outputs_.restoreTargets();
-    refreshOutputOptions();
+    refreshMonitorOutputs();
     updateLiveUi();
     qApp->installEventFilter(this);
 }
 
-MainWindow::~MainWindow() { midi_.shutdown(); library_.clearCleanupLease(cleanupLeaseOwner_); }
+MainWindow::~MainWindow() {
+    qApp->removeEventFilter(this);
+    if (usesLiveDialogOverride_) QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs, false);
+    midi_.shutdown();
+    finishUsageTracking();
+}
 
 bool MainWindow::initialize(QString *error, const QString &databasePath) {
     if (libraryRefreshTimer_) libraryRefreshTimer_->stop();
+    finishUsageTracking();
     if (!library_.open(error, databasePath)) return false;
     transitionUndo_.clear();
     transitionRedo_.clear();
     updateTransitionActions();
     externalDataVersion_ = library_.dataVersion();
+    externalContentVersion_ = library_.contentVersion();
     databasePath_ = databasePath == QStringLiteral(":memory:") ? databasePath
         : databasePath.isEmpty() ? QDir(library_.databaseDirectory()).filePath(QStringLiteral("library.sqlite3"))
         : QFileInfo(databasePath).absoluteFilePath();
@@ -316,12 +345,6 @@ bool MainWindow::initialize(QString *error, const QString &databasePath) {
         libraryRefreshTimer_->setInterval(1000);
         connect(libraryRefreshTimer_, &QTimer::timeout, this, &MainWindow::refreshExternalChanges);
     }
-    if (!cleanupLeaseTimer_) {
-        cleanupLeaseTimer_ = new QTimer(this);
-        cleanupLeaseTimer_->setInterval(10000);
-        connect(cleanupLeaseTimer_, &QTimer::timeout, this, &MainWindow::recordLiveUsage);
-    }
-    cleanupLeaseTimer_->start();
     reloadMidiBindings();
     midi_.restoreSettings();
     libraryRefreshTimer_->start();
@@ -438,7 +461,11 @@ void MainWindow::buildUi() {
         search_->selectAll();
     });
     connect(fileMenu->addAction(QStringLiteral("Keyboard Shortcuts…")), &QAction::triggered, this, &MainWindow::configureShortcuts);
-    connect(fileMenu->addAction(QStringLiteral("Quit")), &QAction::triggered, this, &QWidget::close);
+    auto *quitAction = fileMenu->addAction(QStringLiteral("Quit WorshipCue"), this, &QWidget::close);
+    quitAction->setObjectName(QStringLiteral("quitWorshipCue"));
+    quitAction->setMenuRole(QAction::QuitRole);
+    quitAction->setShortcuts(QKeySequence::Quit);
+    quitAction->setAutoRepeat(false);
     auto *helpMenu = menuBar()->addMenu(QStringLiteral("&Help"));
     helpMenu->setObjectName(QStringLiteral("helpMenu"));
     auto *helpAction = helpMenu->addAction(QStringLiteral("WorshipCue Help…"));
@@ -884,9 +911,19 @@ void MainWindow::buildUi() {
     monitor->setMinimumWidth(280);
     liveInfo_ = header(QStringLiteral("LIVE • Ready"), monitor);
     liveInfo_->setObjectName(QStringLiteral("liveInfo"));
-    right->addWidget(liveInfo_);
+    auto *monitorHeader = new QHBoxLayout;
+    monitorHeader->addWidget(liveInfo_, 1);
+    monitorOutput_ = new QComboBox(monitor);
+    monitorOutput_->setObjectName(QStringLiteral("monitorOutput"));
+    monitorOutput_->setAccessibleName(QStringLiteral("Live monitor output"));
+    monitorHeader->addWidget(monitorOutput_);
+    right->addLayout(monitorHeader);
+    connect(monitorOutput_, &QComboBox::currentIndexChanged, this, &MainWindow::updateMonitorOutput);
+    connect(monitorOutput_, &QComboBox::activated, this, [this] {
+        if (mode_->currentIndex() == 0) slides_->setFocus(Qt::ShortcutFocusReason);
+    });
     livePreview_ = new SlidePreview(monitor, false);
-    livePreview_->setAudienceSource(&outputs_.audience());
+    livePreview_->setOutputSource(outputs_.audience());
     livePreview_->setObjectName(QStringLiteral("livePreview"));
     right->addWidget(livePreview_, 2);
     timingStatus_ = new QLabel(QStringLiteral("Auto-advance: Off"), monitor);
@@ -949,12 +986,15 @@ void MainWindow::buildUi() {
     clearButton_ = button(QStringLiteral("Clear Text"), monitor, QStringLiteral("clearText"));
     blackoutButton_->setCheckable(true);
     clearButton_->setCheckable(true);
-    blackoutButton_->setToolTip(QStringLiteral("Hide audience content and mute video audio. The video playhead continues; Stage stays visible."));
-    clearButton_->setToolTip(QStringLiteral("Hide audience text while keeping the background, media, and audio. Stage stays visible."));
+    blackoutButton_->setToolTip(QStringLiteral("Immediately black out the audience and mute media until Restore Audience. Stage stays visible."));
+    clearButton_->setToolTip(QStringLiteral("Hide audience text while keeping the background, media, and audio. Available after restoring from Blackout."));
     safety->addWidget(blackoutButton_);
     safety->addWidget(clearButton_);
     right->addLayout(safety);
-    connect(blackoutButton_, &QPushButton::clicked, &controller_, &PresentationController::toggleBlackout);
+    connect(blackoutButton_, &QPushButton::clicked, this, [this] {
+        controller_.blackout();
+        blackoutButton_->setChecked(controller_.state().blackout);
+    });
     connect(clearButton_, &QPushButton::clicked, &controller_, &PresentationController::toggleClear);
     auto *restore = button(QStringLiteral("Restore Audience"), monitor, QStringLiteral("restoreAudience"));
     restore->setToolTip(QStringLiteral("Remove Blackout or Clear Text without changing the live slide."));
@@ -974,6 +1014,11 @@ void MainWindow::buildUi() {
     previewTabs_->setCurrentIndex(qBound(0, preferences.value(QStringLiteral("workspace/previewTab"), 0).toInt(), 1));
     updateSlideView();
     statusBar();
+    cueInputStatus_ = new QLabel(QStringLiteral("Cue controls suspended"), this);
+    cueInputStatus_->setObjectName(QStringLiteral("cueInputStatus"));
+    cueInputStatus_->setToolTip(QStringLiteral("Close the open dialog or menu to resume cue controls. The Blackout shortcut is available."));
+    statusBar()->addPermanentWidget(cueInputStatus_);
+    cueInputStatus_->hide();
 }
 
 bool MainWindow::reloadSongs(bool reportFailure) {
@@ -1020,6 +1065,12 @@ void MainWindow::refreshExternalChanges() {
         || QApplication::mouseButtons() != Qt::NoButton) return;
     const qint64 version = library_.dataVersion();
     if (version < 0 || version == externalDataVersion_) return;
+    const auto contentVersion = library_.contentVersion();
+    if (contentVersion.first < 0) return;
+    if (contentVersion == externalContentVersion_) {
+        externalDataVersion_ = version;
+        return;
+    }
     const int entryId = selectedEntryId();
     const int slide = slides_->currentRow();
     const int songScroll = songs_->verticalScrollBar()->value();
@@ -1034,6 +1085,7 @@ void MainWindow::refreshExternalChanges() {
     slides_->verticalScrollBar()->setValue(slideScroll);
     reloadMidiBindings();
     externalDataVersion_ = version;
+    externalContentVersion_ = contentVersion;
     statusBar()->showMessage(QStringLiteral("Library and saved services updated by an external connection."), 8000);
 }
 
@@ -1244,14 +1296,15 @@ void MainWindow::previewMediaAsset() {
     const auto asset = library_.mediaAsset(selectedMediaAssetId());
     if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
     if (!asset.id) return;
-    const QString previewOwner = cleanupLeaseOwner_ + "-preview";
+    const QString previewOwner = cleanupLeaseOwner_ + "-preview-" + QString::number(++cleanupLeaseSerial_);
     CleanupProtection previewProtection; previewProtection.assets.insert(asset.id); previewProtection.paths.insert(asset.media.path);
     QString previewError;
-    if (!library_.replaceCleanupLease(previewOwner, previewProtection, &previewError)) return reportError(previewError);
-    QTimer previewLease;
-    previewLease.setInterval(10000);
-    connect(&previewLease, &QTimer::timeout, this, [this, previewOwner, previewProtection] { QString error; library_.replaceCleanupLease(previewOwner, previewProtection, &error); });
-    previewLease.start();
+    if (!library_.replaceCleanupLease(previewOwner, previewProtection, &previewError, false)) return reportError(previewError);
+    const auto recordPreview = [this, &asset] {
+        pendingUsage_.used.assets.insert(asset.id);
+        pendingUsage_.used.paths.insert(asset.media.path);
+        flushLiveUsage();
+    };
     QDialog dialog(this);
     dialog.setObjectName(QStringLiteral("mediaAssetPreview"));
     dialog.setWindowTitle(QStringLiteral("Preview — %1").arg(asset.media.name));
@@ -1271,7 +1324,7 @@ void MainWindow::previewMediaAsset() {
     play->setVisible(media.kind != MediaKind::Image);
     layout->addWidget(play);
     connect(play, &QPushButton::clicked, &dialog, [&] {
-        QString usageError; library_.recordUsage(0, {asset.id}, {asset.media.path}, &usageError);
+        recordPreview();
         if (previewController.state().index < 0)
             previewController.takeLive(PresentationItem{0, asset.media.name, {QStringLiteral("")}, {media}});
         else previewPlayback.togglePause();
@@ -1285,14 +1338,15 @@ void MainWindow::previewMediaAsset() {
             play->setText(previewPlayback.isPlaying() ? QStringLiteral("Pause Preview") : QStringLiteral("Play Preview"));
     });
     if (media.kind == MediaKind::Image) {
-        library_.recordUsage(0, {asset.id}, {asset.media.path}, &previewError);
+        recordPreview();
         previewController.takeLive(PresentationItem{0, asset.media.name, {QStringLiteral("")}, {media}});
     }
     auto *close = new QDialogButtonBox(QDialogButtonBox::Close, &dialog);
     layout->addWidget(close);
     connect(close, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
     dialog.exec();
-    library_.clearCleanupLease(previewOwner);
+    pendingUsage_.retiredLeases.insert(previewOwner);
+    flushLiveUsage();
 }
 
 int MainWindow::selectedSongId() const {
@@ -1856,13 +1910,19 @@ void MainWindow::goLive() {
     if (browsingLibrary_) {
         const auto song = workspaceSource();
         if (!library_.lastError().isEmpty()) return reportError(library_.lastError());
-        liveLibrarySongId_ = song.id; liveLibraryMediaId_ = song.mediaAssetId;
         const auto item = midiSnapshot(song, selectedSlideOrder()); QString error;
-        if (!prepareCleanupSnapshot({item}, &error)) return reportError(error);
+        if (!prepareCleanupSnapshot({item}, &error)) {
+            statusBar()->showMessage(QStringLiteral("Cue held. %1").arg(error), 5000);
+            return;
+        }
+        liveLibrarySongId_ = song.id; liveLibraryMediaId_ = song.mediaAssetId;
         controller_.takeLive(item, slides_->currentRow());
     } else {
         QString error;
-        if (!takeSavedService(currentServiceId_, selectedEntryId(), slides_->currentRow(), &error)) return reportError(error);
+        if (!takeSavedService(currentServiceId_, selectedEntryId(), slides_->currentRow(), &error)) {
+            statusBar()->showMessage(QStringLiteral("Cue held. %1").arg(error), 5000);
+            return;
+        }
     }
     slides_->setFocus();
 }
@@ -1889,7 +1949,13 @@ void MainWindow::configureMidiSlide() {
 }
 void MainWindow::dispatchMidi(const MidiBinding &binding) {
     if (!license_->liveAllowed()) return;
-    if (mode_->currentIndex() != 0 || QApplication::activeModalWidget() || QApplication::activePopupWidget()) return;
+    if (binding.command == MidiCommand::Blackout) {
+        // Only currently loaded, enabled input mappings reach this signal.
+        // Emergency Blackout must not wait for a SQLite read.
+        controller_.blackout();
+        return;
+    }
+    if (mode_->currentIndex() != 0 || cueInputSuspended()) return;
     const auto current = library_.midiBinding(binding.id);
     if (!current.id || !current.enabled || current.toJson() != binding.toJson()) {
         midi_.record(QStringLiteral("Skipped stale MIDI mapping; reloading saved mappings.")); reloadMidiBindings(); return;
@@ -1897,7 +1963,7 @@ void MainWindow::dispatchMidi(const MidiBinding &binding) {
     switch (binding.command) {
     case MidiCommand::Next: advance(); return;
     case MidiCommand::Previous: rewind(); return;
-    case MidiCommand::Blackout: controller_.toggleBlackout(); return;
+    case MidiCommand::Blackout: return;
     case MidiCommand::ClearText: controller_.toggleClear(); return;
     case MidiCommand::Restore: controller_.restoreOutput(); return;
     case MidiCommand::PauseAutoAdvance: controller_.toggleAutoAdvancePaused(); return;
@@ -1937,9 +2003,9 @@ void MainWindow::dispatchMidi(const MidiBinding &binding) {
     if (serviceId) {
         if (!takeSavedService(serviceId, binding.entryId, row, &error)) { midi_.record(error); return; }
     } else {
-        liveLibrarySongId_ = song.id; liveLibraryMediaId_ = song.mediaAssetId;
         const auto item = midiSnapshot(song, order);
         if (!prepareCleanupSnapshot({item}, &error)) { midi_.record(error); return; }
+        liveLibrarySongId_ = song.id; liveLibraryMediaId_ = song.mediaAssetId;
         controller_.takeLive(item, row);
     }
     revealLiveCue(); syncLiveSelection();
@@ -2032,6 +2098,15 @@ void MainWindow::refreshThumbnails() {
 }
 void MainWindow::updateLiveUi() {
     const auto &state = controller_.state();
+    // Native file and color panels can consume keystrokes outside the
+    // application event filter. Keep new dialogs inside Qt during a cue.
+    if (state.index >= 0 && !QCoreApplication::testAttribute(Qt::AA_DontUseNativeDialogs)) {
+        QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+        usesLiveDialogOverride_ = true;
+    } else if (state.index < 0 && usesLiveDialogOverride_) {
+        QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs, false);
+        usesLiveDialogOverride_ = false;
+    }
     returnToLive_->setEnabled(state.index >= 0 && (liveLibrarySongId_ > 0 || liveLibraryMediaId_ > 0 || (state.serviceId > 0 && state.entryId > 0)));
     const QString status = state.blackout ? QStringLiteral("BLACKOUT") : state.clear ? QStringLiteral("BACKGROUND ONLY") : QStringLiteral("LIVE");
     liveInfo_->setText(state.index < 0 ? QStringLiteral("%1 • Ready").arg(status)
@@ -2039,7 +2114,6 @@ void MainWindow::updateLiveUi() {
     const auto look = state.currentLook();
     if (state.index >= 0 && look.id > 0 && !look.fitText && RichTextSupport::overflows(state.currentText(), state.currentRichText(), look))
         liveInfo_->setText(liveInfo_->text() + QStringLiteral(" • Text overflow • safety fit"));
-    livePreview_->setSlide(state, outputs_.audience().backgroundPixmap(), playback_.frame());
     const QString next = state.nextText();
     const auto media = state.nextMedia();
     nextInfo_->setText(state.nextTitle().isEmpty() ? QStringLiteral("UP NEXT • End of service")
@@ -2047,6 +2121,7 @@ void MainWindow::updateLiveUi() {
     nextPreview_->setSlide(previewState(next, media, state.nextRichText(), state.nextLook()), backgroundPixmap(state.nextBackgroundPath()), mediaThumbnail(media));
     blackoutButton_->setChecked(state.blackout);
     clearButton_->setChecked(state.clear);
+    clearButton_->setEnabled(!state.blackout);
     for (int i = 0; i < service_->count(); ++i) {
         auto *item = service_->item(i);
         const bool live = state.serviceId == currentServiceId_ && item->data(Qt::UserRole).toInt() == state.entryId;
@@ -2162,6 +2237,7 @@ void MainWindow::updateTimingUi() {
         const QString action = state.index + 1 < state.slides.size() ? QStringLiteral("Next slide")
             : state.settings.loop ? QStringLiteral("Loop to first slide") : QStringLiteral("Hold last slide");
         timingStatus_->setText(hidden ? QStringLiteral("Audience hidden • %1 s left").arg(remaining)
+            : cueInputSuspended() ? QStringLiteral("Auto-advance suspended • %1 s left").arg(remaining)
             : paused ? QStringLiteral("Auto-advance paused • %1 s left").arg(remaining)
             : QStringLiteral("%1 in %2 s").arg(action, remaining));
     }
@@ -2288,12 +2364,44 @@ void MainWindow::refreshOutputOptions() {
     };
     refresh(audienceTarget_, DisplayWindow::Kind::Audience);
     refresh(stageTarget_, DisplayWindow::Kind::Stage);
+}
+void MainWindow::refreshMonitorOutputs() {
+    const int selected = monitorOutput_->count() == 0
+        ? QSettings().value(QStringLiteral("workspace/monitorOutput"), int(OutputId::Audience1)).toInt()
+        : monitorOutput_->currentData().toInt();
+    {
+        const QSignalBlocker block(monitorOutput_);
+        monitorOutput_->clear();
+        for (auto id : outputs_.outputIds()) monitorOutput_->addItem(outputName(id), int(id));
+        monitorOutput_->setCurrentIndex(qMax(0, monitorOutput_->findData(selected)));
+    }
+    updateMonitorOutput();
+}
+
+void MainWindow::updateMonitorOutput() {
+    const auto id = OutputId(monitorOutput_->currentData().toInt());
+    livePreview_->setOutputSource(outputs_.output(id));
     updateOutputStatus();
 }
+
 void MainWindow::updateOutputStatus() {
+    livePreview_->update();
     QStringList statuses;
-    for (auto id : outputIds) statuses.append(QStringLiteral("%1: %2").arg(outputName(id), outputs_.status(id)));
-    outputInfo_->setText(statuses.join(QStringLiteral("   •   ")));
+    int assigned = 0;
+    int active = 0;
+    for (auto id : outputs_.outputIds()) {
+        statuses.append(QStringLiteral("%1: %2").arg(outputName(id), outputs_.status(id)));
+        if (outputs_.target(id) == QStringLiteral("off")) continue;
+        ++assigned;
+        const auto &window = outputs_.output(id);
+        if (window.isVisible() && !window.isMinimized()) ++active;
+    }
+    const auto id = OutputId(monitorOutput_->currentData().toInt());
+    const auto selectedStatus = outputs_.status(id);
+    const auto summary = assigned == 0 ? QStringLiteral("Outputs off") : QStringLiteral("Outputs active %1/%2").arg(active).arg(assigned);
+    outputInfo_->setText(QStringLiteral("%1   •   Monitoring %2: %3").arg(summary, outputName(id), selectedStatus));
+    outputInfo_->setToolTip(statuses.join(QLatin1Char('\n')));
+    monitorOutput_->setToolTip(QStringLiteral("Select the output shown here. %1: %2").arg(outputName(id), selectedStatus));
 }
 void MainWindow::focusOperator() {
     show();
@@ -2302,13 +2410,41 @@ void MainWindow::focusOperator() {
     slides_->setFocus(Qt::ShortcutFocusReason);
 }
 
+bool MainWindow::cueInputSuspended() const {
+    return QApplication::activeModalWidget() || QApplication::activePopupWidget();
+}
+
+void MainWindow::updateCueInputStatus() {
+    const bool suspended = cueInputSuspended();
+    cueInputStatus_->setVisible(suspended && controller_.state().index >= 0);
+    controller_.setAutoAdvanceSuspended(suspended);
+}
+
 bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
-    if (event->type() != QEvent::KeyPress || QApplication::activeModalWidget()) return QMainWindow::eventFilter(watched, event);
+    if (watched == qApp && event->type() == QEvent::Quit && !closing_) {
+        return !close();
+    }
     auto *widget = qobject_cast<QWidget *>(watched);
-    if (!widget) return false;
+    if (!widget) return QMainWindow::eventFilter(watched, event);
+    if ((event->type() == QEvent::Show || event->type() == QEvent::Hide)
+        && (widget->isModal() || widget->windowType() == Qt::Popup)) {
+        QMetaObject::invokeMethod(this, &MainWindow::updateCueInputStatus, Qt::QueuedConnection);
+    }
+    if (event->type() != QEvent::KeyPress && event->type() != QEvent::ShortcutOverride)
+        return QMainWindow::eventFilter(watched, event);
+    auto *key = static_cast<QKeyEvent *>(event);
+    const QKeySequence pressed(key->keyCombination());
+    if (pressed == blackoutShortcut_ && license_->liveAllowed()) {
+        // The shortcut editor needs to receive the keystroke it is recording.
+        for (auto *focus = QApplication::focusWidget(); focus; focus = focus->parentWidget())
+            if (qobject_cast<QKeySequenceEdit *>(focus)) return false;
+        key->accept();
+        if (event->type() == QEvent::KeyPress && !key->isAutoRepeat()) controller_.blackout();
+        return true;
+    }
+    if (event->type() != QEvent::KeyPress || cueInputSuspended()) return false;
     QWidget *window = widget->window();
     if (window != this && !outputs_.ownsWindow(window)) return false;
-    auto *key = static_cast<QKeyEvent *>(event);
     if (key->key() == Qt::Key_Escape && key->modifiers() == Qt::NoModifier) {
         focusOperator();
         return true;
@@ -2321,13 +2457,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         return false;
     };
     if (isTyping(widget) || isTyping(QApplication::focusWidget())) return false;
-    const QKeySequence pressed(key->keyCombination());
-    if (pressed == blackoutShortcut_) { if (!key->isAutoRepeat()) controller_.toggleBlackout(); return true; }
     if (pressed == clearShortcut_) { if (!key->isAutoRepeat()) controller_.toggleClear(); return true; }
     if (key->modifiers() != Qt::NoModifier || mode_->currentIndex() != 0) return false;
     switch (key->key()) {
-    case Qt::Key_Right: case Qt::Key_Down: case Qt::Key_Space: case Qt::Key_PageDown: advance(); return true;
-    case Qt::Key_Left: case Qt::Key_Up: case Qt::Key_PageUp: rewind(); return true;
+    case Qt::Key_Right: case Qt::Key_Down: case Qt::Key_Space: case Qt::Key_PageDown:
+        if (!key->isAutoRepeat()) advance();
+        return true;
+    case Qt::Key_Left: case Qt::Key_Up: case Qt::Key_PageUp:
+        if (!key->isAutoRepeat()) rewind();
+        return true;
     default: return false;
     }
 }
@@ -2341,7 +2479,7 @@ void MainWindow::configureShortcuts() {
     form->addRow(QStringLiteral("Audience blackout"), blackout);
     form->addRow(QStringLiteral("Audience clear text"), clear);
     layout->addLayout(form);
-    auto *info = new QLabel(QStringLiteral("Choose one modified key combination for each action. Navigation keys are reserved. Shortcuts are ignored while typing."), &dialog);
+    auto *info = new QLabel(QStringLiteral("Choose one modified key combination for each action. Blackout stays available in app dialogs and during text entry."), &dialog);
     info->setWordWrap(true);
     layout->addWidget(info);
     auto *actions = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel, &dialog);
@@ -2493,7 +2631,36 @@ void MainWindow::reportError(const QString &error) {
     saveInfo_->setText(QStringLiteral("Operation failed • review error"));
     QMessageBox::critical(this, QStringLiteral("WorshipCue"), error.isEmpty() ? QStringLiteral("The operation failed.") : error);
 }
+bool MainWindow::confirmLiveQuit() {
+    if (confirmingQuit_) return false;
+    bool presenting = controller_.state().index >= 0;
+    for (const auto id : outputs_.outputIds()) {
+        if (presenting) break;
+        const auto &output = outputs_.output(id);
+        if (!isStageOutput(id) || !output.isVisible() || output.isMinimized() || !output.stageTimerVisible()) continue;
+        const auto state = output.stageTimerReading().state;
+        presenting = state == StageTimerReading::State::Running || state == StageTimerReading::State::Paused;
+    }
+    if (!presenting) return true;
+    confirmingQuit_ = true;
+    QMessageBox confirm(QMessageBox::Warning, QStringLiteral("Quit WorshipCue?"),
+        QStringLiteral("A presentation is live. Quitting will close the live outputs and stop playback."), QMessageBox::NoButton, this);
+    confirm.setObjectName(QStringLiteral("quitWhileLiveConfirmation"));
+    auto *keepPresenting = confirm.addButton(QStringLiteral("Keep Presenting"), QMessageBox::RejectRole);
+    auto *quit = confirm.addButton(QStringLiteral("Quit WorshipCue"), QMessageBox::DestructiveRole);
+    keepPresenting->setObjectName(QStringLiteral("keepPresenting"));
+    quit->setObjectName(QStringLiteral("quitLive"));
+    confirm.setDefaultButton(keepPresenting);
+    confirm.setEscapeButton(keepPresenting);
+    confirm.exec();
+    confirmingQuit_ = false;
+    return confirm.clickedButton() == quit;
+}
+
 void MainWindow::closeEvent(QCloseEvent *event) {
+    if (closing_) { event->accept(); return; }
+    if (!confirmLiveQuit()) { event->ignore(); return; }
+    closing_ = true;
     QSettings().setValue(QStringLiteral("control/geometry"), saveGeometry());
     QSettings settings;
     settings.setValue(QStringLiteral("workspace/panels"), operatorSplitter_->saveState());
@@ -2501,10 +2668,11 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     settings.setValue(QStringLiteral("workspace/slideView"), slideViewMode_->currentIndex());
     settings.setValue(QStringLiteral("workspace/slideSize"), slideSize_->value());
     settings.setValue(QStringLiteral("workspace/previewTab"), previewTabs_->currentIndex());
+    settings.setValue(QStringLiteral("workspace/monitorOutput"), monitorOutput_->currentData());
     midi_.shutdown();
     outputs_.shutdown();
-    if (cleanupLeaseTimer_) cleanupLeaseTimer_->stop();
-    library_.clearCleanupLease(cleanupLeaseOwner_);
+    controller_.revokeLiveAuthorization();
+    finishUsageTracking();
     QMainWindow::closeEvent(event);
 }
 
@@ -2527,20 +2695,84 @@ CleanupProtection MainWindow::cleanupProtection(const QVector<PresentationItem> 
     return result;
 }
 bool MainWindow::prepareCleanupSnapshot(const QVector<PresentationItem> &items, QString *error) {
-    auto next=cleanupProtection(items);const auto current=cleanupProtection(controller_.snapshotItems());
-    next.songs.unite(current.songs);next.assets.unite(current.assets);next.paths.unite(current.paths);
-    return library_.replaceCleanupLease(cleanupLeaseOwner_,next,error);
+    auto protection = cleanupProtection(items);
+    if (protection.songs == activeCleanupProtection_.songs && protection.assets == activeCleanupProtection_.assets
+        && protection.paths == activeCleanupProtection_.paths) return true;
+    const auto owner = cleanupLeaseOwner_ + QLatin1Char('-') + QString::number(++cleanupLeaseSerial_);
+    if (!library_.replaceCleanupLease(owner, protection, error, false)) return false;
+    if (!activeCleanupLease_.isEmpty()) pendingUsage_.retiredLeases.insert(activeCleanupLease_);
+    activeCleanupLease_ = owner;
+    activeCleanupProtection_ = std::move(protection);
+    return true;
 }
-void MainWindow::recordLiveUsage() {
-    const auto &state=controller_.state();if(state.index<0){library_.clearCleanupLease(cleanupLeaseOwner_);usageRevision_=0;return;}
+
+bool MainWindow::UsageBatch::empty() const {
+    return used.songs.isEmpty() && used.assets.isEmpty() && used.paths.isEmpty() && retiredLeases.isEmpty();
+}
+
+void MainWindow::UsageBatch::merge(const UsageBatch &batch) {
+    used.songs.unite(batch.used.songs);
+    used.assets.unite(batch.used.assets);
+    used.paths.unite(batch.used.paths);
+    retiredLeases.unite(batch.retiredLeases);
+}
+
+QString MainWindow::UsageBatch::write(LibraryRepository &repository) const {
     QString error;
-    if(!library_.replaceCleanupLease(cleanupLeaseOwner_,cleanupProtection(controller_.snapshotItems()),&error)) { statusBar()->showMessage(error,5000); return; }
-    if(usageRevision_==state.cueRevision)return;
-    QSet<QString> paths;const auto media=managedCleanupPath(state.currentMedia().path),background=managedCleanupPath(state.currentBackgroundPath());
-    if(!media.isEmpty())paths.insert(media);if(!background.isEmpty())paths.insert(background);
-    const auto *item=controller_.liveItem();QSet<int> assets;if(item&&item->mediaAssetId)assets.insert(item->mediaAssetId);
-    if(!library_.recordUsage(item?item->songId:0,assets,paths,&error)){statusBar()->showMessage(error,5000);return;}
-    usageRevision_=state.cueRevision;
+    if ((!used.songs.isEmpty() || !used.assets.isEmpty() || !used.paths.isEmpty())
+        && !repository.recordUsageBatch(used, &error)) return error;
+    for (const auto &owner : retiredLeases)
+        if (!repository.clearCleanupLease(owner, &error)) return error;
+    return {};
+}
+
+void MainWindow::recordLiveUsage() {
+    const auto &state = controller_.state();
+    if (state.index < 0) {
+        if (!activeCleanupLease_.isEmpty()) pendingUsage_.retiredLeases.insert(std::exchange(activeCleanupLease_, {}));
+        activeCleanupProtection_ = {};
+        usageRevision_ = 0;
+    } else if (usageRevision_ != state.cueRevision) {
+        usageRevision_ = state.cueRevision;
+        const auto *item = controller_.liveItem();
+        if (item && item->songId) pendingUsage_.used.songs.insert(item->songId);
+        if (item && item->mediaAssetId) pendingUsage_.used.assets.insert(item->mediaAssetId);
+        for (const auto &path : {state.currentMedia().path, state.currentBackgroundPath()}) {
+            const auto relative = managedCleanupPath(path);
+            if (!relative.isEmpty()) pendingUsage_.used.paths.insert(relative);
+        }
+    }
+    flushLiveUsage();
+}
+
+void MainWindow::flushLiveUsage() {
+    if (closing_ || databasePath_.isEmpty() || !writingUsage_.empty() || pendingUsage_.empty() || usageRetry_.isActive()) return;
+    if (databasePath_ == QStringLiteral(":memory:")) {
+        // A private in-memory library has no competing connection.
+        const auto error = std::exchange(pendingUsage_, {}).write(library_);
+        if (!error.isEmpty()) statusBar()->showMessage(error, 5000);
+        return;
+    }
+    writingUsage_ = std::exchange(pendingUsage_, {});
+    usageWriter_.setFuture(QtConcurrent::run([path = databasePath_, batch = writingUsage_] {
+        LibraryRepository repository;
+        QString error;
+        if (!repository.openForUsage(path, &error)) return error;
+        return batch.write(repository);
+    }));
+}
+
+void MainWindow::finishUsageTracking() {
+    usageRetry_.stop();
+    if (!activeCleanupLease_.isEmpty()) pendingUsage_.retiredLeases.insert(std::exchange(activeCleanupLease_, {}));
+    activeCleanupProtection_ = {};
+    if (!writingUsage_.empty()) {
+        usageWriter_.waitForFinished();
+        if (!usageWriter_.result().isEmpty()) pendingUsage_.merge(writingUsage_);
+        writingUsage_ = {};
+    }
+    if (!pendingUsage_.empty() && !databasePath_.isEmpty()) std::exchange(pendingUsage_, {}).write(library_);
+    usageRevision_ = 0;
 }
 void MainWindow::configureCleanup() {
     if(mediaManager_&&mediaManager_->busy()){statusBar()->showMessage(QStringLiteral("Wait for the current import to finish before cleaning up the library."),5000);return;}
@@ -2557,7 +2789,8 @@ void MainWindow::showLicense() {
 }
 void MainWindow::updateLicense() {
     const bool allowed = license_->liveAllowed();
-    licenseStatus_->setText(allowed ? QStringLiteral("Licensed") : QStringLiteral("Editing only — activate to present"));
+    licenseStatus_->setText(!allowed ? QStringLiteral("Editing only — activate to present")
+        : license_->retryingCacheWrite() ? QStringLiteral("Licensed • cache retry") : QStringLiteral("Licensed"));
     licenseStatus_->setToolTip(license_->status());
     if (!allowed && controller_.state().index >= 0) {
         mode_->setCurrentIndex(1);

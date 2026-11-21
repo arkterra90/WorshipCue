@@ -128,7 +128,7 @@ public:
     bool setSlide(int index);
     bool next();
     bool previous();
-    void toggleBlackout();
+    void blackout();
     void toggleClear();
     void restoreOutput();
     // Shared lyric edits update all matching occurrences without re-cueing media or timers.
@@ -143,6 +143,9 @@ public:
     int autoAdvanceRemainingMs() const;
     void setAutoAdvancePaused(bool paused);
     void toggleAutoAdvancePaused();
+    // On a due countdown, check the operator input gate before changing the cue.
+    void setAutoAdvanceGate(std::function<bool()> gate) { autoAdvanceGate_ = std::move(gate); }
+    void setAutoAdvanceSuspended(bool suspended);
 
 signals:
     void stateChanged();
@@ -150,6 +153,7 @@ signals:
 
 private:
     std::function<bool()> authorizationCheck_;
+    std::function<bool()> autoAdvanceGate_;
     LivePresentation state_;
     QVector<PresentationItem> serviceSnapshot_;
     int itemIndex_ = -1;
@@ -157,6 +161,7 @@ private:
     QTimer autoAdvanceTimer_;
     bool autoAdvancePending_ = false;
     bool autoAdvanceManuallyPaused_ = false;
+    bool autoAdvanceSuspended_ = false;
     int autoAdvanceRemainingMs_ = 0;
     PresentationSettings globalTransitionDefaults_;
     bool hasGlobalTransitionDefaults_ = false;

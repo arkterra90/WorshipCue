@@ -10,7 +10,7 @@ Unsigned development packages are labelled in their filename and window title. S
 
 Check the route in **Screens…**, confirm that the display is connected, and inspect the output status. Use **Windowed Preview** to inspect the route on the operator display. Choose **Restore Audience** to clear Blackout or Clear Text, then take the required slide live.
 
-An unavailable saved physical mode hides that output. Choose a mode offered by the connected display or **Keep OS desktop mode**. Two fullscreen outputs require separate displays. Ambiguous monitor identities may need reassignment.
+An unavailable saved physical mode hides that output. Choose a mode offered by the connected display or **Keep OS desktop mode**. Each fullscreen output requires a separate display. Ambiguous monitor identities may need reassignment.
 
 ## Navigation keys affect the wrong window
 

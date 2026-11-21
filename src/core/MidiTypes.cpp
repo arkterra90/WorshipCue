@@ -60,7 +60,7 @@ bool MidiOutputAction::fromJson(const QJsonObject &json, MidiOutputAction *resul
 QString MidiBinding::commandName(MidiCommand command) {
     switch (command) {
     case MidiCommand::Next: return "Next slide"; case MidiCommand::Previous: return "Previous slide";
-    case MidiCommand::Blackout: return "Toggle Blackout"; case MidiCommand::ClearText: return "Toggle Clear Text";
+    case MidiCommand::Blackout: return "Blackout"; case MidiCommand::ClearText: return "Toggle Clear Text";
     case MidiCommand::Restore: return "Restore audience"; case MidiCommand::SelectPresentation: return "Select presentation";
     case MidiCommand::TakePresentation: return "Take presentation live"; case MidiCommand::TakeSlide: return "Take slide live";
     case MidiCommand::PauseAutoAdvance: return "Pause / resume auto-advance"; case MidiCommand::PauseMedia: return "Pause / resume media";

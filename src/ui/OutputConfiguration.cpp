@@ -2,13 +2,9 @@
 #include <QtMath>
 
 QString outputName(OutputId id) {
-    switch (id) {
-    case OutputId::Audience1: return QStringLiteral("Audience Screen 1");
-    case OutputId::Audience2: return QStringLiteral("Audience Screen 2");
-    case OutputId::Stage1: return QStringLiteral("Stage Screen 1");
-    case OutputId::Stage2: return QStringLiteral("Stage Screen 2");
-    }
-    return {};
+    const int value = int(id);
+    const auto label = isStageOutput(id) ? QStringLiteral("Stage Screen %1") : QStringLiteral("Audience Screen %1");
+    return label.arg(value < 4 ? value % 2 + 1 : value / 2 + 1);
 }
 
 bool OutputConfiguration::validate(QString *error) const {

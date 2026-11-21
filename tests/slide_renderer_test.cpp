@@ -95,12 +95,11 @@ private slots:
         controller.setGlobalTransitionDefaults(program);
         const auto effective = source.resolvedWithDefaults(program);
         const bool animated = effective.transition != SlideTransitionType::Cut && effective.transitionDurationMs > 0;
-        controller.toggleBlackout();
+        controller.blackout();
         QCOMPARE(controller.state().settings, effective);
-        if (animated) QCOMPARE(audienceImage(audience), normal);
         QImage fullyBlack(normal.size(), normal.format());
         fullyBlack.fill(Qt::black);
-        QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience), fullyBlack, 1000);
+        QCOMPARE(audienceImage(audience), fullyBlack);
         const auto black = audienceImage(audience);
         controller.restoreOutput();
         if (animated) QCOMPARE(audienceImage(audience), black);
@@ -128,7 +127,7 @@ private slots:
         controller.takeLive(song);
         const auto before = audienceImage(audience);
         const auto revision = controller.state().cueRevision;
-        QSignalSpy frames(&audience, &DisplayWindow::audienceFrameChanged);
+        QSignalSpy frames(&audience, &DisplayWindow::outputFrameChanged);
         QVERIFY(controller.refreshSongText(5, {QStringLiteral("chorus/0")},
             {QStringLiteral("Edited shared chorus")}, {QStringLiteral("")}));
         QCOMPARE(controller.state().cueRevision, revision);
@@ -281,7 +280,7 @@ private slots:
         QVERIFY(second != first);
         DisplayWindow reference(DisplayWindow::Kind::Audience, &controller);
         QCOMPARE(second, audienceImage(reference));
-        QSignalSpy frames(&audience, &DisplayWindow::audienceFrameChanged);
+        QSignalSpy frames(&audience, &DisplayWindow::outputFrameChanged);
         QTest::qWait(80);
         QCOMPARE(frames.count(), 0);
         QCOMPARE(audienceImage(audience), second);
@@ -305,9 +304,10 @@ private slots:
         QCOMPARE(audienceImage(audience), middle);
         QVERIFY(controller.next());
         QCOMPARE(audienceImage(audience), middle);
-        controller.toggleBlackout();
-        QCOMPARE(audienceImage(audience), middle);
-        QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience).pixelColor(160, 90), QColor(Qt::black), 1600);
+        controller.blackout();
+        QCOMPARE(audienceImage(audience).pixelColor(160, 90), QColor(Qt::black));
+        QVERIFY(controller.previous());
+        QCOMPARE(audienceImage(audience).pixelColor(160, 90), QColor(Qt::black));
         const QImage black = audienceImage(audience);
         controller.restoreOutput();
         QCOMPARE(audienceImage(audience), black);
@@ -352,7 +352,7 @@ private slots:
         QVERIFY(mixed.red() > 0);
         QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience).pixelColor(160, 90), QColor(Qt::blue), 3000);
         controller.previous();
-        controller.toggleBlackout();
+        controller.blackout();
         QTRY_VERIFY_WITH_TIMEOUT(!playback.frame().isNull(), 3000);
         QTRY_COMPARE_WITH_TIMEOUT(audienceImage(audience).pixelColor(160, 90), QColor(Qt::black), 1500);
     }
@@ -568,7 +568,7 @@ private slots:
         const QImage original = lyricArea();
         controller.toggleClear();
         QCOMPARE(lyricArea(), original);
-        controller.toggleBlackout();
+        controller.blackout();
         QCOMPARE(lyricArea(), original);
     }
 

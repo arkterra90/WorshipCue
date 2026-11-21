@@ -30,6 +30,8 @@ The installation identity and signed authorization are saved automatically in an
 
 Older Keychain-based activations migrate silently when macOS permits access without a prompt. If they cannot be migrated, enter your activation code once in the updated app and release the older installation if needed. Subsequent launches and app updates reuse the saved activation.
 
+If a cache write temporarily fails, WorshipCue retries while honoring an existing valid saved authorization for up to five minutes. Lease expiry, revocation, and device binding still apply. The License panel shows when the app is retrying.
+
 The service stores a random installation public-key identifier, your chosen device name, and activation/verification times. The hardware-binding hash stays on this computer. License codes are not retained by the desktop after activation. Treat your code as private and keep a secure backup outside the library.
 
 If activation cannot connect, check the internet connection, computer clock, and licensing service availability. A build reporting that its licensing service is unconfigured needs an administrator to configure its HTTPS endpoint and public verification key. Editing remains available if activation or protected storage fails.

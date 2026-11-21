@@ -86,7 +86,7 @@ private slots:
             QCOMPARE(image.pixelColor(0,0), QColor(Qt::red)); QCOMPARE(image.pixelColor(399,399), QColor(Qt::red));
         }
         QCOMPARE(primary.configuration().rotation, 0); QCOMPARE(controller.state().cueRevision, revision);
-        controller.toggleBlackout(); image = render(secondary, {400,400}); QCOMPARE(image.pixelColor(200,200), QColor(Qt::black));
+        controller.blackout(); image = render(secondary, {400,400}); QCOMPARE(image.pixelColor(200,200), QColor(Qt::black));
     }
     void allRotationsPreserveContentOrientation_data() {
         QTest::addColumn<int>("rotation");
@@ -135,7 +135,7 @@ private slots:
         }
         QVERIFY(white > 30); QVERIFY(yellow > 30);
         controller.toggleClear(); QCOMPARE(render(stage,size), image);
-        controller.toggleBlackout(); QCOMPARE(render(stage,size), image);
+        controller.blackout(); QCOMPARE(render(stage,size), image);
     }
     void stageLayoutSerializationAndDynamicElements() {
         auto layout = StageLayout::standard(); layout.id = "editable"; layout.name = "Sunday";

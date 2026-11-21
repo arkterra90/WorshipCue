@@ -188,8 +188,17 @@ StageControlsDialog::StageControlsDialog(OutputManager *outputs, QWidget *parent
     root->addLayout(outputRow);
     auto *stage = new QComboBox(this);
     stage->setObjectName("stageControlOutput");
-    stage->addItem(outputName(OutputId::Stage1), int(OutputId::Stage1));
-    stage->addItem(outputName(OutputId::Stage2), int(OutputId::Stage2));
+    const auto refreshOutputs = [outputs, stage] {
+        const int selected = stage->currentData().toInt();
+        const QSignalBlocker block(stage);
+        stage->clear();
+        for (auto id : outputs->outputIds()) {
+            if (isStageOutput(id)) stage->addItem(outputName(id), int(id));
+        }
+        stage->setCurrentIndex(qMax(0, stage->findData(selected)));
+    };
+    refreshOutputs();
+    connect(outputs, &OutputManager::outputsChanged, this, refreshOutputs);
     stage->setAccessibleName("Confidence monitor");
     outputRow->addWidget(stage);
     auto *route = new QLabel(this);

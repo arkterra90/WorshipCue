@@ -53,7 +53,7 @@ private slots:
         PresentationController controller;
         controller.takeServiceLive(4, {{11, "Service item", {"Service text"}},
                                        {12, "Upcoming service item", {"Upcoming text"}}}, 11);
-        controller.toggleBlackout();
+        controller.blackout();
         const auto previousRevision = controller.state().cueRevision;
         PresentationSettings defaults;
         defaults.transition = SlideTransitionType::Fade;
@@ -83,7 +83,7 @@ private slots:
         QCOMPARE(controller.state().settings.transition, defaults.transition);
         QCOMPARE(controller.state().settings.transitionDurationMs, defaults.transitionDurationMs);
         QVERIFY(controller.state().cueRevision > previousRevision);
-        QVERIFY(!controller.state().blackout);
+        QVERIFY(controller.state().blackout);
         QVERIFY(controller.autoAdvanceActive());
         QVERIFY(controller.state().upcomingTitle.isEmpty());
         QVERIFY(controller.state().upcomingText.isEmpty());
@@ -275,7 +275,7 @@ private slots:
         settings.autoAdvanceMs = 200;
         controller.takeLive("Timed", {"One", "Two"}, 0, settings);
         QTest::qWait(30);
-        controller.toggleBlackout();
+        controller.blackout();
         const int remaining = controller.autoAdvanceRemainingMs();
         QVERIFY(controller.autoAdvancePaused());
         QVERIFY(!controller.autoAdvanceManuallyPaused());
@@ -283,8 +283,8 @@ private slots:
         QCOMPARE(controller.state().index, 0);
         QCOMPARE(controller.autoAdvanceRemainingMs(), remaining);
         controller.toggleClear();
-        QVERIFY(!controller.state().blackout);
-        QVERIFY(controller.state().clear);
+        QVERIFY(controller.state().blackout);
+        QVERIFY(!controller.state().clear);
         QTest::qWait(250);
         QCOMPARE(controller.autoAdvanceRemainingMs(), remaining);
         controller.restoreOutput();
@@ -292,7 +292,7 @@ private slots:
         QTRY_COMPARE_WITH_TIMEOUT(controller.state().index, 1, 1000);
         QVERIFY(controller.setSlide(0));
         controller.setAutoAdvancePaused(true);
-        controller.toggleBlackout();
+        controller.blackout();
         controller.restoreOutput();
         QVERIFY(controller.autoAdvancePaused());
         QTest::qWait(250);
@@ -379,7 +379,7 @@ private slots:
         PresentationController controller;
         controller.takeLive(QStringLiteral("Song"), {QStringLiteral("One"), QStringLiteral("Two")});
         const auto first = controller.state().cueRevision;
-        controller.toggleBlackout();
+        controller.blackout();
         controller.toggleClear();
         controller.restoreOutput();
         QCOMPARE(controller.state().cueRevision, first);
@@ -407,18 +407,25 @@ private slots:
         QCOMPARE(controller.state().index, 2);
     }
 
-    void blackoutAndClearAreExclusive() {
+    void onlyExplicitRestoreReleasesBlackout() {
         PresentationController controller;
         controller.takeLive("Test", {"First", "Second"});
-        controller.toggleBlackout();
+        controller.blackout();
         QVERIFY(controller.state().blackout);
         QVERIFY(!controller.state().clear);
         controller.toggleClear();
-        QVERIFY(!controller.state().blackout);
-        QVERIFY(controller.state().clear);
-        QVERIFY(controller.next());
+        controller.blackout();
+        QVERIFY(controller.state().blackout);
         QVERIFY(!controller.state().clear);
-        QCOMPARE(controller.state().currentText(), QStringLiteral("Second"));
+        QVERIFY(controller.next());
+        QVERIFY(controller.state().blackout);
+        controller.restoreOutput();
+        QVERIFY(!controller.state().blackout);
+        controller.toggleClear();
+        QVERIFY(controller.state().clear);
+        QVERIFY(controller.previous());
+        QVERIFY(!controller.state().clear);
+        QCOMPARE(controller.state().currentText(), QStringLiteral("First"));
     }
 
     void goingLiveEmitsChange() {
@@ -492,7 +499,7 @@ private slots:
     void invalidTakeDoesNotReplaceLiveOutput() {
         PresentationController controller;
         controller.takeServiceLive(2, {{41, "Live", {"Keep this"}}}, 41);
-        controller.toggleBlackout();
+        controller.blackout();
         QSignalSpy spy(&controller, &PresentationController::stateChanged);
         controller.takeServiceLive(4, {{51, "Other", {"Other text"}}}, 99);
         controller.takeServiceLive(4, {{51, "Empty", {}}}, 51);
@@ -507,11 +514,11 @@ private slots:
         QVERIFY(controller.state().blackout);
     }
 
-    void restoreAndCrossItemNavigationRestoreAudience() {
+    void crossingServiceItemsKeepsBlackoutLatched() {
         PresentationController controller;
         controller.takeServiceLive(9, {{61, "First", {"One"}},
                                       {62, "Second", {"Two"}}}, 61);
-        controller.toggleBlackout();
+        controller.blackout();
         controller.restoreOutput();
         QVERIFY(!controller.state().blackout);
         QVERIFY(!controller.state().clear);
@@ -519,11 +526,15 @@ private slots:
         controller.restoreOutput();
         QVERIFY(!controller.state().clear);
         QCOMPARE(controller.state().currentText(), QStringLiteral("One"));
-        controller.toggleBlackout();
+        controller.blackout();
         QVERIFY(controller.next());
-        QVERIFY(!controller.state().blackout);
-        controller.toggleClear();
+        QVERIFY(controller.state().blackout);
         QVERIFY(controller.previous());
+        QVERIFY(controller.state().blackout);
+        controller.takeServiceLive(9, {{61, "First", {"One"}}}, 61);
+        QVERIFY(controller.state().blackout);
+        controller.restoreOutput();
+        QVERIFY(!controller.state().blackout);
         QVERIFY(!controller.state().clear);
         QCOMPARE(controller.state().currentText(), QStringLiteral("One"));
     }

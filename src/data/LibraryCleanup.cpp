@@ -1,4 +1,5 @@
 #include "LibraryRepository.h"
+#include "LibraryWriteTransaction.h"
 #include <QCryptographicHash>
 #include <QCoreApplication>
 #ifdef Q_OS_WIN
@@ -15,6 +16,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
+#include <QScopeGuard>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUuid>
@@ -22,16 +24,6 @@
 
 namespace {
 constexpr int maxCleanupItems = 50000;
-class CleanupTransaction {
-public:
-    explicit CleanupTransaction(QSqlDatabase &db) : db_(db) { QSqlQuery q(db_); active_ = q.exec("BEGIN IMMEDIATE"); }
-    ~CleanupTransaction() { if (active_) db_.rollback(); }
-    bool active() const { return active_; }
-    bool commit() { if (!active_ || !db_.commit()) return false; active_ = false; return true; }
-private:
-    QSqlDatabase &db_;
-    bool active_ = false;
-};
 // Keep a stalled/suspended running process protected after its heartbeat grace period.
 bool processMayBeRunning(qint64 pid) {
     if(pid<=0 || pid>2147483647)return true;
@@ -102,8 +94,8 @@ bool samePlan(const CleanupPlan &a, const CleanupPlan &b) {
 }
 
 bool LibraryRepository::migrateCleanup(QString *error) {
-    CleanupTransaction tx(db_);
-    if (!tx.active()) return fail(db_.lastError().text(),error);
+    LibraryWriteTransaction tx(db_);
+    if (!tx.active()) return fail(tx.error(),error);
     const QStringList schema {
         "CREATE TABLE cleanup_batches(id TEXT PRIMARY KEY,created_at INTEGER NOT NULL,item_count INTEGER NOT NULL,state TEXT NOT NULL CHECK(state IN('archived','restored','purging','purged')))",
         "CREATE TABLE content_usage(song_id INTEGER UNIQUE REFERENCES songs(id) ON DELETE CASCADE,asset_id INTEGER UNIQUE REFERENCES media_assets(id) ON DELETE CASCADE,created_at INTEGER NOT NULL DEFAULT 0,imported_at INTEGER NOT NULL DEFAULT 0,modified_at INTEGER NOT NULL DEFAULT 0,last_used_at INTEGER NOT NULL DEFAULT 0,archived_batch TEXT REFERENCES cleanup_batches(id),CHECK((song_id IS NOT NULL)+(asset_id IS NOT NULL)=1))",
@@ -174,21 +166,43 @@ bool LibraryRepository::recordManagedImport(const QString &path,QString *error) 
     return q.exec()||fail(q.lastError().text(),error);
 }
 bool LibraryRepository::recordUsage(int songId,const QSet<int> &assets,const QSet<QString> &paths,QString *error) {
-    clearError(error);if(songId<0||assets.size()>10000||paths.size()>50000)return fail("Invalid usage references.",error);
-    for(const auto &path:paths)if(!managedPath(path))return fail("Usage must reference managed relative paths.",error);
-    CleanupTransaction tx(db_);if(!tx.active())return fail(db_.lastError().text(),error);
-    const auto now=QDateTime::currentSecsSinceEpoch();QSqlQuery q(db_);
-    if(songId){q.prepare("UPDATE content_usage SET last_used_at=MAX(last_used_at,?) WHERE song_id=? AND archived_batch IS NULL");q.addBindValue(now);q.addBindValue(songId);if(!q.exec())return fail(q.lastError().text(),error);}
-    for(int id:assets){q.prepare("UPDATE content_usage SET last_used_at=MAX(last_used_at,?) WHERE asset_id=? AND archived_batch IS NULL");q.addBindValue(now);q.addBindValue(id);if(!q.exec())return fail(q.lastError().text(),error);}
-    for(const auto &path:paths){
+    return recordUsageBatch({songId ? QSet<int>{songId} : QSet<int>{}, assets, paths}, error);
+}
+bool LibraryRepository::recordUsageBatch(const CleanupProtection &usage, QString *error) {
+    clearError(error);
+    if (usage.songs.size() > 50000 || usage.assets.size() > 10000 || usage.paths.size() > 50000)
+        return fail("Invalid usage references.", error);
+    for (const int id : usage.songs) if (id <= 0) return fail("Invalid usage references.", error);
+    for (const auto &path : usage.paths) if (!managedPath(path)) return fail("Usage must reference managed relative paths.", error);
+    LibraryWriteTransaction tx(db_);
+    if (!tx.active()) return fail(tx.error(), error);
+    const auto now = QDateTime::currentSecsSinceEpoch();
+    QSqlQuery q(db_);
+    const auto mark = [&](const QSet<int> &ids, const QString &column) {
+        if (ids.isEmpty()) return true;
+        if (!q.prepare("UPDATE content_usage SET last_used_at=MAX(last_used_at,?) WHERE " + column + "=? AND archived_batch IS NULL"))
+            return fail(q.lastError().text(), error);
+        for (const int id : ids) {
+            q.bindValue(0, now);
+            q.bindValue(1, id);
+            if (!q.exec()) return fail(q.lastError().text(), error);
+        }
+        return true;
+    };
+    if (!mark(usage.songs, "song_id") || !mark(usage.assets, "asset_id")) return false;
+    for(const auto &path:usage.paths){
         q.prepare("INSERT INTO managed_files(path,last_used_at) VALUES(?,?) ON CONFLICT(path) DO UPDATE SET last_used_at=MAX(last_used_at,excluded.last_used_at)");q.addBindValue(path);q.addBindValue(now);if(!q.exec())return fail(q.lastError().text(),error);
         q.prepare("UPDATE content_usage SET last_used_at=MAX(last_used_at,?) WHERE asset_id IN(SELECT id FROM media_assets WHERE path=?) AND archived_batch IS NULL");q.addBindValue(now);q.addBindValue(path);if(!q.exec())return fail(q.lastError().text(),error);
     }
     return tx.commit()||fail(db_.lastError().text(),error);
 }
-bool LibraryRepository::replaceCleanupLease(const QString &owner,const CleanupProtection &p,QString *error) {
+bool LibraryRepository::replaceCleanupLease(const QString &owner,const CleanupProtection &p,QString *error, bool waitForLock) {
     clearError(error);if(owner.isEmpty()||owner.size()>100||p.songs.size()+p.assets.size()+p.paths.size()>50000)return fail("Invalid live snapshot lease.",error);
-    CleanupTransaction tx(db_);if(!tx.active())return fail(db_.lastError().text(),error);QSqlQuery q(db_);
+    if (!waitForLock && !execute("PRAGMA busy_timeout=25", error)) return false;
+    const auto restoreTimeout = qScopeGuard([&] {
+        if (!waitForLock) execute("PRAGMA busy_timeout=3000");
+    });
+    LibraryWriteTransaction tx(db_);if(!tx.active())return fail(tx.error(),error);QSqlQuery q(db_);
     // A newly captured snapshot cannot take content already archived by another connection.
     for(bool song:{true,false})for(int id:song?p.songs:p.assets){
         q.prepare("SELECT archived_batch FROM content_usage WHERE "+QString(song?"song_id":"asset_id")+"=?");q.addBindValue(id);if(!q.exec())return fail(q.lastError().text(),error);
@@ -204,7 +218,13 @@ bool LibraryRepository::replaceCleanupLease(const QString &owner,const CleanupPr
         for(const auto &ref:refs){q.bindValue(0,owner);q.bindValue(1,kind);q.bindValue(2,ref);if(!q.exec())return fail(q.lastError().text(),error);}}
     return tx.commit()||fail(db_.lastError().text(),error);
 }
-void LibraryRepository::clearCleanupLease(const QString &owner){QSqlQuery q(db_);q.prepare("DELETE FROM cleanup_leases WHERE owner=?");q.addBindValue(owner);q.exec();}
+bool LibraryRepository::clearCleanupLease(const QString &owner, QString *error) {
+    clearError(error);
+    QSqlQuery query(db_);
+    query.prepare("DELETE FROM cleanup_leases WHERE owner=?");
+    query.addBindValue(owner);
+    return query.exec() || fail(query.lastError().text(), error);
+}
 CleanupProtection LibraryRepository::cleanupLeases(const CleanupProtection &p) const {
     auto result=p;QSqlQuery q(db_);
     if(!q.exec("SELECT r.kind,r.reference,l.expires_at,l.process_id FROM cleanup_lease_refs r JOIN cleanup_leases l ON l.owner=r.owner")){fail(q.lastError().text());return {};}
@@ -334,7 +354,7 @@ CleanupPlan LibraryRepository::previewCleanup(const QVector<CleanupKey> &keys,in
     return cleanupPlan(selected,p);
 }
 QString LibraryRepository::archiveCleanup(const QVector<CleanupKey> &keys,int days,const CleanupProtection &p,QString *error) {
-    clearError(error);CleanupTransaction tx(db_);if(!tx.active()){fail(db_.lastError().text(),error);return {};}
+    clearError(error);LibraryWriteTransaction tx(db_);if(!tx.active()){fail(tx.error(),error);return {};}
     const auto plan=previewCleanup(keys,days,p);if(!lastError_.isEmpty()){fail(lastError_,error);return {};}
     const auto batch=QUuid::createUuid().toString(QUuid::WithoutBraces);QSqlQuery q(db_);
     q.prepare("INSERT INTO cleanup_batches(id,created_at,item_count,state) VALUES(?,?,?,'archived')");q.addBindValue(batch);q.addBindValue(QDateTime::currentSecsSinceEpoch());q.addBindValue(plan.items.size());if(!q.exec()){fail(q.lastError().text(),error);return {};}
@@ -350,7 +370,7 @@ QVector<CleanupBatch> LibraryRepository::cleanupBatches() const {
     QVector<CleanupBatch> result;while(q.next())result.append({q.value(0).toString(),q.value(1).toLongLong(),q.value(2).toInt(),q.value(3).toString()});return result;
 }
 bool LibraryRepository::restoreCleanup(const QString &batch,QString *error) {
-    clearError(error);if(!batchId(batch))return fail("Choose a valid Recovery batch.",error);CleanupTransaction tx(db_);if(!tx.active())return fail(db_.lastError().text(),error);
+    clearError(error);if(!batchId(batch))return fail("Choose a valid Recovery batch.",error);LibraryWriteTransaction tx(db_);if(!tx.active())return fail(tx.error(),error);
     QSqlQuery q(db_);q.prepare("UPDATE cleanup_batches SET state='restored' WHERE id=? AND state='archived'");q.addBindValue(batch);if(!q.exec()||q.numRowsAffected()!=1)return fail("This Recovery batch is unavailable or has already been permanently removed.",error);
     for(const auto &table:{QStringLiteral("content_usage"),QStringLiteral("managed_files")}){q.prepare("UPDATE "+table+" SET archived_batch=NULL WHERE archived_batch=?");q.addBindValue(batch);if(!q.exec())return fail(q.lastError().text(),error);}
     return tx.commit()||fail(db_.lastError().text(),error);
@@ -384,7 +404,7 @@ bool LibraryRepository::purgeCleanup(const QString &batch,const CleanupPlan &rev
     clearError(error);
     if(!batchId(batch)||reviewed.items.isEmpty())return fail("Review a nonempty Recovery batch before permanent removal.",error);
     {
-        CleanupTransaction tx(db_);if(!tx.active())return fail(db_.lastError().text(),error);
+        LibraryWriteTransaction tx(db_);if(!tx.active())return fail(tx.error(),error);
         const auto fresh=previewCleanupPurge(batch,p);if(!lastError_.isEmpty())return fail(lastError_,error);
         if(!samePlan(reviewed,fresh))return fail("The Recovery contents, file sizes, or references changed. Review the permanent-delete preview again.",error);
         QSqlQuery q(db_);q.prepare("UPDATE cleanup_batches SET state='purging' WHERE id=? AND state='archived'");q.addBindValue(batch);if(!q.exec()||q.numRowsAffected()!=1)return fail("This Recovery batch changed. Review it again.",error);
@@ -395,8 +415,8 @@ bool LibraryRepository::purgeCleanup(const QString &batch,const CleanupPlan &rev
     QString operationError;
     bool committed=false;
     {
-        CleanupTransaction tx(db_);
-        if(!tx.active())operationError=db_.lastError().text();
+        LibraryWriteTransaction tx(db_);
+        if(!tx.active())operationError=tx.error();
         else {
             QSqlQuery q(db_);q.prepare("SELECT state,created_at FROM cleanup_batches WHERE id=?");q.addBindValue(batch);
             if(!q.exec()||!q.next()||q.value(0).toString()!="purging")operationError="The pending cleanup was recovered by another connection. Review it again.";
@@ -444,7 +464,7 @@ bool LibraryRepository::purgeCleanup(const QString &batch,const CleanupPlan &rev
 }
 
 bool LibraryRepository::recoverCleanup(QString *error) {
-    clearError(error);CleanupTransaction tx(db_);if(!tx.active())return fail(db_.lastError().text(),error);
+    clearError(error);LibraryWriteTransaction tx(db_);if(!tx.active())return fail(tx.error(),error);
     QSqlQuery batches(db_);if(!batches.exec("SELECT id,state FROM cleanup_batches WHERE state='purging' OR (state='purged' AND id IN(SELECT batch_id FROM cleanup_files))"))return fail(batches.lastError().text(),error);
     QVector<QPair<QString,QString>> pending;while(batches.next())pending.append({batches.value(0).toString(),batches.value(1).toString()});batches.finish();
     for(const auto &batch:pending) {

@@ -7,14 +7,16 @@
 | Space, Right, Down, Page Down | Next slide in Show mode |
 | Left, Up, Page Up | Previous slide in Show mode |
 | Escape | Focus the operator's slide controls |
-| {{blackout-shortcut}} | Toggle audience Blackout |
+| {{blackout-shortcut}} | Immediately black out the audience |
 | {{clear-shortcut}} | Toggle audience Clear Text |
 | Command+F on macOS / Ctrl+F on Windows | Focus Content Library search |
 | {{help-shortcut}} | Open WorshipCue Help |
 
 Blackout and Clear Text above show the configured audience shortcuts. Use **File → Keyboard Shortcuts…** to change them. This reference updates when the new shortcuts are saved.
 
-Navigation shortcuts work in Show mode when the operator or output window has focus. Typing fields, modal dialogs, and combo-box editing receive their own keys. In Edit mode, arrow keys select slides.
+Navigation shortcuts work in Show mode when the operator or output window has focus. Each press moves one cue. Typing fields and combo boxes receive their own navigation keys. In Edit mode, arrow keys select slides.
+
+The Blackout shortcut stays available in WorshipCue dialogs and during text entry. Close a modal dialog or popup menu to resume other cue controls. Use **Restore Audience** to release Blackout.
 
 ## Editing and service selection
 

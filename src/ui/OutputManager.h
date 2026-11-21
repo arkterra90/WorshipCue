@@ -4,7 +4,8 @@
 #include <QObject>
 #include <QPointer>
 #include <QSet>
-#include <array>
+#include <map>
+#include <optional>
 
 class QScreen;
 class QEvent;
@@ -16,17 +17,21 @@ public:
     explicit OutputManager(PresentationController *controller, QObject *parent = nullptr,
                            std::shared_ptr<DisplayModeProvider> modes = {});
     ~OutputManager() override;
-    DisplayWindow &audience() { return audience_; }
-    DisplayWindow &stage() { return stage_; }
-    const DisplayWindow &audience() const { return audience_; }
-    const DisplayWindow &stage() const { return stage_; }
+    DisplayWindow &audience() { return output(OutputId::Audience1); }
+    DisplayWindow &stage() { return output(OutputId::Stage1); }
+    const DisplayWindow &audience() const { return output(OutputId::Audience1); }
+    const DisplayWindow &stage() const { return output(OutputId::Stage1); }
     DisplayWindow &output(OutputId id);
     const DisplayWindow &output(OutputId id) const;
+    QVector<OutputId> outputIds() const;
+    OutputId addOutput(DisplayWindow::Kind kind);
     QVector<OutputTarget> availableTargets() const;
-    OutputConfiguration configuration(OutputId id) const { return configurations_.at(int(id)); }
+    OutputConfiguration configuration(OutputId id) const { return outputs_.at(id).configuration; }
     QString target(OutputId id) const { return configuration(id).target; }
     bool setTarget(OutputId id, const QString &target, QString *error = nullptr);
     bool setConfiguration(OutputId id, const OutputConfiguration &configuration, QString *error = nullptr);
+    bool beginModeTrial(OutputId id, const OutputConfiguration &configuration, QString *error = nullptr);
+    bool finishModeTrial(bool keep, QString *error = nullptr);
     QString status(OutputId id) const;
     DisplayCapabilities capabilities(const QString &target) const;
     QVector<StageLayout> stageLayouts() const { return layouts_; }
@@ -48,6 +53,7 @@ public:
     static QString screenId(const QScreen *screen);
 
 signals:
+    void outputsChanged();
     void targetsChanged();
     void statusChanged();
     void layoutsChanged();
@@ -58,15 +64,18 @@ protected:
 
 private:
     std::function<bool()> authorizationCheck_;
-    DisplayWindow audience_;
-    DisplayWindow audience2_;
-    DisplayWindow stage_;
-    DisplayWindow stage2_;
-    std::array<OutputConfiguration, 4> configurations_;
-    std::array<QPointer<QScreen>, 4> activeScreens_;
+    PresentationController *controller_;
     struct ModeLease { QPointer<QScreen> screen; QString original; QString applied; };
-    std::array<ModeLease, 4> modeLeases_;
-    std::array<QString, 4> errors_;
+    struct Output {
+        std::unique_ptr<DisplayWindow> window;
+        OutputConfiguration configuration;
+        QPointer<QScreen> activeScreen;
+        ModeLease modeLease;
+        QString error;
+    };
+    std::map<OutputId, Output> outputs_;
+    struct ModeTrial { OutputId id; OutputConfiguration previous; QPointer<QScreen> screen; };
+    std::optional<ModeTrial> modeTrial_;
     std::shared_ptr<DisplayModeProvider> modes_;
     QVector<StageLayout> layouts_{StageLayout::standard()};
     QSet<QScreen *> watchedScreens_;
@@ -78,10 +87,13 @@ private:
     static QScreen *findScreen(const QString &id);
     static QString settingsKey(OutputId id);
     static bool isDisplayTarget(const QString &id);
+    bool hasFullscreenConflict(OutputId id, const QString &target, const QScreen *screen) const;
+    void createOutput(OutputId id);
+    bool applyConfiguration(OutputId id, const OutputConfiguration &configuration, bool save, QString *error);
     void applyTarget(OutputId id);
     bool applySignal(OutputId id, const OutputConfiguration &configuration, QString *error);
     bool releaseMode(ModeLease &lease, QString *error = nullptr);
-    void persist(OutputId id);
+    bool persist(OutputId id);
     void persistLayouts();
     void persistStageTimer(OutputId);
     void watchScreen(QScreen *screen);

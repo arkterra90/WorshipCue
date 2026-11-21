@@ -118,7 +118,7 @@ PresentationSettingsDialog::PresentationSettingsDialog(const QString &title,
         "Mixed selections start with the first item's settings. Uncheck override to inherit global defaults. "
         "Changes apply on the next take and can be undone from the service playlist.") : programMode_ ? QStringLiteral(
         "The global default applies to all presentations that do not override it. "
-        "Changes take effect on the next slide cue or Blackout, Clear Text, or Restore operation, including in a running service. "
+        "Changes take effect on the next slide cue, Clear Text, or Restore operation, including in a running service. "
         "A presentation's explicit override takes precedence.")
         : QStringLiteral(
         "Saved for this library presentation and all its service entries. "

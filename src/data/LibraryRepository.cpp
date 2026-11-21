@@ -1,4 +1,5 @@
 #include "LibraryRepository.h"
+#include "LibraryWriteTransaction.h"
 
 #include <QDebug>
 #include <QDateTime>
@@ -29,21 +30,6 @@ bool validRichText(const QStringList &texts, const QStringList &richText) {
     }
     return true;
 }
-
-class Transaction {
-public:
-    explicit Transaction(QSqlDatabase &database) : database_(database), active_(database.transaction()) {}
-    ~Transaction() { if (active_) database_.rollback(); }
-    bool active() const { return active_; }
-    bool commit() {
-        if (!active_ || !database_.commit()) return false;
-        active_ = false;
-        return true;
-    }
-private:
-    QSqlDatabase &database_;
-    bool active_;
-};
 
 class ForeignKeyPause {
 public:
@@ -147,6 +133,22 @@ bool LibraryRepository::exists(const QString &table, int id, QString *error) con
     return true;
 }
 
+bool LibraryRepository::openConnection(const QString &path, QString *error) {
+    db_ = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"),
+        QStringLiteral("worshipcue-") + QUuid::createUuid().toString(QUuid::WithoutBraces));
+    db_.setDatabaseName(path);
+    if (!db_.open()) return fail(db_.lastError().text(), error);
+    return execute(QStringLiteral("PRAGMA foreign_keys=ON"), error)
+        && execute(QStringLiteral("PRAGMA busy_timeout=3000"), error);
+}
+
+bool LibraryRepository::openForUsage(const QString &databasePath, QString *error) {
+    clearError(error);
+    close();
+    if (!QFileInfo(databasePath).isFile()) return fail(QStringLiteral("The library file is unavailable."), error);
+    return openConnection(databasePath, error);
+}
+
 bool LibraryRepository::open(QString *error, const QString &databasePath) {
     clearError(error);
     close();
@@ -160,12 +162,7 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         return fail(QStringLiteral("Could not create database directory."), error);
     }
 
-    db_ = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"),
-        QStringLiteral("worshipcue-") + QUuid::createUuid().toString(QUuid::WithoutBraces));
-    db_.setDatabaseName(path);
-    if (!db_.open()) return fail(db_.lastError().text(), error);
-    if (!execute(QStringLiteral("PRAGMA foreign_keys=ON"), error) ||
-        !execute(QStringLiteral("PRAGMA busy_timeout=3000"), error) ||
+    if (!openConnection(path, error) ||
         !execute(QStringLiteral("PRAGMA journal_mode=WAL"), error) ||
         !execute(QStringLiteral("PRAGMA synchronous=FULL"), error)) return false;
 
@@ -180,8 +177,8 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         return fail(QStringLiteral("This library was saved by a newer WorshipCue version. Update WorshipCue to open it."), error);
     const bool fresh = !db_.tables().contains(QStringLiteral("songs"));
     if (version < 1) {
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         const QStringList migration = {
             QStringLiteral("CREATE TABLE IF NOT EXISTS songs (id INTEGER PRIMARY KEY, title TEXT NOT NULL)"),
             QStringLiteral("CREATE TABLE IF NOT EXISTS slides (id INTEGER PRIMARY KEY, "
@@ -216,8 +213,8 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         if (!transaction.commit()) return fail(db_.lastError().text(), error);
     }
     if (version < 2) {
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         const QStringList migration = {
             QStringLiteral("ALTER TABLE slides ADD COLUMN media_kind TEXT NOT NULL DEFAULT ''"),
             QStringLiteral("ALTER TABLE slides ADD COLUMN media_path TEXT NOT NULL DEFAULT ''"),
@@ -229,8 +226,8 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         if (!transaction.commit()) return fail(db_.lastError().text(), error);
     }
     if (version < 3) {
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         const QStringList migration = {
             QStringLiteral("ALTER TABLE songs ADD COLUMN auto_advance_ms INTEGER NOT NULL DEFAULT 0 "
                            "CHECK(auto_advance_ms=0 OR auto_advance_ms BETWEEN 100 AND 3600000)"),
@@ -246,8 +243,8 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         if (!transaction.commit()) return fail(db_.lastError().text(), error);
     }
     if (version < 4) {
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         const QStringList migration = {
             QStringLiteral("ALTER TABLE songs ADD COLUMN transition_override INTEGER NOT NULL DEFAULT 0 "
                            "CHECK(transition_override IN (0,1))"),
@@ -260,15 +257,15 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         if (!transaction.commit()) return fail(db_.lastError().text(), error);
     }
     if (version < 5) {
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         if (!execute(QStringLiteral("ALTER TABLE slides ADD COLUMN rich_text TEXT NOT NULL DEFAULT ''"), error)
             || !execute(QStringLiteral("PRAGMA user_version=5"), error)) return false;
         if (!transaction.commit()) return fail(db_.lastError().text(), error);
     }
     if (version < 6) {
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         const QStringList migration = {
             QStringLiteral("CREATE TABLE media_assets (id INTEGER PRIMARY KEY AUTOINCREMENT, "
                            "name TEXT NOT NULL, kind TEXT NOT NULL CHECK(kind IN ('image','video','audio')), "
@@ -303,15 +300,15 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         if (!transaction.commit()) return fail(db_.lastError().text(), error);
     }
     if (version < 7) {
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         if (!execute(QStringLiteral("ALTER TABLE songs ADD COLUMN song_structure TEXT NOT NULL DEFAULT ''"), error)
             || !execute(QStringLiteral("PRAGMA user_version=7"), error)) return false;
         if (!transaction.commit()) return fail(db_.lastError().text(), error);
     }
     if (version < 8) {
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         const QStringList migration = {
             QStringLiteral("CREATE TABLE looks(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL COLLATE NOCASE UNIQUE,settings TEXT NOT NULL)"),
             QStringLiteral("ALTER TABLE songs ADD COLUMN look_id INTEGER REFERENCES looks(id) ON DELETE SET NULL"),
@@ -324,8 +321,8 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         if (!transaction.commit()) return fail(db_.lastError().text(), error);
     }
     if (version < 9) {
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         const QStringList migration = {
             QStringLiteral("ALTER TABLE service_entries ADD COLUMN media_transition_type INTEGER NOT NULL DEFAULT 0 CHECK(media_transition_type BETWEEN 0 AND 3)"),
             QStringLiteral("ALTER TABLE service_entries ADD COLUMN media_transition_duration_ms INTEGER NOT NULL DEFAULT 500 CHECK(media_transition_duration_ms BETWEEN 0 AND 10000)"),
@@ -340,8 +337,8 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         // Disable FKs outside the transaction, then verify every reference before committing.
         ForeignKeyPause foreignKeys(db_);
         if (!foreignKeys.active()) return fail("Could not prepare MIDI identity migration.", error);
-        Transaction transaction(db_);
-        if (!transaction.active()) return fail(db_.lastError().text(), error);
+        LibraryWriteTransaction transaction(db_);
+        if (!transaction.active()) return fail(transaction.error(), error);
         const QStringList migration = {
             "CREATE TABLE songs_v10(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,auto_advance_ms INTEGER NOT NULL DEFAULT 0 CHECK(auto_advance_ms=0 OR auto_advance_ms BETWEEN 100 AND 3600000),presentation_loop INTEGER NOT NULL DEFAULT 0 CHECK(presentation_loop IN(0,1)),transition_type INTEGER NOT NULL DEFAULT 0 CHECK(transition_type BETWEEN 0 AND 3),transition_duration_ms INTEGER NOT NULL DEFAULT 500 CHECK(transition_duration_ms BETWEEN 0 AND 10000),transition_override INTEGER NOT NULL DEFAULT 0 CHECK(transition_override IN(0,1)),background_path TEXT NOT NULL DEFAULT '',song_structure TEXT NOT NULL DEFAULT '',look_id INTEGER REFERENCES looks(id) ON DELETE SET NULL)",
             "INSERT INTO songs_v10 SELECT id,title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms,transition_override,background_path,song_structure,look_id FROM songs",
@@ -368,8 +365,38 @@ bool LibraryRepository::open(QString *error, const QString &databasePath) {
         if(!transaction.commit())return fail(db_.lastError().text(),error);
     }
     if (version < 11 && !migrateCleanup(error)) return false;
+    if (!ensureContentVersion(error)) return false;
     if (!recoverCleanup(error)) return false;
     return true;
+}
+
+bool LibraryRepository::ensureContentVersion(QString *error) {
+    const QStringList tables{"songs", "slides", "looks", "services", "service_entries",
+                             "media_assets", "midi_bindings", "midi_slide_actions"};
+    {
+        QSqlQuery query(db_);
+        if (!query.exec("SELECT COUNT(*) FROM sqlite_master WHERE name='library_content_revision' "
+                        "OR (type='trigger' AND name GLOB 'wc_content_revision_*')") || !query.next())
+            return fail(query.lastError().text(), error);
+        if (query.value(0).toInt() == tables.size() * 3 + 2) return true;
+    }
+    // Additive metadata: v11 libraries remain readable and writable by older builds.
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
+    if (!execute("CREATE TABLE IF NOT EXISTS library_content_revision("
+                 "id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL)", error)
+        || !execute("INSERT OR IGNORE INTO library_content_revision VALUES(1,0)", error)) return false;
+    const auto bump = QStringLiteral(" BEGIN UPDATE library_content_revision SET revision=revision+1 WHERE id=1; END");
+    for (const auto &table : tables) {
+        for (const auto &operation : {QStringLiteral("INSERT"), QStringLiteral("UPDATE"), QStringLiteral("DELETE")}) {
+            if (!execute(QStringLiteral("CREATE TRIGGER IF NOT EXISTS wc_content_revision_%1_%2 AFTER %2 ON %1")
+                             .arg(table, operation) + bump, error)) return false;
+        }
+    }
+    if (!execute("CREATE TRIGGER IF NOT EXISTS wc_content_revision_archive "
+                 "AFTER UPDATE OF archived_batch ON content_usage "
+                 "WHEN OLD.archived_batch IS NOT NEW.archived_batch" + bump, error)) return false;
+    return transaction.commit() || fail(db_.lastError().text(), error);
 }
 
 QString LibraryRepository::databaseDirectory() const {
@@ -385,6 +412,17 @@ qint64 LibraryRepository::dataVersion() const {
         return -1;
     }
     return query.value(0).toLongLong();
+}
+
+QPair<qint64, qint64> LibraryRepository::contentVersion() const {
+    clearError();
+    QSqlQuery query(db_);
+    if (!query.exec("SELECT revision, schema_version FROM library_content_revision, pragma_schema_version WHERE id=1")
+        || !query.next()) {
+        fail(query.lastError().text());
+        return {-1, -1};
+    }
+    return {query.value(0).toLongLong(), query.value(1).toLongLong()};
 }
 
 QVector<Song> LibraryRepository::songs(const QString &search) const {
@@ -566,8 +604,8 @@ int LibraryRepository::createTextPresentation(const QString &title, const QStrin
     QString structureError;
     if (!structure.validate(int(slides.size()), &structureError)) return fail(structureError, error);
     if (!appearance.validate(int(slides.size()))) return fail(QStringLiteral("Invalid slide Look assignments."), error);
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     QSqlQuery query(db_);
     query.prepare(QStringLiteral("INSERT INTO songs(title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms,transition_override,background_path,song_structure,look_id) VALUES(?,?,?,?,?,?,?,?,?)"));
     query.addBindValue(title.trimmed());
@@ -645,8 +683,8 @@ int LibraryRepository::createPresentation(const QString &title, const QStringLis
         return 0;
     }
     if (!appearance.validate(int(texts.size()))) { fail(QStringLiteral("Invalid slide Look assignments."), error); return 0; }
-    Transaction transaction(db_);
-    if (!transaction.active()) { fail(db_.lastError().text(), error); return 0; }
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) { fail(transaction.error(), error); return 0; }
     QSqlQuery query(db_);
     query.prepare(QStringLiteral("INSERT INTO songs(title,auto_advance_ms,presentation_loop,transition_type,transition_duration_ms,transition_override,background_path,look_id) VALUES(?,?,?,?,?,?,?,?)"));
     query.addBindValue(title.trimmed());
@@ -715,8 +753,8 @@ bool LibraryRepository::updatePresentationSettings(int songId, const Presentatio
 bool LibraryRepository::updateTransitions(const QVector<TransitionChange> &changes, QString *error) {
     clearError(error);
     if (changes.isEmpty()) return fail(QStringLiteral("Select service items to edit transitions."), error);
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     QSet<QString> targets;
     for (const auto &change : changes) {
         if (change.id <= 0 || !change.before.isValid() || !change.after.isValid()
@@ -790,8 +828,8 @@ bool LibraryRepository::updatePresentationMediaNames(int songId, const QStringLi
         hasMedia = true;
     }
     if (!hasMedia) return fail(QStringLiteral("This song contains no media to rename."), error);
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     QSqlQuery ids(db_);
     ids.prepare(QStringLiteral("SELECT id FROM slides WHERE song_id=? ORDER BY position,id"));
     ids.addBindValue(songId);
@@ -838,8 +876,8 @@ bool LibraryRepository::updateSong(int id, const QString &title, const QStringLi
     midiCheck.addBindValue(id); midiCheck.addBindValue(id);
     if(!midiCheck.exec())return fail(midiCheck.lastError().text(),error);
     if(midiCheck.next())return fail("Use Song Sections / Arrangements or Looks / Reflow to change pages with MIDI assignments while preserving their identities.",error);
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     QSqlQuery query(db_);
     query.prepare(QStringLiteral("UPDATE songs SET title=? WHERE id=?"));
     query.addBindValue(title.trimmed());
@@ -879,8 +917,8 @@ bool LibraryRepository::updatePresentationText(int songId, const QString &title,
         || richText.size() != texts.size() || !validRichText(texts, richText))
         return fail(QStringLiteral("Provide one rich-text document per slide, no larger than 1 MB each (16 MB total)."), error);
 
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     QSqlQuery query(db_);
     query.prepare(QStringLiteral("SELECT id FROM slides WHERE song_id=? ORDER BY position,id"));
     query.addBindValue(songId);
@@ -919,8 +957,8 @@ bool LibraryRepository::updateSongStructure(const Song &original, const Song &dr
         || !draft.structure.validate(int(draft.slides.size()), &validation)
         || !original.structure.validate(int(original.slides.size()), &validation))
         return fail(validation.isEmpty() ? QStringLiteral("Provide a complete song with valid sections, arrangements, and slide text.") : validation, error);
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     const Song current = song(original.id);
     if (!lastError_.isEmpty()) return fail(lastError_, error);
     if (!current.id || current.title != original.title || current.slides != original.slides
@@ -1124,8 +1162,8 @@ bool LibraryRepository::updatePresentationDraft(const Song &original, const Song
     if (expected.toJson() != draft.structure.toJson() || !draft.structure.validate(int(draft.slides.size()), &validation))
         return fail(QStringLiteral("Reflow must retain song section and arrangement associations. %1").arg(validation), error);
 
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     const auto current = song(original.id);
     if (!lastError_.isEmpty()) return fail(lastError_, error);
     if (!current.id || current.title != original.title || current.slides != original.slides
@@ -1271,8 +1309,8 @@ QVector<int> LibraryRepository::registerMediaAssets(const QVector<SlideMedia> &m
         fail(QStringLiteral("Import between 1 and 10000 media items per batch."), error);
         return {};
     }
-    Transaction transaction(db_);
-    if (!transaction.active()) { fail(db_.lastError().text(), error); return {}; }
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) { fail(transaction.error(), error); return {}; }
     QVector<int> ids;
     for (const auto &item : media) {
         const int id = registerMediaAsset(item, error);
@@ -1321,8 +1359,8 @@ bool LibraryRepository::deleteMediaAsset(int id, QString *error) {
 
 int LibraryRepository::appendMediaToService(int serviceId, int mediaAssetId, QString *error, int beforeEntryId) {
     clearError(error);
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     if (!exists(QStringLiteral("services"), serviceId, error)
         || !exists(QStringLiteral("media_assets"), mediaAssetId, error)) return false;
     auto entries = service(serviceId);
@@ -1368,7 +1406,7 @@ bool LibraryRepository::setMidiActions(MidiOwnerType type,qint64 id,const QVecto
     clearError(error);const auto column=midiOwnerColumn(type);
     if(column.isEmpty()||id<=0||actions.size()>64)return fail("Choose a valid cue and at most 64 MIDI output actions.",error);
     for(const auto &action:actions)if(!action.valid())return fail("Use a destination, channel 1–16, number/value 0–127, and positive Note On velocity.",error);
-    Transaction transaction(db_);if(!transaction.active())return fail(db_.lastError().text(),error);
+    LibraryWriteTransaction transaction(db_);if(!transaction.active())return fail(transaction.error(),error);
     QSqlQuery query(db_);query.prepare("SELECT 1 FROM "+midiOwnerTable(type)+" WHERE id=?"+(type==MidiOwnerType::Entry?QStringLiteral(" AND media_asset_id IS NOT NULL"):QString()));query.addBindValue(id);
     if(!query.exec())return fail(query.lastError().text(),error);
     if(!query.next())return fail("This slide or media cue no longer exists.",error);query.finish();
@@ -1427,7 +1465,7 @@ bool LibraryRepository::validateMidiTarget(const MidiBinding &binding,QString *e
 }
 bool LibraryRepository::saveMidiBinding(MidiBinding binding,QString *error,const MidiBinding *original) {
     clearError(error);binding.name=binding.name.trimmed();
-    Transaction transaction(db_);if(!transaction.active())return fail(db_.lastError().text(),error);
+    LibraryWriteTransaction transaction(db_);if(!transaction.active())return fail(transaction.error(),error);
     if(!validateMidiTarget(binding,error))return false;
     auto all=midiBindings();if(!lastError_.isEmpty())return fail(lastError_,error);
     bool found=!binding.id;
@@ -1519,8 +1557,8 @@ int LibraryRepository::createServiceOrder(const QString &name, const QVector<Ser
             return reject(QStringLiteral("Slide arrangements are limited to 10000 indices per item and 50000 per service order."));
     }
 
-    Transaction transaction(db_);
-    if (!transaction.active()) return reject(db_.lastError().text());
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return reject(transaction.error());
     // Validate every reference inside the transaction, including arrangements,
     // before creating the service or any new library presentations.
     QSqlQuery query(db_);
@@ -1588,8 +1626,8 @@ bool LibraryRepository::renameService(int id, const QString &name, QString *erro
 int LibraryRepository::duplicateService(int id, const QString &name, QString *error) {
     clearError(error);
     if (name.trimmed().isEmpty()) { fail(QStringLiteral("A service must have a name."), error); return 0; }
-    Transaction transaction(db_);
-    if (!transaction.active()) { fail(db_.lastError().text(), error); return 0; }
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) { fail(transaction.error(), error); return 0; }
     if (!exists(QStringLiteral("services"), id, error)) return 0;
     QSqlQuery query(db_);
     query.prepare(QStringLiteral("INSERT INTO services(name) VALUES(?)"));
@@ -1663,8 +1701,8 @@ bool LibraryRepository::moveServiceEntry(int serviceId, int from, int to, QStrin
 
 bool LibraryRepository::reorderServiceEntries(int serviceId, const QVector<int> &ids, QString *error) {
     clearError(error);
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     if (!exists(QStringLiteral("services"), serviceId, error)) return false;
     const auto entries = service(serviceId);
     if (!lastError_.isEmpty()) return fail(lastError_, error);
@@ -1687,8 +1725,8 @@ bool LibraryRepository::reorderServiceEntries(int serviceId, const QVector<int> 
 
 bool LibraryRepository::duplicateServiceEntry(int entryId, QString *error) {
     clearError(error);
-    Transaction transaction(db_);
-    if (!transaction.active()) return fail(db_.lastError().text(), error);
+    LibraryWriteTransaction transaction(db_);
+    if (!transaction.active()) return fail(transaction.error(), error);
     QSqlQuery query(db_);
     query.prepare(QStringLiteral("SELECT service_id FROM service_entries WHERE id=?"));
     query.addBindValue(entryId);

@@ -6,6 +6,7 @@
 #include "../licensing/LicenseManager.h"
 #include "../midi/MidiEngine.h"
 #include "../media/MediaPlayback.h"
+#include <QFutureWatcher>
 #include <QKeySequence>
 #include <QMainWindow>
 #include <QPointer>
@@ -75,6 +76,7 @@ private:
     SlidePreview *nextPreview_ = nullptr;
     QLabel *selectedInfo_ = nullptr;
     QLabel *liveInfo_ = nullptr;
+    QComboBox *monitorOutput_ = nullptr;
     QLabel *nextInfo_ = nullptr;
     QLabel *outputInfo_ = nullptr;
     QLabel *saveInfo_ = nullptr;
@@ -109,6 +111,10 @@ private:
     QComboBox *audienceTarget_ = nullptr;
     QComboBox *stageTarget_ = nullptr;
     QPushButton *blackoutButton_ = nullptr;
+    QLabel *cueInputStatus_ = nullptr;
+    bool confirmingQuit_ = false;
+    bool closing_ = false;
+    bool usesLiveDialogOverride_ = false;
     QPushButton *clearButton_ = nullptr;
     int currentServiceId_ = 0;
     bool browsingLibrary_ = false;
@@ -127,16 +133,31 @@ private:
     QString selectedTimingSummary_;
     QString databasePath_;
     qint64 externalDataVersion_ = -1;
+    QPair<qint64, qint64> externalContentVersion_{-1, -1};
     QTimer *libraryRefreshTimer_ = nullptr;
     QPointer<HelpDialog> helpDialog_;
     QPointer<StageControlsDialog> stageControlsDialog_;
-    QTimer *cleanupLeaseTimer_ = nullptr;
     QString cleanupLeaseOwner_;
+    QString activeCleanupLease_;
+    CleanupProtection activeCleanupProtection_;
+    quint64 cleanupLeaseSerial_ = 0;
     quint64 usageRevision_ = 0;
+    struct UsageBatch {
+        CleanupProtection used;
+        QSet<QString> retiredLeases;
+        bool empty() const;
+        void merge(const UsageBatch &batch);
+        QString write(LibraryRepository &repository) const;
+    };
+    UsageBatch pendingUsage_, writingUsage_;
+    QFutureWatcher<QString> usageWriter_;
+    QTimer usageRetry_;
     CleanupProtection cleanupProtection(const QVector<PresentationItem> &) const;
     QString managedCleanupPath(const QString &) const;
     bool prepareCleanupSnapshot(const QVector<PresentationItem> &, QString *error);
     void recordLiveUsage();
+    void flushLiveUsage();
+    void finishUsageTracking();
     void configureCleanup();
 
     void buildUi();
@@ -204,6 +225,11 @@ private:
     void updateLiveUi();
     void refreshThumbnails();
     void refreshOutputOptions();
+    void refreshMonitorOutputs();
+    void updateMonitorOutput();
+    bool cueInputSuspended() const;
+    void updateCueInputStatus();
+    bool confirmLiveQuit();
     void updateOutputStatus();
     void configureShortcuts();
     void configureMcp();

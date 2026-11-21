@@ -163,6 +163,29 @@ class LicenseTest : public QObject {
         QVERIFY(!unconfigured.configured());
         QVERIFY(!unconfigured.liveAllowed());
     }
+
+    void validSavedLeaseSurvivesTransientCacheWriteFailures() {
+        MemoryLicenseStore *store = nullptr;
+        auto license = fixtureLicense(true, {}, &store);
+        QVERIFY(license->liveAllowed());
+        const auto saved = store->state;
+        store->writable = false;
+        for (int attempt = 0; attempt < 2; ++attempt) {
+            QVERIFY(QMetaObject::invokeMethod(license.get(), "tick", Qt::DirectConnection));
+            QVERIFY(license->liveAllowed());
+            QVERIFY(license->status().contains("temporarily unavailable"));
+            QCOMPARE(store->state, saved);
+        }
+        store->writable = true;
+        QVERIFY(QMetaObject::invokeMethod(license.get(), "tick", Qt::DirectConnection));
+        QVERIFY(license->liveAllowed());
+        QVERIFY(!license->status().contains("cache temporarily unavailable"));
+
+        auto denied = fixtureLicense(true, [](QJsonObject &state) { state["denied"] = true; }, &store);
+        store->writable = false;
+        QVERIFY(QMetaObject::invokeMethod(denied.get(), "tick", Qt::DirectConnection));
+        QVERIFY(!denied->liveAllowed());
+    }
 };
 QTEST_GUILESS_MAIN(LicenseTest)
 #include "license_test.moc"

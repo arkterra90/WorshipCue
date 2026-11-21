@@ -18,9 +18,9 @@ For presentations, the shared library setting affects their service occurrences.
 
 ## Blackout and Clear Text
 
-**Blackout** makes audience output black and mutes live media audio while its playhead continues. **Clear Text** hides audience text while retaining the visual background/media and audio. **Restore Audience** resumes normal audience content.
+**Blackout** instantly makes audience output black and mutes live media audio while its playhead continues. Blackout stays active while you navigate or take another cue. Choose **Restore Audience** to release it.
 
-These operations use the active presentation override or current global default and preserve cue position. Blackout and Clear Text suspend automatic timing with its remaining time preserved. Restore resumes timing unless it was also paused manually. Stage content continues displaying its current/next information.
+**Clear Text** hides audience text while retaining the background, media, and audio. Clear Text and Restore use the active presentation transition override or current global default. Blackout and Clear Text suspend automatic timing with its remaining time preserved. Restore resumes timing unless it was also paused manually or suspended by a dialog. Stage content continues displaying its current and next cues.
 
 ## Automatic advancement
 

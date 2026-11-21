@@ -17,7 +17,7 @@ In **Input Mappings**, add a named trigger for Note On, Note Off, or Control Cha
 
 Choose an action such as Next/Previous, Blackout, Clear Text, Restore, presentation selection/take, a source-page take, timing/media controls, or note release. **Occurrence** identifies a repeated page within an arrangement. Service targets belong to their specific saved entry.
 
-Overlapping enabled triggers are rejected. Input mappings save in their editor. Input controls operate in Show mode with modal dialogs and popup menus closed. Learning and monitoring remain available during modal editing.
+Overlapping enabled triggers are rejected. Input mappings save in their editor. Cue controls operate in Show mode with modal dialogs and popup menus closed. A mapped Blackout remains available during setup. Use Restore to release it once cue controls resume. Learning and monitoring remain available during modal editing.
 
 ## Send MIDI from slides
 

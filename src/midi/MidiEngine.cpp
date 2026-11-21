@@ -139,13 +139,13 @@ void MidiEngine::receive(const QString &source, const QByteArray &data, quint64 
         const auto now=clock_.elapsed(); const auto echo=recentOutput_.constFind(message.edgeKey());
         if(settings_.echoWindowMs>0&&echo!=recentOutput_.cend()&&now-echo.value()<=settings_.echoWindowMs){record("Ignored: possible MIDI feedback/echo.");continue;}
         if(duplicate){record("Ignored: held note or unchanged controller value.");continue;}
-        if(dispatchGate_&&!dispatchGate_()){record("Ignored: MIDI input control is suspended in Edit mode or a dialog.");continue;}
         MidiBinding matched;
         for(const auto &input:QStringList{source,QStringLiteral("*")})for(int channel:{message.channel,0})for(int value:{message.value,-1}){
             const auto found=bindingIndex_.constFind(triggerKey(input,channel,message.type,message.number,value));
             if(found!=bindingIndex_.cend())matched=found.value();
         }
         if(matched.id){
+            if(dispatchGate_&&!dispatchGate_(matched.command)){record("Ignored: MIDI cue control is suspended in Edit mode or a dialog.");continue;}
             if(lastTrigger_.contains(matched.id)&&now-lastTrigger_.value(matched.id)<settings_.minimumIntervalMs){record("Ignored: mapping debounce.");continue;}
             lastTrigger_[matched.id]=now;record("Mapped: "+matched.name);emit commandRequested(matched);
         }

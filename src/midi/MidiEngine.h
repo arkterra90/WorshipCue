@@ -38,7 +38,7 @@ public:
     void restoreSettings();
     bool setBindings(const QVector<MidiBinding> &, QString *error = nullptr);
     void setLiveAuthorizationCheck(std::function<bool()> check) { authorizationCheck_ = std::move(check); }
-    void setDispatchGate(std::function<bool()> gate) { dispatchGate_ = std::move(gate); }
+    void setDispatchGate(std::function<bool(MidiCommand)> gate) { dispatchGate_ = std::move(gate); }
     void refreshPorts();
     void activateCue(quint64 revision, const QVector<MidiOutputAction> &actions);
     bool sendAction(const MidiOutputAction &, QString *error = nullptr);
@@ -75,7 +75,7 @@ private:
     quint64 connectionSerial_ = 0;
     quint64 lastCue_ = 0;
     QString lastDiscoveryError_;
-    std::function<bool()> dispatchGate_;
+    std::function<bool(MidiCommand)> dispatchGate_;
     std::function<bool()> authorizationCheck_;
     bool releasingNotes_ = false;
     void receive(const QString &, const QByteArray &, quint64);

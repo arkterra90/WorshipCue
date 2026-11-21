@@ -25,7 +25,7 @@ DisplayWindow::DisplayWindow(Kind kind, PresentationController *controller, QWid
     setMinimumSize(320, 180);
     setAutoFillBackground(false);
     if (kind_ == Kind::Audience && sharedAudience_) {
-        connect(sharedAudience_, &DisplayWindow::audienceFrameChanged, this, [this] { audienceChanged(); });
+        connect(sharedAudience_, &DisplayWindow::outputFrameChanged, this, [this] { notifyFrameChanged(); });
     } else if (kind_ == Kind::Audience) {
         audienceState_ = controller_->state();
         syncBackground();
@@ -37,12 +37,11 @@ DisplayWindow::DisplayWindow(Kind kind, PresentationController *controller, QWid
                 / qreal(qMax(1, transitionDurationMs_)), qreal(1));
             compositeDirty_ = true;
             if (transitionProgress_ >= 1) finishTransition();
-            audienceChanged();
+            notifyFrameChanged();
         });
         connect(controller_, &PresentationController::stateChanged, this, &DisplayWindow::syncAudienceState);
     } else {
-        connect(controller_, &PresentationController::stateChanged, this,
-                QOverload<>::of(&QWidget::update));
+        connect(controller_, &PresentationController::stateChanged, this, &DisplayWindow::notifyFrameChanged);
     }
     if (kind_ == Kind::Stage) {
         auto *timer = new QTimer(this);
@@ -52,7 +51,7 @@ DisplayWindow::DisplayWindow(Kind kind, PresentationController *controller, QWid
             if (text != lastText || second != lastSecond) {
                 lastText = text;
                 lastSecond = second;
-                update();
+                notifyFrameChanged();
             }
         });
         timer->start(100);
@@ -82,8 +81,8 @@ void DisplayWindow::setBackgroundImage(const QString &path) {
         syncBackground();
         finishTransition();
         rebuildAudienceCanvas();
-        audienceChanged();
-    } else update();
+        notifyFrameChanged();
+    } else notifyFrameChanged();
 }
 
 void DisplayWindow::setMediaPlayback(MediaPlayback *playback) {
@@ -96,16 +95,16 @@ void DisplayWindow::setMediaPlayback(MediaPlayback *playback) {
         connect(playback_, &MediaPlayback::statusChanged, this, [this] {
             if (playback_ && !playback_->errorString().isEmpty()) {
                 finishTransition();
-                audienceChanged();
+                notifyFrameChanged();
             }
         });
     }
     syncMediaFrame();
 }
 
-void DisplayWindow::audienceChanged() {
+void DisplayWindow::notifyFrameChanged() {
     update();
-    emit audienceFrameChanged();
+    emit outputFrameChanged();
 }
 
 void DisplayWindow::syncBackground() {
@@ -176,14 +175,14 @@ void DisplayWindow::syncAudienceState() {
             || state.currentRichText() != audienceState_.currentRichText()
             || state.currentLook() != audienceState_.currentLook();
         audienceState_ = state;
-        if (textChanged) { rebuildAudienceCanvas(); audienceChanged(); }
+        if (textChanged) { rebuildAudienceCanvas(); notifyFrameChanged(); }
         return;
     }
 
     // Capture the visible composite before the media decoder clears its old
     // frame. Repeated navigation therefore starts at the current visual.
     const bool interrupted = transitionTimer_.isActive() || waitingForMedia_;
-    const bool animate = (state.index >= 0 || outputChanged)
+    const bool animate = !state.blackout && (state.index >= 0 || outputChanged)
         && state.settings.isValid() && state.settings.transition != SlideTransitionType::Cut
         && state.settings.transitionDurationMs > 0;
     const QPixmap outgoing = animate ? audienceCanvas() : QPixmap{};
@@ -206,7 +205,7 @@ void DisplayWindow::syncAudienceState() {
             waitingForMedia_ = true;
         else startTransition();
     }
-    audienceChanged();
+    notifyFrameChanged();
 }
 
 void DisplayWindow::syncMediaFrame() {
@@ -214,6 +213,7 @@ void DisplayWindow::syncMediaFrame() {
     // frameChanged signal arrives before our controller stateChanged callback.
     syncAudienceState();
     mediaFrame_ = playback_ ? playback_->frame() : QPixmap{};
+    if (audienceState_.blackout) return;
     rebuildAudienceCanvas();
     if (dynamicOutgoing_) {
         // Output-state fades use the current shared frame on both sides, so
@@ -223,7 +223,7 @@ void DisplayWindow::syncMediaFrame() {
         compositeDirty_ = true;
     }
     if (waitingForMedia_ && !mediaFrame_.isNull()) startTransition();
-    audienceChanged();
+    notifyFrameChanged();
 }
 
 void DisplayWindow::paintAudience(QPainter &painter, const QRect &destination) {
@@ -233,19 +233,39 @@ void DisplayWindow::paintAudience(QPainter &painter, const QRect &destination) {
     SlideRenderer::paintTransition(painter, destination, {}, audienceCanvas(), SlideTransitionType::Cut, 1);
 }
 
+void DisplayWindow::paintMonitor(QPainter &painter, const QRect &destination) {
+    QSize frame = size();
+    if (!isVisible()) {
+        frame = configuration_.canvas;
+        if (configuration_.rotation == 90 || configuration_.rotation == 270) frame.transpose();
+    }
+    // Keep the output's frame shape so a Fill route crops at the physical
+    // output edges, even when the operator resizes the monitoring pane.
+    const auto scaled = frame.scaled(destination.size(), Qt::KeepAspectRatio);
+    QRect viewport(QPoint(), scaled);
+    viewport.moveCenter(destination.center());
+    painter.fillRect(destination, Qt::black);
+    if (!viewport.isEmpty()) paintOutput(painter, viewport);
+}
+
+void DisplayWindow::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+    emit outputFrameChanged();
+}
+
 bool DisplayWindow::setConfiguration(const OutputConfiguration &configuration, QString *error) {
     if (!configuration.validate(error)) return false;
     configuration_ = configuration;
-    audienceChanged();
+    notifyFrameChanged();
     return true;
 }
 
 void DisplayWindow::setStageLayout(const StageLayout &layout) {
-    if (layout.validate()) { stageLayout_ = layout; update(); }
+    if (layout.validate()) { stageLayout_ = layout; notifyFrameChanged(); }
 }
 bool DisplayWindow::setStageMessage(const QString &text) {
     if (text.size() > 4000) return false;
-    stageMessage_ = text; update(); return true;
+    stageMessage_ = text; notifyFrameChanged(); return true;
 }
 void DisplayWindow::setCountdownSeconds(int seconds) {
     if (seconds < 1 || seconds > 86400) return;
@@ -254,19 +274,19 @@ void DisplayWindow::setCountdownSeconds(int seconds) {
     configuration.durationSeconds = seconds;
     configureStageTimer(configuration);
 }
-void DisplayWindow::startCountdown() { stageTimer_.start(); update(); }
-void DisplayWindow::pauseCountdown() { stageTimer_.pause(); update(); }
-void DisplayWindow::resumeCountdown() { stageTimer_.resume(); update(); }
-void DisplayWindow::resetCountdown() { stageTimer_.reset(); update(); }
+void DisplayWindow::startCountdown() { stageTimer_.start(); notifyFrameChanged(); }
+void DisplayWindow::pauseCountdown() { stageTimer_.pause(); notifyFrameChanged(); }
+void DisplayWindow::resumeCountdown() { stageTimer_.resume(); notifyFrameChanged(); }
+void DisplayWindow::resetCountdown() { stageTimer_.reset(); notifyFrameChanged(); }
 bool DisplayWindow::configureStageTimer(const StageTimerConfiguration &configuration, QString *error) {
     if (!stageTimer_.configure(configuration, error)) return false;
-    update();
+    notifyFrameChanged();
     return true;
 }
 void DisplayWindow::setStageTimerVisible(bool visible, bool overlay) {
     timerVisible_ = visible;
     timerOverlay_ = visible && overlay;
-    update();
+    notifyFrameChanged();
 }
 bool DisplayWindow::stageTimerVisible() const {
     const bool hasTimer = stageLayout_.id != "standard" && std::any_of(stageLayout_.elements.cbegin(), stageLayout_.elements.cend(),

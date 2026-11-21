@@ -16,6 +16,7 @@
 #include "../src/ui/StageLayoutDialog.h"
 #include "../src/core/BuiltInBackgrounds.h"
 #include <QAction>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QDir>
 #include <QImage>
@@ -37,13 +38,17 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QElapsedTimer>
+#include <QKeyEvent>
 #include <QKeySequenceEdit>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
+#include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QScopeGuard>
 #include <QSettings>
 #include <QSlider>
 #include <QSplitter>
@@ -70,6 +75,14 @@ class OperatorWorkflowTest : public QObject {
         Q_ASSERT(found);
         return found;
     }
+    void closeOperator(MainWindow &window) {
+        QTimer::singleShot(0, &window, [] {
+            auto *dialog = qobject_cast<QMessageBox *>(QApplication::activeModalWidget());
+            if (dialog && dialog->objectName() == QStringLiteral("quitWhileLiveConfirmation"))
+                dialog->findChild<QPushButton *>("quitLive")->click();
+        });
+        QVERIFY(window.close());
+    }
     void answerTextDialog(const QString &text) {
         QTimer::singleShot(0, [text] {
             auto *dialog = qobject_cast<QInputDialog *>(QApplication::activeModalWidget());
@@ -95,6 +108,134 @@ private slots:
     }
     void init() { QSettings().clear(); }
 
+    void closingOrQuittingLiveRequiresAnExplicitChoice() {
+        QString error;
+        LicensedMainWindow window;
+        QVERIFY2(window.initialize(&error, QStringLiteral(":memory:")), qPrintable(error));
+        window.show();
+        auto *controller = control<PresentationController>(window, "presentationController");
+        auto *outputs = window.findChild<OutputManager *>();
+        QVERIFY(outputs);
+        QVERIFY(outputs->setTarget(OutputId::Audience1, "preview", &error));
+        controller->takeLive("Live service", {"One", "Two"});
+        const auto revision = controller->state().cueRevision;
+
+        const auto keepPresenting = [&] {
+            QTimer::singleShot(0, &window, [] {
+                auto *confirm = qobject_cast<QMessageBox *>(QApplication::activeModalWidget());
+                QVERIFY(confirm);
+                const auto finish = qScopeGuard([confirm] { confirm->reject(); });
+                QCOMPARE(confirm->objectName(), QStringLiteral("quitWhileLiveConfirmation"));
+                QCOMPARE(confirm->defaultButton(), confirm->findChild<QPushButton *>("keepPresenting"));
+                QTest::keyClick(confirm, Qt::Key_Escape);
+            });
+        };
+        keepPresenting();
+        QVERIFY(!window.close());
+        QVERIFY(window.isVisible());
+        QVERIFY(outputs->audience().isVisible());
+        QCOMPARE(controller->state().cueRevision, revision);
+
+        keepPresenting();
+        QEvent quit(QEvent::Quit);
+        QCoreApplication::sendEvent(qApp, &quit);
+        QVERIFY(window.isVisible());
+        QVERIFY(outputs->audience().isVisible());
+        QCOMPARE(controller->state().cueRevision, revision);
+
+        QTimer::singleShot(0, &window, [] {
+            auto *confirm = qobject_cast<QMessageBox *>(QApplication::activeModalWidget());
+            QVERIFY(confirm);
+            confirm->findChild<QPushButton *>("quitLive")->click();
+        });
+        control<QAction>(window, "quitWorshipCue")->trigger();
+        QVERIFY(!window.isVisible());
+        QVERIFY(!outputs->audience().isVisible());
+        QCOMPARE(controller->state().index, -1);
+        QCOMPARE(outputs->target(OutputId::Audience1), QStringLiteral("preview"));
+    }
+
+    void setupSuspendsCueAdvanceButKeyboardAndMidiBlackoutStillWork() {
+        QTemporaryDir directory;
+        QString error;
+        LibraryRepository repo;
+        const auto path = directory.filePath("safety.sqlite3");
+        QVERIFY(repo.open(&error, path));
+        MidiBinding blackout;
+        blackout.name = "Emergency Blackout";
+        blackout.command = MidiCommand::Blackout;
+        blackout.trigger.number = 61;
+        QVERIFY(repo.saveMidiBinding(blackout, &error));
+        MidiBinding next;
+        next.name = "Next cue";
+        next.command = MidiCommand::Next;
+        next.trigger.number = 62;
+        QVERIFY(repo.saveMidiBinding(next, &error));
+        auto backend = std::make_unique<FakeMidiBackend>();
+        auto *fake = backend.get();
+        LicensedMainWindow window(nullptr, std::move(backend));
+        QVERIFY(window.initialize(&error, path));
+        window.show();
+        auto *controller = control<PresentationController>(window, "presentationController");
+        auto *engine = control<MidiEngine>(window, "midiEngine");
+        MidiSettings midi;
+        midi.enabled = true;
+        midi.autoReconnect = false;
+        midi.minimumIntervalMs = 0;
+        midi.inputs = {{"in-a", true, 0}};
+        QVERIFY(engine->setSettings(midi, &error, false));
+        PresentationSettings timed;
+        timed.autoAdvanceMs = 200;
+        controller->takeLive("Timed", {"One", "Two", "Three"}, 0, timed);
+        const auto revision = controller->state().cueRevision;
+        QTimer::singleShot(0, &window, [&] {
+            auto *dialog = qobject_cast<OutputSettingsDialog *>(QApplication::activeModalWidget());
+            QVERIFY(dialog);
+            const auto finish = qScopeGuard([dialog] { dialog->reject(); });
+            QTRY_VERIFY(!control<QLabel>(window, "cueInputStatus")->isHidden());
+            const int remaining = controller->autoAdvanceRemainingMs();
+            QTest::keyClick(dialog, Qt::Key_Space);
+            fake->inject(QByteArray::fromHex("903e7f"));
+            QTest::qWait(300);
+            QCOMPARE(controller->state().cueRevision, revision);
+            QCOMPARE(controller->autoAdvanceRemainingMs(), remaining);
+            QTest::keyClick(dialog, Qt::Key_B, Qt::ControlModifier);
+            QVERIFY(controller->state().blackout);
+            controller->restoreOutput();
+            fake->inject(QByteArray::fromHex("903d7f"));
+            QTRY_VERIFY(controller->state().blackout);
+            QCOMPARE(controller->state().cueRevision, revision);
+        });
+        control<QAction>(window, "outputSettingsAction")->trigger();
+        QTRY_VERIFY(control<QLabel>(window, "cueInputStatus")->isHidden());
+        QVERIFY(controller->state().blackout);
+        controller->restoreOutput();
+        QTRY_VERIFY(controller->state().index >= 1);
+
+        controller->takeLive("Manual", {"One", "Two", "Three"});
+        QVERIFY(QCoreApplication::testAttribute(Qt::AA_DontUseNativeDialogs));
+        QFileDialog filePicker(&window);
+        QTimer::singleShot(0, &filePicker, [&] {
+            const auto finish = qScopeGuard([&] { filePicker.reject(); });
+            QCOMPARE(QApplication::activeModalWidget(), &filePicker);
+            QTest::keyClick(&filePicker, Qt::Key_B, Qt::ControlModifier);
+            QVERIFY(controller->state().blackout);
+        });
+        filePicker.exec();
+        controller->restoreOutput();
+        auto *slides = control<ReorderListWidget>(window, "slideWorkspace");
+        slides->setFocus();
+        QTest::keyClick(slides, Qt::Key_Space);
+        QCOMPARE(controller->state().index, 1);
+        QKeyEvent repeatForward(QEvent::KeyPress, Qt::Key_Space, Qt::NoModifier, QStringLiteral(" "), true);
+        QCoreApplication::sendEvent(slides, &repeatForward);
+        QKeyEvent repeatBackward(QEvent::KeyPress, Qt::Key_Left, Qt::NoModifier, QString(), true);
+        QCoreApplication::sendEvent(slides, &repeatBackward);
+        QCOMPARE(controller->state().index, 1);
+        QTest::keyClick(slides, Qt::Key_Left);
+        QCOMPARE(controller->state().index, 0);
+    }
+
     void editingOnlyPreservesLibraryAndBlocksEveryLiveRoute() {
         QTemporaryDir directory; QString error;
         MainWindow window(nullptr, {}, fixtureLicense(false));
@@ -105,7 +246,7 @@ private slots:
         auto *outputs = window.findChild<OutputManager *>(); QVERIFY(outputs);
         controller->takeLive("Blocked", {"Text"});
         QCOMPARE(controller->state().index, -1);
-        for (auto id : outputIds) {
+        for (auto id : defaultOutputIds) {
             QVERIFY(outputs->setTarget(id, "preview", &error));
             QVERIFY(!outputs->output(id).isVisible());
             outputs->output(id).showPreview();
@@ -127,7 +268,7 @@ private slots:
         QVERIFY(outputs);
         auto *controller = control<PresentationController>(window, "presentationController");
         control<QPushButton>(window, "takeLive")->click();
-        controller->toggleBlackout();
+        controller->blackout();
         const auto live = controller->state();
         control<QToolButton>(window, "stageTimersButton")->click();
         auto *dialog = window.findChild<StageControlsDialog *>("stageControlsDialog");
@@ -218,7 +359,7 @@ private slots:
         QCOMPARE(take->parentWidget(), control<QWidget>(window, "livePreview")->parentWidget());
         QTest::mouseClick(take, Qt::LeftButton);
         QVERIFY(controller->state().index >= 0);
-        controller->toggleBlackout();
+        controller->blackout();
         const auto live = controller->state();
         bool reviewedMenu = false;
         bool openedTiming = false;
@@ -374,7 +515,7 @@ private slots:
         QDir().mkpath(dir.filePath("media"));QImage image(20,20,QImage::Format_RGB32);image.fill(Qt::blue);QVERIFY(image.save(dir.filePath("media/midi-test.png")));const auto assets=repo.registerMediaAssets({{MediaKind::Image,"media/midi-test.png","MIDI image",false}},&error);QCOMPARE(assets.size(),1);MidiBinding media;media.name="Take library media";media.command=MidiCommand::TakeSlide;media.assetId=assets[0];media.trigger.number=78;QVERIFY(repo.saveMidiBinding(media,&error));
         auto backend=std::make_unique<FakeMidiBackend>();auto *fake=backend.get();LicensedMainWindow window(nullptr,std::move(backend));QVERIFY(window.initialize(&error,path));window.show();QTest::qWait(30);auto *engine=control<MidiEngine>(window,"midiEngine");auto *controller=control<PresentationController>(window,"presentationController");MidiSettings settings;settings.enabled=true;settings.autoReconnect=false;settings.minimumIntervalMs=0;settings.inputs={{"in-a",true,0}};QVERIFY(engine->setSettings(settings,&error,false));
         auto send=[&](int note){MidiMessage m;m.number=note;fake->inject(m.bytes());QCoreApplication::sendPostedEvents();QCoreApplication::processEvents();};
-        const auto revision=controller->state().cueRevision;send(70);QCOMPARE(controller->state().cueRevision,revision);QCOMPARE(control<QListWidget>(window,"slideWorkspace")->count(),2);send(71);QCOMPARE(controller->state().currentText(),QString("Arranged first"));QCOMPARE(controller->state().serviceId,0);send(72);QCOMPARE(controller->state().currentText(),QString("Source first"));send(73);QCOMPARE(controller->state().currentText(),QString("Arranged first"));send(74);QVERIFY(controller->state().blackout);send(75);QVERIFY(controller->state().clear);send(76);QVERIFY(!controller->state().blackout);QVERIFY(!controller->state().clear);
+        const auto revision=controller->state().cueRevision;send(70);QCOMPARE(controller->state().cueRevision,revision);QCOMPARE(control<QListWidget>(window,"slideWorkspace")->count(),2);send(71);QCOMPARE(controller->state().currentText(),QString("Arranged first"));QCOMPARE(controller->state().serviceId,0);send(72);QCOMPARE(controller->state().currentText(),QString("Source first"));send(73);QCOMPARE(controller->state().currentText(),QString("Arranged first"));send(74);QVERIFY(controller->state().blackout);send(75);QVERIFY(controller->state().blackout);QVERIFY(!controller->state().clear);send(76);QVERIFY(!controller->state().blackout);QVERIFY(!controller->state().clear);
         const auto beforeSelect=controller->state().cueRevision;send(77);QCOMPARE(controller->state().cueRevision,beforeSelect);QCOMPARE(control<QListWidget>(window,"slideWorkspace")->count(),1);QCOMPARE(control<QTabWidget>(window,"sidebarTabs")->currentIndex(),1);
         send(78);QCOMPARE(controller->state().currentMedia().kind,MediaKind::Image);QCOMPARE(controller->state().title,QString("MIDI image"));QCOMPARE(controller->state().serviceId,0);
     }
@@ -399,10 +540,34 @@ private slots:
         QDir().mkpath(dir.filePath("media"));QImage image(20,20,QImage::Format_RGB32);image.fill(Qt::blue);QVERIFY(image.save(dir.filePath("media/future.png")));
         const int first=repo.createTextPresentation("Usage first",{"Current"},&error);const int future=repo.createPresentation("Usage future",{""},{{MediaKind::Image,"media/future.png","Future",false}},&error);const int asset=repo.mediaAssets()[0].id;const int service=repo.createService("Usage service",&error);QVERIFY(repo.appendToService(service,first,&error));QVERIFY(repo.appendToService(service,future,&error));
         const auto sqlName=QUuid::createUuid().toString();{auto db=QSqlDatabase::addDatabase("QSQLITE",sqlName);db.setDatabaseName(path);QVERIFY(db.open());QSqlQuery q(db);const auto old=QString::number(QDateTime::currentSecsSinceEpoch()-200*86400);for(const auto &table:{"content_usage","managed_files"})QVERIFY(q.exec("UPDATE "+QString(table)+" SET created_at="+old+",imported_at="+old+",modified_at="+old+",last_used_at="+old));}QSqlDatabase::removeDatabase(sqlName);
-        QSettings().setValue("service/selected",service);LicensedMainWindow window;QVERIFY(window.initialize(&error,path));window.show();QTest::qWait(30);control<QListWidget>(window,"serviceOrder")->setCurrentRow(0);control<QPushButton>(window,"takeLive")->click();auto *controller=control<PresentationController>(window,"presentationController");QCOMPARE(controller->state().currentText(),QString("Current"));QVERIFY(repo.usageDates(CleanupKind::Presentation,first).lastUsedAt>QDateTime::currentSecsSinceEpoch()-60);const auto futureUse=repo.usageDates(CleanupKind::Presentation,future).lastUsedAt;QVERIFY(futureUse<QDateTime::currentSecsSinceEpoch()-86400);
+        QSettings().setValue("service/selected",service);LicensedMainWindow window;QVERIFY(window.initialize(&error,path));window.show();QTest::qWait(30);control<QListWidget>(window,"serviceOrder")->setCurrentRow(0);control<QPushButton>(window,"takeLive")->click();auto *controller=control<PresentationController>(window,"presentationController");QCOMPARE(controller->state().currentText(),QString("Current"));QTRY_VERIFY(repo.usageDates(CleanupKind::Presentation,first).lastUsedAt>QDateTime::currentSecsSinceEpoch()-60);const auto futureUse=repo.usageDates(CleanupKind::Presentation,future).lastUsedAt;QVERIFY(futureUse<QDateTime::currentSecsSinceEpoch()-86400);
         // Saved entries can disappear while the live service still holds its captured next item.
         QVERIFY(repo.deleteSong(future,&error));QVERIFY(repo.deleteMediaAsset(asset,&error));bool protectedFile=false;for(const auto &item:repo.cleanupCandidates(90))if(item.key.path=="media/future.png"){protectedFile=!item.eligible&&item.reason.contains("snapshot");}QVERIFY(protectedFile);
-        QVERIFY(controller->next());QCOMPARE(controller->state().title,QString("Usage future"));QVERIFY(repo.usageDates(CleanupKind::File,0,"media/future.png").lastUsedAt>QDateTime::currentSecsSinceEpoch()-60);QVERIFY(QFileInfo::exists(dir.filePath("media/future.png")));
+        const auto writerName = QUuid::createUuid().toString();
+        {
+            auto writer = QSqlDatabase::addDatabase("QSQLITE", writerName);
+            writer.setDatabaseName(path);
+            QVERIFY(writer.open());
+            QSqlQuery writeLock(writer);
+            QVERIFY(writeLock.exec("BEGIN IMMEDIATE"));
+            QElapsedTimer elapsed;
+            elapsed.start();
+            control<QPushButton>(window, "nextSlide")->click();
+            QCOMPARE(controller->state().title, QStringLiteral("Usage future"));
+            QVERIFY2(elapsed.elapsed() < 750, "Existing live cues should advance while another writer holds SQLite.");
+            QVERIFY(repo.usageDates(CleanupKind::File, 0, "media/future.png").lastUsedAt < QDateTime::currentSecsSinceEpoch() - 60);
+            const auto revision = controller->state().cueRevision;
+            control<QListWidget>(window, "serviceOrder")->setCurrentRow(0);
+            elapsed.restart();
+            control<QPushButton>(window, "takeLive")->click();
+            QVERIFY2(elapsed.elapsed() < 750, "An unprotected snapshot should fail promptly while the library is busy.");
+            QCOMPARE(controller->state().cueRevision, revision);
+            QVERIFY(window.statusBar()->currentMessage().contains(QStringLiteral("Cue held")));
+            QVERIFY(writeLock.exec("ROLLBACK"));
+        }
+        QSqlDatabase::removeDatabase(writerName);
+        QTRY_VERIFY(repo.usageDates(CleanupKind::File,0,"media/future.png").lastUsedAt>QDateTime::currentSecsSinceEpoch()-60);
+        QVERIFY(QFileInfo::exists(dir.filePath("media/future.png")));
     }
     void libraryCleanupAndRecoveryRequireReviewedConfirmations() {
         QTemporaryDir dir;const auto path=dir.filePath("cleanup-ui.sqlite");QString error;LibraryRepository repo;QVERIFY(repo.open(&error,path));const int song=repo.createTextPresentation("Cleanup fixture",{"Old text"},&error);
@@ -410,7 +575,7 @@ private slots:
         const auto sqlName=QUuid::createUuid().toString();{auto db=QSqlDatabase::addDatabase("QSQLITE",sqlName);db.setDatabaseName(path);QVERIFY(db.open());QSqlQuery q(db);const auto old=QString::number(QDateTime::currentSecsSinceEpoch()-200*86400);for(const auto &table:{"content_usage","managed_files"})QVERIFY(q.exec("UPDATE "+QString(table)+" SET created_at="+old+",imported_at="+old+",modified_at="+old+",last_used_at="+old));}QSqlDatabase::removeDatabase(sqlName);
         const int unknown=repo.createTextPresentation("Unknown usage",{"Keep"},&error);LicensedMainWindow window;QVERIFY(window.initialize(&error,path));window.show();QTest::qWait(30);
         auto *running=control<PresentationController>(window,"presentationController");PresentationSettings timed;timed.autoAdvanceMs=100;running->takeLive("Continuous output",{"First","Second"},0,timed);
-        QTimer::singleShot(0,[&]{auto *d=qobject_cast<QDialog*>(QApplication::activeModalWidget());QVERIFY(d);QCOMPARE(d->objectName(),QString("libraryCleanupDialog"));QTimer::singleShot(15000,d,&QDialog::reject);auto *days=d->findChild<QSpinBox*>("cleanupDays");days->setValue(365);d->findChild<QPushButton*>("cleanupScan")->click();QTRY_VERIFY(d->findChild<QPushButton*>("cleanupScan")->isEnabled());d->findChild<QPushButton*>("cleanupSelectAll")->click();QTest::qWait(100);QVERIFY(!d->findChild<QPushButton*>("cleanupArchive")->isEnabled());days->setValue(90);d->findChild<QPushButton*>("cleanupScan")->click();QTRY_VERIFY(d->findChild<QPushButton*>("cleanupScan")->isEnabled());auto *table=d->findChild<QTableWidget*>("cleanupCandidates");int protectedCount=0;for(int r=0;r<table->rowCount();++r)if(!(table->item(r,0)->flags()&Qt::ItemIsUserCheckable))++protectedCount;QVERIFY(protectedCount>=3);QTRY_COMPARE(running->state().index,1);d->findChild<QPushButton*>("cleanupSelectAll")->click();QTest::qWait(110);QVERIFY(d->findChild<QLabel*>("cleanupSummary")->text().contains("2 selected"));QVERIFY(d->findChild<QPushButton*>("cleanupArchive")->isEnabled());
+        QTimer::singleShot(0,[&]{auto *d=qobject_cast<QDialog*>(QApplication::activeModalWidget());QVERIFY(d);QCOMPARE(d->objectName(),QString("libraryCleanupDialog"));QTimer::singleShot(15000,d,&QDialog::reject);auto *days=d->findChild<QSpinBox*>("cleanupDays");days->setValue(365);d->findChild<QPushButton*>("cleanupScan")->click();QTRY_VERIFY(d->findChild<QPushButton*>("cleanupScan")->isEnabled());d->findChild<QPushButton*>("cleanupSelectAll")->click();QTest::qWait(100);QVERIFY(!d->findChild<QPushButton*>("cleanupArchive")->isEnabled());days->setValue(90);d->findChild<QPushButton*>("cleanupScan")->click();QTRY_VERIFY(d->findChild<QPushButton*>("cleanupScan")->isEnabled());auto *table=d->findChild<QTableWidget*>("cleanupCandidates");int protectedCount=0;for(int r=0;r<table->rowCount();++r)if(!(table->item(r,0)->flags()&Qt::ItemIsUserCheckable))++protectedCount;QVERIFY(protectedCount>=3);QCOMPARE(running->state().index,0);d->findChild<QPushButton*>("cleanupSelectAll")->click();QTest::qWait(110);QVERIFY(d->findChild<QLabel*>("cleanupSummary")->text().contains("2 selected"));QVERIFY(d->findChild<QPushButton*>("cleanupArchive")->isEnabled());
             if(qEnvironmentVariableIsSet("WORSHIPCUE_CLEANUP_SCREENSHOT"))QVERIFY(d->grab().save(qEnvironmentVariable("WORSHIPCUE_CLEANUP_SCREENSHOT")));
             auto cancelPreview=[&]{auto *p=qobject_cast<QDialog*>(QApplication::activeModalWidget());QVERIFY(p);p->reject();};
             QTimer::singleShot(0,cancelPreview);d->findChild<QPushButton*>("cleanupArchive")->click();QTRY_VERIFY(d->findChild<QPushButton*>("cleanupScan")->isEnabled());QCOMPARE(repo.song(song).id,song);QVERIFY(repo.cleanupBatches().isEmpty());
@@ -518,8 +683,99 @@ private slots:
         QCOMPARE(controller->state().index, 1);
         QTest::keyClick(&outputs->output(OutputId::Stage2), Qt::Key_Up);
         QCOMPARE(controller->state().index, 0);
-        window.close();
-        for (auto id : outputIds) QVERIFY(!outputs->output(id).isVisible());
+        closeOperator(window);
+        for (auto id : defaultOutputIds) QVERIFY(!outputs->output(id).isVisible());
+    }
+
+    void addedOutputsCanBeMonitoredWithoutChangingTheLiveCue() {
+        QString error;
+        OutputId audience;
+        OutputId stage;
+        {
+            LicensedMainWindow window;
+            QVERIFY2(window.initialize(&error, QStringLiteral(":memory:")), qPrintable(error));
+            window.show();
+            auto *outputs = window.findChild<OutputManager *>();
+            QVERIFY(outputs);
+            auto *controller = control<PresentationController>(window, "presentationController");
+            controller->takeLive("Presentation", {"Current", "Next"});
+            const auto revision = controller->state().cueRevision;
+            QTimer::singleShot(0, [&] {
+                auto *dialog = qobject_cast<OutputSettingsDialog *>(QApplication::activeModalWidget());
+                QVERIFY(dialog);
+                const auto close = qScopeGuard([dialog] { dialog->reject(); });
+                auto *addAudience = dialog->findChild<QAction *>("addAudienceOutput");
+                auto *addStage = dialog->findChild<QAction *>("addStageOutput");
+                QVERIFY(addAudience);
+                QVERIFY(addStage);
+                addAudience->trigger();
+                addStage->trigger();
+                auto *tabs = dialog->findChild<QTabWidget *>("outputSettingsTabs");
+                QCOMPARE(tabs->count(), 6);
+                QCOMPARE(tabs->tabText(tabs->currentIndex()), QStringLiteral("Stage Screen 3"));
+            });
+            control<QPushButton>(window, "outputSettingsButton")->click();
+            QCOMPARE(outputs->outputIds().size(), 6);
+            audience = outputs->outputIds().at(4);
+            stage = outputs->outputIds().at(5);
+            QCOMPARE(outputs->target(audience), QStringLiteral("off"));
+            QCOMPARE(outputs->target(stage), QStringLiteral("off"));
+
+            auto layout = StageLayout::standard();
+            layout.id = "extra-confidence";
+            layout.name = "Confidence for musicians";
+            layout.background = "#173649";
+            QVERIFY(outputs->saveStageLayout(layout, &error));
+            auto format = outputs->configuration(stage);
+            format.stageLayout = layout.id;
+            QVERIFY(outputs->setConfiguration(stage, format, &error));
+
+            auto *monitor = control<QComboBox>(window, "monitorOutput");
+            auto *preview = control<QWidget>(window, "livePreview");
+            QCOMPARE(monitor->count(), 6);
+            const auto background = [&] {
+                const auto image = preview->grab().toImage();
+                return image.pixelColor(image.width() / 2, image.height() / 2 + image.height() / 12);
+            };
+            monitor->setCurrentIndex(monitor->findData(int(audience)));
+            QVERIFY(background() != QColor(Qt::black));
+            QVERIFY(background() != QColor(layout.background));
+            monitor->setCurrentIndex(monitor->findData(int(stage)));
+            QCOMPARE(background(), QColor(layout.background));
+            QTest::mouseClick(control<QPushButton>(window, "blackout"), Qt::LeftButton);
+            QVERIFY(controller->state().blackout);
+            QCOMPARE(background(), QColor(layout.background));
+            window.activateWindow();
+            QTRY_VERIFY(window.isActiveWindow());
+            monitor->setFocus();
+            QTest::keyClick(monitor, Qt::Key_Up);
+            QCOMPARE(monitor->currentData().toInt(), int(audience));
+            QCOMPARE(window.focusWidget(), control<ReorderListWidget>(window, "slideWorkspace"));
+            QCOMPARE(background(), QColor(Qt::black));
+            QCOMPARE(controller->state().cueRevision, revision);
+            QVERIFY(!outputs->output(stage).isVisible());
+            QVERIFY(!outputs->output(audience).isVisible());
+
+            control<QAction>(window, "stageControlsAction")->trigger();
+            auto *stageControls = window.findChild<StageControlsDialog *>("stageControlsDialog");
+            QVERIFY(stageControls);
+            auto *stagePicker = stageControls->findChild<QComboBox *>("stageControlOutput");
+            QCOMPARE(stagePicker->count(), 3);
+            stagePicker->setCurrentIndex(stagePicker->findData(int(stage)));
+            stageControls->findChild<QPushButton *>("stageCountdownStart")->click();
+            QVERIFY(outputs->output(stage).stageRuntime().running);
+            QVERIFY(!outputs->stage().stageRuntime().running);
+            stageControls->close();
+            monitor->setCurrentIndex(monitor->findData(int(stage)));
+            if (qEnvironmentVariableIsSet("WORSHIPCUE_MONITOR_UI_SCREENSHOT"))
+                QVERIFY(window.grab().save(qEnvironmentVariable("WORSHIPCUE_MONITOR_UI_SCREENSHOT")));
+            closeOperator(window);
+        }
+        LicensedMainWindow reopened;
+        QVERIFY2(reopened.initialize(&error, QStringLiteral(":memory:")), qPrintable(error));
+        auto *monitor = control<QComboBox>(reopened, "monitorOutput");
+        QCOMPARE(monitor->count(), 6);
+        QCOMPARE(monitor->currentData().toInt(), int(stage));
     }
 
     void bulkTransitionsSupportMixedSelectionUndoRedoAndIndividualOverride() {
@@ -1191,7 +1447,7 @@ private slots:
         entries->setCurrentRow(1);
         slides->setCurrentRow(1);
         QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
-        controller->toggleBlackout();
+        controller->blackout();
         const auto live = controller->state();
         const int selectedSong = songs->currentItem()->data(Qt::UserRole).toInt();
 
@@ -1417,7 +1673,7 @@ private slots:
             QCOMPARE(controller->state().settings.transition, SlideTransitionType::Fade);
             QCOMPARE(controller->state().settings.transitionDurationMs, 750);
             QVERIFY(control<QLabel>(window, "selectedTimingInfo")->text().contains(QStringLiteral("global default")));
-            window.close();
+            closeOperator(window);
         }
         LicensedMainWindow reopened;
         QVERIFY2(reopened.initialize(&error, path), qPrintable(error));
@@ -1450,7 +1706,7 @@ private slots:
         auto *controller = control<PresentationController>(window, "presentationController");
         QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
         QVERIFY(controller->setSlide(1));
-        controller->toggleBlackout();
+        controller->blackout();
         const LivePresentation live = controller->state();
         const auto originalOrder = observer.service(planId).first().slideOrder;
 
@@ -1491,7 +1747,7 @@ private slots:
         QCOMPARE(controller->state().currentText(), QStringLiteral("Second verse"));
         QCOMPARE(controller->state().slides, observer.entrySlides(entryId));
         QVERIFY(controller->state().cueRevision > live.cueRevision);
-        QVERIFY(!controller->state().blackout);
+        QVERIFY(controller->state().blackout);
         if (qEnvironmentVariableIsSet("WORSHIPCUE_TEXT_UI_SCREENSHOT")) {
             QCoreApplication::processEvents();
             QVERIFY(window.grab().save(qEnvironmentVariable("WORSHIPCUE_TEXT_UI_SCREENSHOT")));
@@ -1527,7 +1783,7 @@ private slots:
         entries->setCurrentRow(1);
         slides->setCurrentRow(1);
         QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
-        controller->toggleBlackout();
+        controller->blackout();
         const LivePresentation live = controller->state();
         plans->setCurrentIndex(plans->findData(otherPlan));
         QVERIFY(reveal->isEnabled());
@@ -1628,7 +1884,7 @@ private slots:
             panels->setSizes({310, 620, 330});
             QCoreApplication::processEvents();
             panelSizes = panels->sizes();
-            window.close();
+            closeOperator(window);
         }
         LicensedMainWindow reopened;
         QVERIFY2(reopened.initialize(&error, path), qPrintable(error));
@@ -1844,7 +2100,7 @@ private slots:
             QVERIFY(controller->setSlide(0));
             if (qEnvironmentVariableIsSet("WORSHIPCUE_TIMING_SCREENSHOT"))
                 QVERIFY(window.grab().save(qEnvironmentVariable("WORSHIPCUE_TIMING_SCREENSHOT")));
-            window.close();
+            closeOperator(window);
         }
         LicensedMainWindow reopened;
         QVERIFY2(reopened.initialize(&error, path), qPrintable(error));
@@ -1922,7 +2178,7 @@ private slots:
             QVERIFY(observer.updatePresentationSettings(entries.at(1).songId, explicitCut, &error));
             QTest::mouseClick(control<QPushButton>(window, "takeLive"), Qt::LeftButton);
             QCOMPARE(controller->state().settings, explicitCut);
-            window.close();
+            closeOperator(window);
         }
         LicensedMainWindow reopened;
         QVERIFY2(reopened.initialize(&error, path), qPrintable(error));
@@ -1978,7 +2234,7 @@ private slots:
             QCOMPARE(observer.song(songId).backgroundPath, assigned);
             if (qEnvironmentVariableIsSet("WORSHIPCUE_CORRECTIONS_SCREENSHOT"))
                 QVERIFY(window.grab().save(qEnvironmentVariable("WORSHIPCUE_CORRECTIONS_SCREENSHOT")));
-            window.close();
+            closeOperator(window);
         }
         LicensedMainWindow reopened;
         QVERIFY2(reopened.initialize(&error, path), qPrintable(error));
@@ -2034,7 +2290,7 @@ private slots:
             QCOMPARE(controller->state().backgroundPath, resource);
             QVERIFY(audienceImage(audience) != before);
             QVERIFY(!QFileInfo::exists(temp.filePath(QStringLiteral("backgrounds"))));
-            window.close();
+            closeOperator(window);
         }
         LicensedMainWindow reopened;
         QVERIFY2(reopened.initialize(&error, path), qPrintable(error));
@@ -2084,7 +2340,7 @@ private slots:
             QCOMPARE(services->currentText(), QStringLiteral("Next Sunday"));
             QCOMPARE(order->count(), 3);
             services->setCurrentIndex(services->findData(planId));
-            window.close();
+            closeOperator(window);
         }
         {
             LicensedMainWindow reopened;
@@ -2187,7 +2443,7 @@ private slots:
             QCOMPARE(slides->currentRow(), 1);
             if (qEnvironmentVariableIsSet("WORSHIPCUE_MEDIA_SCREENSHOT"))
                 QVERIFY(window.grab().save(qEnvironmentVariable("WORSHIPCUE_MEDIA_SCREENSHOT")));
-            window.close();
+            closeOperator(window);
         }
         LicensedMainWindow reopened;
         QVERIFY(reopened.initialize(&error, path));
@@ -2293,7 +2549,7 @@ private slots:
         QTest::keyClick(search, Qt::Key_Right);
         QTest::keyClick(search, Qt::Key_B, Qt::ControlModifier);
         QCOMPARE(controller->state().index, 1);
-        QVERIFY(!controller->state().blackout);
+        QVERIFY(controller->state().blackout);
         QTest::keyClick(search, Qt::Key_Escape);
         QTRY_VERIFY(slides->hasFocus());
         QTest::keyClick(slides, Qt::Key_B, Qt::ControlModifier);

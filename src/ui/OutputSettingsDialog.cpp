@@ -4,7 +4,9 @@
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFormLayout>
+#include <QGuiApplication>
 #include <QLabel>
+#include <QMenu>
 #include <QMessageBox>
 #include <QPainter>
 #include <QPushButton>
@@ -12,6 +14,7 @@
 #include <QSpinBox>
 #include <QTabWidget>
 #include <QTimer>
+#include <QToolButton>
 #include <QVBoxLayout>
 #include <functional>
 
@@ -73,8 +76,13 @@ public:
             if (config.validate()) outputs_->output(id_).paintOutput(painter, rect, &config, &stageLayout);
             else painter.fillRect(rect, Qt::black);
         };
-        connect(&outputs_->audience(), &DisplayWindow::audienceFrameChanged, preview_, QOverload<>::of(&QWidget::update));
-        auto *tick = new QTimer(this); connect(tick, &QTimer::timeout, preview_, QOverload<>::of(&QWidget::update)); tick->start(1000);
+        connect(&outputs_->output(id_), &DisplayWindow::outputFrameChanged, preview_, QOverload<>::of(&QWidget::update));
+        auto *routeStatus = new QLabel(this);
+        routeStatus->setWordWrap(true);
+        fields->addWidget(routeStatus);
+        const auto updateRouteStatus = [this, routeStatus] { routeStatus->setText(outputs_->status(id_)); };
+        connect(outputs_, &OutputManager::statusChanged, this, updateRouteStatus);
+        updateRouteStatus();
         status_ = new QLabel(this); status_->setWordWrap(true); fields->addWidget(status_);
         auto *save = new QPushButton("Save This Output", this); save->setObjectName(QStringLiteral("saveOutput%1").arg(int(id))); fields->addWidget(save);
         connect(save, &QPushButton::clicked, this, [this] { this->save(); });
@@ -113,32 +121,66 @@ public:
         layout_->setCurrentIndex(qMax(0, layout_->findData(selected))); preview_->update();
     }
     void save() {
-        const auto config = draft(); const auto previous = outputs_->configuration(id_); QString error;
+        const auto config = draft();
+        QString error;
         const auto previousSignal = config.signalMode.isEmpty() ? QString() : outputs_->capabilities(config.target).currentMode;
-        if (!outputs_->setConfiguration(id_, config, &error)) { status_->setText(error); return; }
         if (!config.signalMode.isEmpty() && config.signalMode != previousSignal) {
+            if (!outputs_->beginModeTrial(id_, config, &error)) { status_->setText(error); return; }
             QMessageBox keep(QMessageBox::Question, "Keep display mode?", "Keep this physical display mode? It will revert in 15 seconds.", QMessageBox::Yes | QMessageBox::No, this);
+            keep.button(QMessageBox::Yes)->setText(QStringLiteral("Keep Mode"));
+            keep.button(QMessageBox::No)->setText(QStringLiteral("Revert"));
             keep.setDefaultButton(QMessageBox::No);
             QTimer timeout; timeout.setSingleShot(true);
             connect(&timeout, &QTimer::timeout, &keep, [&keep] { keep.reject(); }); timeout.start(15000);
-            if (keep.exec() != QMessageBox::Yes) {
-                if (!outputs_->setConfiguration(id_, previous, &error)) status_->setText("Could not revert mode: " + error);
-                else { status_->setText("Physical mode reverted. Draft settings remain available for review."); }
+            const bool confirmed = keep.exec() == QMessageBox::Yes;
+            if (!outputs_->finishModeTrial(confirmed, &error) || !confirmed) {
+                status_->setText(error.isEmpty() ? QStringLiteral("Physical mode reverted. Draft settings remain available for review.") : error);
                 return;
             }
+        } else if (!outputs_->setConfiguration(id_, config, &error)) {
+            status_->setText(error);
+            return;
         }
-        saved_ = config; status_->setText("Saved. This output is " + outputs_->status(id_) + "."); preview_->update();
+        saved_ = config; status_->setText("Saved."); preview_->update();
     }
 };
 }
 OutputSettingsDialog::OutputSettingsDialog(OutputManager *outputs, QWidget *parent) : QDialog(parent) {
     setObjectName("outputSettingsDialog"); setWindowTitle("Screens / Output Settings"); resize(1000, 700);
     auto *root = new QVBoxLayout(this);
-    auto *hint = new QLabel("Configure four independent outputs. Save each output separately; unsaved format changes appear only in its preview.", this);
-    hint->setWordWrap(true); root->addWidget(hint);
-    auto *tabs = new QTabWidget(this); tabs->setObjectName("outputSettingsTabs"); root->addWidget(tabs, 1);
-    QVector<OutputPage *> pages;
-    for (auto id : outputIds) { auto *page = new OutputPage(outputs, id, tabs); pages.append(page); tabs->addTab(page, outputName(id)); }
+    auto *header = new QHBoxLayout;
+    root->addLayout(header);
+    auto *detected = new QLabel(this);
+    header->addWidget(detected, 1);
+    const auto updateDetected = [detected] {
+        const auto count = QGuiApplication::screens().size();
+        detected->setText(count == 1 ? QStringLiteral("1 display detected") : QStringLiteral("%1 displays detected").arg(count));
+    };
+    updateDetected();
+    connect(outputs, &OutputManager::targetsChanged, this, updateDetected);
+    auto *add = new QToolButton(this);
+    add->setObjectName("addOutput");
+    add->setText("Add Output");
+    add->setPopupMode(QToolButton::InstantPopup);
+    header->addWidget(add);
+    auto *addMenu = new QMenu(add);
+    add->setMenu(addMenu);
+    auto *tabs = new QTabWidget(this);
+    tabs->setObjectName("outputSettingsTabs");
+    tabs->setUsesScrollButtons(true);
+    root->addWidget(tabs, 1);
+    const auto appendPage = [outputs, tabs](OutputId id) {
+        return tabs->addTab(new OutputPage(outputs, id, tabs), outputName(id));
+    };
+    for (auto id : outputs->outputIds()) appendPage(id);
+    auto *addAudience = addMenu->addAction("Audience Screen", this, [=] {
+        tabs->setCurrentIndex(appendPage(outputs->addOutput(DisplayWindow::Kind::Audience)));
+    });
+    addAudience->setObjectName("addAudienceOutput");
+    auto *addStage = addMenu->addAction("Stage Screen (Confidence Monitor)", this, [=] {
+        tabs->setCurrentIndex(appendPage(outputs->addOutput(DisplayWindow::Kind::Stage)));
+    });
+    addStage->setObjectName("addStageOutput");
     auto *tools = new QHBoxLayout; root->addLayout(tools);
     auto *layouts = new QPushButton("Stage Layouts…", this); layouts->setObjectName("openStageLayouts"); tools->addWidget(layouts);
     connect(layouts, &QPushButton::clicked, this, [this, outputs] { StageLayoutDialog dialog(outputs, this); dialog.exec(); });

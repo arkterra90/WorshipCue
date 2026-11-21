@@ -5,8 +5,11 @@
 #include <QString>
 
 enum class OutputId { Audience1, Audience2, Stage1, Stage2 };
-inline constexpr OutputId outputIds[] = {OutputId::Audience1, OutputId::Audience2, OutputId::Stage1, OutputId::Stage2};
-inline bool isStageOutput(OutputId id) { return id == OutputId::Stage1 || id == OutputId::Stage2; }
+inline constexpr OutputId defaultOutputIds[] = {OutputId::Audience1, OutputId::Audience2, OutputId::Stage1, OutputId::Stage2};
+// Keep the first four settings keys. Additional IDs alternate audience and stage.
+inline bool isStageOutput(OutputId id) {
+    return id == OutputId::Stage1 || id == OutputId::Stage2 || (int(id) >= 4 && int(id) % 2 != 0);
+}
 QString outputName(OutputId id);
 
 struct OutputConfiguration {

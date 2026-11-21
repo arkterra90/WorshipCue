@@ -37,11 +37,13 @@ inline QByteArray fixtureLease(const QByteArray &authority, const QString &insta
     return payload + '.' + LicenseCrypto::encode(LicenseCrypto::sign(authority, payload));
 }
 inline std::unique_ptr<LicenseManager>
-fixtureLicense(bool licensed = true, std::function<void(QJsonObject &)> mutate = {}) {
+fixtureLicense(bool licensed = true, std::function<void(QJsonObject &)> mutate = {},
+               MemoryLicenseStore **storeObserver = nullptr) {
     using namespace LicenseCrypto;
     auto authority = random(32), seed = random(32);
     const auto now = QDateTime::currentSecsSinceEpoch();
     auto store = std::make_unique<MemoryLicenseStore>();
+    if (storeObserver) *storeObserver = store.get();
     if (licensed) {
         const auto lease =
             fixtureLease(authority, QString::fromLatin1(installationId(publicKey(seed))), "fixture",

@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/icons">
-    <file alias="worshipcue.png">/Users/jeremykuehn/Documents/GitHub/WorshipCue/WorshipCue/assets/icons/worshipcue.png</file>
-  </qresource>
-</RCC>
-

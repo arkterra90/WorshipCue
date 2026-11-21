@@ -50,7 +50,7 @@ private slots:
         auto backend=std::make_unique<FakeMidiBackend>();auto *f=backend.get();MidiEngine e(nullptr,std::move(backend));QString error;auto s=settings();s.inputs[0].channel=2;QVERIFY(e.setSettings(s,&error,false));QVERIFY(e.setBindings({binding()},&error));QSignalSpy command(&e,&MidiEngine::commandRequested);QSignalSpy monitor(&e,&MidiEngine::messageReceived);
         f->inject(QByteArray::fromHex("903c7f913c7f913c7f"));flush();QCOMPARE(command.count(),1);QCOMPARE(monitor.count(),3);
         f->inject(QByteArray::fromHex("813c00913c70"));flush();QCOMPARE(command.count(),2);
-        bool gate=false;e.setDispatchGate([&]{return gate;});f->inject(QByteArray::fromHex("813c00913c7f"));flush();QCOMPARE(command.count(),2);gate=true;f->inject(QByteArray::fromHex("913c7f"));flush();QCOMPARE(command.count(),2);f->inject(QByteArray::fromHex("813c00913c7f"));flush();QCOMPARE(command.count(),3);
+        bool gate=false;e.setDispatchGate([&](MidiCommand){return gate;});f->inject(QByteArray::fromHex("813c00913c7f"));flush();QCOMPARE(command.count(),2);gate=true;f->inject(QByteArray::fromHex("913c7f"));flush();QCOMPARE(command.count(),2);f->inject(QByteArray::fromHex("813c00913c7f"));flush();QCOMPARE(command.count(),3);
     }
     void controllerChangesRearmAndDebounceApplies(){
         auto backend=std::make_unique<FakeMidiBackend>();auto *f=backend.get();MidiEngine e(nullptr,std::move(backend));QString error;auto s=settings();s.minimumIntervalMs=50;QVERIFY(e.setSettings(s,&error,false));auto b=binding();b.trigger.type=MidiMessageType::ControlChange;b.trigger.number=10;b.trigger.value=127;QVERIFY(e.setBindings({b},&error));QSignalSpy command(&e,&MidiEngine::commandRequested);

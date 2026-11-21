@@ -30,6 +30,7 @@ public:
     // The operator's live monitor paints this same compositor and animation.
     void paintAudience(QPainter &painter, const QRect &destination);
     void paintOutput(QPainter &painter, const QRect &destination, const OutputConfiguration *preview = nullptr, const StageLayout *layoutPreview = nullptr);
+    void paintMonitor(QPainter &painter, const QRect &destination);
     bool setConfiguration(const OutputConfiguration &configuration, QString *error = nullptr);
     const OutputConfiguration &configuration() const { return configuration_; }
     void setStageLayout(const StageLayout &layout);
@@ -55,10 +56,11 @@ public:
 signals:
     void operatorFocusRequested();
     void closedByOperator();
-    void audienceFrameChanged();
+    void outputFrameChanged();
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
 
@@ -98,7 +100,7 @@ private:
     void rebuildAudienceCanvas();
     void startTransition();
     void finishTransition();
-    void audienceChanged();
+    void notifyFrameChanged();
     QPixmap audienceCanvas();
     void paintStage(QPainter &p, const QRect &canvas);
     void drawFittedText(QPainter &p, const QRect &rect, const QString &text,

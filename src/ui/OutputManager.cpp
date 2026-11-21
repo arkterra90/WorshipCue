@@ -9,58 +9,87 @@
 #include <QTimer>
 
 OutputManager::OutputManager(PresentationController *controller, QObject *parent, std::shared_ptr<DisplayModeProvider> modes)
-    : QObject(parent), audience_(DisplayWindow::Kind::Audience, controller),
-      audience2_(DisplayWindow::Kind::Audience, controller, nullptr, &audience_),
-      stage_(DisplayWindow::Kind::Stage, controller), stage2_(DisplayWindow::Kind::Stage, controller),
+    : QObject(parent), controller_(controller),
       modes_(modes ? std::move(modes) : nativeDisplayModeProvider()) {
-    for (const auto id : outputIds) {
-        auto &window = output(id);
-        window.setLiveAuthorizationCheck([this] { return liveAuthorized(); });
-        window.setWindowTitle(QStringLiteral("WorshipCue — %1").arg(outputName(id)));
-        window.installEventFilter(this);
-        connect(&window, &DisplayWindow::operatorFocusRequested, this, &OutputManager::operatorFocusRequested);
-        connect(&window, &DisplayWindow::closedByOperator, this, [this, id] {
-            QString error;
-            if (setTarget(id, "off", &error)) return;
-            // A backend restore failure must never reopen a window the operator
-            // explicitly closed. Retain its lease for a later restoration retry.
-            auto &config = configurations_[int(id)]; config.target = "off"; config.signalMode.clear();
-            errors_[int(id)] = "desktop mode restore failed: " + error;
-            activeScreens_[int(id)].clear(); output(id).setConfiguration(config); persist(id);
-            emit targetsChanged(); emit statusChanged();
-        });
-    }
+    for (const auto id : defaultOutputIds) createOutput(id);
     for (auto *screen : QGuiApplication::screens()) watchScreen(screen);
     connect(qGuiApp, &QGuiApplication::screenAdded, this, [this](QScreen *screen) { watchScreen(screen); scheduleRefresh(); });
     connect(qGuiApp, &QGuiApplication::screenRemoved, this, [this](QScreen *screen) {
-        for (auto id : outputIds) if (activeScreens_[int(id)] == screen || target(id) == screenId(screen)) {
-            output(id).hide(); activeScreens_[int(id)].clear();
-            // A disconnected display cannot be restored. Its desired route/mode
-            // remains saved and is revalidated when a matching display returns.
-            modeLeases_[int(id)] = {};
+        for (auto &[id, route] : outputs_) {
+            if (route.activeScreen == screen || route.configuration.target == screenId(screen)) {
+                route.window->hide();
+                route.activeScreen.clear();
+            }
+            // Keep the requested mode so it can be reapplied when the display returns.
+            if (route.modeLease.screen == screen) route.modeLease = {};
         }
         watchedScreens_.remove(screen); disconnect(screen, nullptr, this, nullptr); scheduleRefresh();
     });
 }
-OutputManager::~OutputManager() { shutdown(); for (auto id : outputIds) output(id).removeEventFilter(this); }
-DisplayWindow &OutputManager::output(OutputId id) {
-    switch (id) {
-    case OutputId::Audience1: return audience_;
-    case OutputId::Audience2: return audience2_;
-    case OutputId::Stage1: return stage_;
-    case OutputId::Stage2: return stage2_;
-    }
-    return audience_;
+OutputManager::~OutputManager() {
+    shutdown();
+    for (const auto &[id, route] : outputs_) route.window->removeEventFilter(this);
 }
-const DisplayWindow &OutputManager::output(OutputId id) const { return const_cast<OutputManager *>(this)->output(id); }
+
+void OutputManager::createOutput(OutputId id) {
+    const auto kind = isStageOutput(id) ? DisplayWindow::Kind::Stage : DisplayWindow::Kind::Audience;
+    auto *source = kind == DisplayWindow::Kind::Audience && id != OutputId::Audience1 ? &audience() : nullptr;
+    auto &route = outputs_[id];
+    route.window = std::make_unique<DisplayWindow>(kind, controller_, nullptr, source);
+    auto &window = *route.window;
+    window.setLiveAuthorizationCheck([this] { return liveAuthorized(); });
+    window.setWindowTitle(QStringLiteral("WorshipCue — %1").arg(outputName(id)));
+    window.installEventFilter(this);
+    connect(&window, &DisplayWindow::operatorFocusRequested, this, &OutputManager::operatorFocusRequested);
+    connect(&window, &DisplayWindow::closedByOperator, this, [this, id] {
+        if (shuttingDown_) return;
+        if (modeTrial_ && modeTrial_->id == id) {
+            finishModeTrial(false);
+            return;
+        }
+        QString error;
+        if (setTarget(id, "off", &error)) return;
+        // Keep the output closed and retain its mode lease for a later restoration retry.
+        auto &closed = outputs_.at(id);
+        closed.configuration.target = "off";
+        closed.configuration.signalMode.clear();
+        closed.error = "desktop mode restore failed: " + error;
+        closed.activeScreen.clear();
+        closed.window->setConfiguration(closed.configuration);
+        persist(id);
+        emit targetsChanged();
+        emit statusChanged();
+    });
+}
+
+OutputId OutputManager::addOutput(DisplayWindow::Kind kind) {
+    int next = kind == DisplayWindow::Kind::Stage ? 5 : 4;
+    while (outputs_.count(OutputId(next))) next += 2;
+    const auto id = OutputId(next);
+    createOutput(id);
+    persist(id);
+    emit outputsChanged();
+    return id;
+}
+
+QVector<OutputId> OutputManager::outputIds() const {
+    QVector<OutputId> ids;
+    ids.reserve(outputs_.size());
+    for (const auto &[id, route] : outputs_) ids.append(id);
+    return ids;
+}
+
+DisplayWindow &OutputManager::output(OutputId id) { return *outputs_.at(id).window; }
+const DisplayWindow &OutputManager::output(OutputId id) const { return *outputs_.at(id).window; }
 bool OutputManager::ownsWindow(const QWidget *window) const {
-    for (auto id : outputIds) if (&output(id) == window) return true;
+    for (const auto &[id, route] : outputs_) if (route.window.get() == window) return true;
     return false;
 }
 QString OutputManager::screenId(const QScreen *screen) {
     return QStringLiteral("screen:%1|%2|%3|%4").arg(screen->name(), screen->manufacturer(), screen->model(), screen->serialNumber());
 }
 QScreen *OutputManager::findScreen(const QString &id) {
+    if (!isDisplayTarget(id)) return nullptr;
     QVector<QScreen *> matches;
     for (auto *screen : QGuiApplication::screens()) if (screenId(screen) == id) matches.append(screen);
     if (matches.size() == 1) return matches.first();
@@ -72,6 +101,15 @@ QScreen *OutputManager::findScreen(const QString &id) {
 }
 QString OutputManager::settingsKey(OutputId id) { return QStringLiteral("outputs/%1/configuration").arg(int(id)); }
 bool OutputManager::isDisplayTarget(const QString &id) { return id.startsWith("screen:"); }
+bool OutputManager::hasFullscreenConflict(OutputId id, const QString &target, const QScreen *screen) const {
+    for (const auto &[otherId, other] : outputs_) {
+        const auto &otherTarget = other.configuration.target;
+        if (otherId != id && isDisplayTarget(otherTarget)
+            && (otherTarget == target || (screen && findScreen(otherTarget) == screen))) return true;
+    }
+    return false;
+}
+
 QVector<OutputTarget> OutputManager::availableTargets() const {
     QVector<OutputTarget> result{{"off", "Off"}, {"preview", "Windowed Preview"}};
     QSet<QString> included{"off", "preview"};
@@ -83,11 +121,12 @@ QVector<OutputTarget> OutputManager::availableTargets() const {
         result.append({id, QStringLiteral("%1: %2 (%3×%4 desktop pixels)").arg(index + 1).arg(screen->name()).arg(pixels.width()).arg(pixels.height())});
         included.insert(id);
     }
-    for (const auto &configuration : configurations_) if (!included.contains(configuration.target)) {
-        auto *screen = findScreen(configuration.target);
-        result.append({configuration.target, screen ? QStringLiteral("Reconnected: %1").arg(screen->name())
-            : QStringLiteral("Disconnected or ambiguous: %1").arg(configuration.target.mid(7).section('|', 0, 0))});
-        included.insert(configuration.target);
+    for (const auto &[id, route] : outputs_) if (!included.contains(route.configuration.target)) {
+        const auto &target = route.configuration.target;
+        auto *screen = findScreen(target);
+        result.append({target, screen ? QStringLiteral("Reconnected: %1").arg(screen->name())
+            : QStringLiteral("Disconnected or ambiguous: %1").arg(target.mid(7).section('|', 0, 0))});
+        included.insert(target);
     }
     return result;
 }
@@ -103,7 +142,7 @@ bool OutputManager::releaseMode(ModeLease &lease, QString *error) {
     lease = {}; return true;
 }
 bool OutputManager::applySignal(OutputId id, const OutputConfiguration &configuration, QString *error) {
-    auto &lease = modeLeases_[int(id)];
+    auto &lease = outputs_.at(id).modeLease;
     auto *screen = findScreen(configuration.target);
     if (!screen || configuration.signalMode.isEmpty()) return releaseMode(lease, error);
     const auto caps = modes_->capabilities(screen);
@@ -137,12 +176,67 @@ bool OutputManager::setTarget(OutputId id, const QString &target, QString *error
     config.target = target; return setConfiguration(id, config, error);
 }
 bool OutputManager::setConfiguration(OutputId id, const OutputConfiguration &config, QString *error) {
+    if (modeTrial_ && modeTrial_->id == id) {
+        if (error) *error = "Finish the physical display mode review first.";
+        return false;
+    }
+    return applyConfiguration(id, config, true, error);
+}
+
+bool OutputManager::beginModeTrial(OutputId id, const OutputConfiguration &config, QString *error) {
+    auto *screen = findScreen(config.target);
+    if (modeTrial_ || !screen || config.signalMode.isEmpty() || !liveAuthorized()) {
+        if (error) *error = "A physical mode trial requires a connected display and live authorization.";
+        return false;
+    }
+    modeTrial_ = ModeTrial{id, configuration(id), screen};
+    if (applyConfiguration(id, config, false, error)) return true;
+    modeTrial_.reset();
+    return false;
+}
+
+bool OutputManager::finishModeTrial(bool keep, QString *error) {
+    if (error) error->clear();
+    if (!modeTrial_ || shuttingDown_) {
+        if (error) *error = "The physical mode trial is no longer active.";
+        return false;
+    }
+    const auto trial = *modeTrial_;
+    modeTrial_.reset();
+    auto &route = outputs_.at(trial.id);
+    if (keep && liveAuthorized() && trial.screen && route.activeScreen == trial.screen
+        && modes_->capabilities(trial.screen).currentMode == route.configuration.signalMode) {
+        if (persist(trial.id)) return true;
+        if (error) *error = "Could not save the confirmed display mode.";
+    } else if (keep && error) {
+        *error = "The display or trial mode is no longer available.";
+    }
+
+    // The saved settings still describe the prior route, even if restoring the
+    // native mode fails or that display was unplugged during confirmation.
+    route.configuration = trial.previous;
+    route.window->setConfiguration(trial.previous);
+    if (isStageOutput(trial.id)) route.window->setStageLayout(stageLayout(trial.previous.stageLayout));
+    route.error.clear();
+    const bool restored = applySignal(trial.id, trial.previous, &route.error);
+    if (restored) {
+        applyTarget(trial.id);
+    } else {
+        route.window->hide();
+        route.activeScreen.clear();
+        if (error) *error = "Could not restore the physical display mode: " + route.error;
+    }
+    emit targetsChanged();
+    emit statusChanged();
+    return restored && !keep;
+}
+
+bool OutputManager::applyConfiguration(OutputId id, const OutputConfiguration &config, bool save, QString *error) {
     if (error) error->clear();
     if (!config.validate(error)) return false;
     auto *screen = findScreen(config.target);
     if (isDisplayTarget(config.target)) {
-        for (const auto other : outputIds) if (other != id && isDisplayTarget(target(other))
-            && (target(other) == config.target || (screen && findScreen(target(other)) == screen))) {
+        if (hasFullscreenConflict(id, config.target, screen)) {
             if (error) *error = "Each fullscreen output must use a different physical display."; return false;
         }
         if (!screen && config.target != target(id)) {
@@ -153,12 +247,23 @@ bool OutputManager::setConfiguration(OutputId id, const OutputConfiguration &con
         if (error) *error = "Choose an existing stage layout."; return false;
     }
     if (liveAuthorized() && !applySignal(id, config, error)) return false;
-    configurations_[int(id)] = config; errors_[int(id)].clear(); shuttingDown_ = false;
+    auto &route = outputs_.at(id);
+    const auto &oldTarget = route.configuration.target;
+    auto *oldScreen = findScreen(oldTarget);
+    const bool resolvedConflict = oldTarget != config.target && oldScreen && hasFullscreenConflict(id, oldTarget, oldScreen);
+    route.configuration = config;
+    route.error.clear();
+    shuttingDown_ = false;
     output(id).setConfiguration(config);
     if (isStageOutput(id)) output(id).setStageLayout(stageLayout(config.stageLayout));
-    persist(id); applyTarget(id); emit targetsChanged(); emit statusChanged(); return true;
+    if (save) persist(id);
+    applyTarget(id);
+    if (resolvedConflict) scheduleRefresh();
+    emit targetsChanged();
+    emit statusChanged();
+    return true;
 }
-void OutputManager::persist(OutputId id) {
+bool OutputManager::persist(OutputId id) {
     QSettings settings;
     settings.setValue(settingsKey(id), QJsonDocument(configuration(id).toJson()).toJson(QJsonDocument::Compact));
     // Retain compatibility with the first-pair route preferences.
@@ -166,10 +271,22 @@ void OutputManager::persist(OutputId id) {
     if (id == OutputId::Stage1) settings.setValue("outputs/stageTarget", target(id));
     settings.sync();
     if (settings.status() != QSettings::NoError) qWarning() << "Could not save output configuration" << settings.fileName();
+    return settings.status() == QSettings::NoError;
 }
 void OutputManager::restoreTargets() {
     shuttingDown_ = false;
     QSettings settings;
+    settings.beginGroup("outputs");
+    bool addedOutputs = false;
+    for (const auto &group : settings.childGroups()) {
+        bool ok = false;
+        const int value = group.toInt(&ok);
+        if (!ok || value < 4 || group != QString::number(value)
+            || !settings.contains(group + "/configuration") || outputs_.count(OutputId(value))) continue;
+        createOutput(OutputId(value));
+        addedOutputs = true;
+    }
+    settings.endGroup();
     layouts_ = {StageLayout::standard()};
     const auto storedLayouts = settings.value("outputs/stageLayouts").toByteArray();
     const auto savedLayouts = storedLayouts.size() <= 20 * 1024 * 1024 ? QJsonDocument::fromJson(storedLayouts).array() : QJsonArray{};
@@ -182,9 +299,7 @@ void OutputManager::restoreTargets() {
             if (!duplicate) layouts_.append(layout);
         }
     }
-    QSet<QString> assigned;
-    QSet<QScreen *> assignedScreens;
-    for (const auto id : outputIds) {
+    for (auto &[id, route] : outputs_) {
         OutputConfiguration config;
         if (settings.contains(settingsKey(id))) {
             const auto data = settings.value(settingsKey(id)).toByteArray();
@@ -196,13 +311,8 @@ void OutputManager::restoreTargets() {
             const auto saved = legacy.isEmpty() ? QStringLiteral("off") : settings.value(legacy, "off").toString();
             if (saved == "off" || saved == "preview" || isDisplayTarget(saved)) config.target = saved;
         }
-        auto *screen = findScreen(config.target);
-        if (isDisplayTarget(config.target) && (assigned.contains(config.target) || (screen && assignedScreens.contains(screen)))) {
-            qWarning() << "Ignoring conflicting fullscreen assignment" << outputName(id); config.target = "off"; config.signalMode.clear();
-        }
         if (stageLayout(config.stageLayout).id != config.stageLayout) config.stageLayout = "standard";
-        configurations_[int(id)] = config;
-        if (isDisplayTarget(config.target)) { assigned.insert(config.target); if (screen) assignedScreens.insert(screen); }
+        route.configuration = config;
         output(id).setConfiguration(config);
         if (isStageOutput(id)) output(id).setStageLayout(stageLayout(config.stageLayout));
         if (isStageOutput(id)) {
@@ -218,21 +328,39 @@ void OutputManager::restoreTargets() {
                 } else qWarning() << "Ignoring invalid saved stage timer" << int(id);
             }
         }
-        persist(id); applyTarget(id);
+        persist(id);
     }
+    for (const auto id : outputIds()) applyTarget(id);
+    if (addedOutputs) emit outputsChanged();
     emit layoutsChanged(); emit targetsChanged(); emit statusChanged();
 }
 void OutputManager::applyTarget(OutputId id) {
     if (shuttingDown_) return;
-    auto &window = output(id); const auto config = configuration(id); auto &active = activeScreens_[int(id)];
-    if (!liveAuthorized()) { window.hide(); active.clear(); releaseMode(modeLeases_[int(id)]); return; }
+    auto &route = outputs_.at(id);
+    auto &window = *route.window;
+    const auto &config = route.configuration;
+    auto &active = route.activeScreen;
+    if (!liveAuthorized()) { window.hide(); active.clear(); releaseMode(route.modeLease); return; }
     if (config.target == "off") { window.hide(); active.clear(); return; }
     if (config.target == "preview") { active.clear(); if (!window.isVisible() || window.isFullScreen()) window.showPreview(); return; }
     auto *screen = findScreen(config.target);
     if (!screen) { window.hide(); active.clear(); return; }
+    if (modeTrial_ && modeTrial_->id == id && modeTrial_->screen != screen) {
+        window.hide();
+        active.clear();
+        return;
+    }
+    // Previously separate display identities can resolve to the same screen
+    // after a reconnect. Keep both routes hidden until one is reassigned.
+    if (hasFullscreenConflict(id, config.target, screen)) {
+        window.hide();
+        active.clear();
+        releaseMode(route.modeLease, &route.error);
+        return;
+    }
     QString error;
-    if (!applySignal(id, config, &error)) { errors_[int(id)] = error; window.hide(); active.clear(); return; }
-    errors_[int(id)].clear();
+    if (!applySignal(id, config, &error)) { route.error = error; window.hide(); active.clear(); return; }
+    route.error.clear();
     if (active == screen && window.isVisible() && window.isFullScreen()) {
         if (window.geometry() != screen->geometry()) window.setGeometry(screen->geometry());
         return;
@@ -241,11 +369,13 @@ void OutputManager::applyTarget(OutputId id) {
 }
 QString OutputManager::status(OutputId id) const {
     if (!liveAuthorized()) return "Editing only — license required";
-    if (!errors_[int(id)].isEmpty()) return (target(id) == "off" ? QStringLiteral("Off — %1") : QStringLiteral("Mode unavailable: %1")).arg(errors_[int(id)]);
     const auto desired = target(id);
-    if (desired == "off") return "Off";
-    const auto *screen = isDisplayTarget(desired) ? findScreen(desired) : nullptr;
+    const auto *screen = findScreen(desired);
     if (isDisplayTarget(desired) && !screen) return "Disconnected";
+    if (screen && hasFullscreenConflict(id, desired, screen)) return "Display assignment conflict";
+    const auto &error = outputs_.at(id).error;
+    if (!error.isEmpty()) return (desired == "off" ? QStringLiteral("Off — %1") : QStringLiteral("Mode unavailable: %1")).arg(error);
+    if (desired == "off") return "Off";
     const auto &window = output(id);
     if (!window.isVisible()) return "Off";
     if (window.isMinimized()) return "Minimized";
@@ -293,13 +423,13 @@ bool OutputManager::saveStageLayout(StageLayout layout, QString *error) {
     if (existing < 0 && layouts_.size() >= 65) { if (error) *error = "At most 64 custom stage layouts can be saved."; return false; }
     if (existing < 0) layouts_.append(layout); else layouts_[existing] = layout;
     persistLayouts();
-    for (auto id : outputIds) if (isStageOutput(id) && configuration(id).stageLayout == layout.id) output(id).setStageLayout(layout);
+    for (auto &[id, route] : outputs_) if (isStageOutput(id) && route.configuration.stageLayout == layout.id) route.window->setStageLayout(layout);
     emit layoutsChanged(); return true;
 }
 bool OutputManager::deleteStageLayout(const QString &id, QString *error) {
     if (error) error->clear();
     if (id == "standard") { if (error) *error = "The standard layout cannot be removed."; return false; }
-    for (auto outputId : {OutputId::Stage1, OutputId::Stage2}) if (configuration(outputId).stageLayout == id) {
+    for (const auto &[outputId, route] : outputs_) if (isStageOutput(outputId) && route.configuration.stageLayout == id) {
         if (error) *error = "This layout is assigned to a stage screen. Assign another layout before removing it."; return false;
     }
     for (int i = 0; i < layouts_.size(); ++i) if (layouts_.at(i).id == id) { layouts_.removeAt(i); persistLayouts(); emit layoutsChanged(); return true; }
@@ -308,13 +438,17 @@ bool OutputManager::deleteStageLayout(const QString &id, QString *error) {
 void OutputManager::shutdown() {
     if (shuttingDown_) return;
     shuttingDown_ = true;
-    for (auto id : outputIds) {
-        output(id).hide(); activeScreens_[int(id)].clear(); QString error;
-        if (!releaseMode(modeLeases_[int(id)], &error)) qWarning() << "Could not restore desktop mode:" << error;
+    for (auto &[id, route] : outputs_) {
+        route.window->hide();
+        route.activeScreen.clear();
+        QString error;
+        if (!releaseMode(route.modeLease, &error)) qWarning() << "Could not restore desktop mode:" << error;
     }
 }
 bool OutputManager::eventFilter(QObject *watched, QEvent *event) {
-    for (auto id : outputIds) if (watched == &output(id) && (event->type() == QEvent::Show || event->type() == QEvent::Hide || event->type() == QEvent::WindowStateChange)) scheduleStatusRefresh();
+    // Only managed output windows install this filter.
+    if (event->type() == QEvent::Show || event->type() == QEvent::Hide || event->type() == QEvent::WindowStateChange)
+        scheduleStatusRefresh();
     return QObject::eventFilter(watched, event);
 }
 void OutputManager::scheduleStatusRefresh() {
@@ -331,13 +465,13 @@ void OutputManager::watchScreen(QScreen *screen) {
 }
 void OutputManager::scheduleRefresh() {
     if (refreshPending_ || shuttingDown_) return; refreshPending_ = true;
-    QTimer::singleShot(0, this, [this] { refreshPending_ = false; for (auto id : outputIds) applyTarget(id); emit targetsChanged(); emit statusChanged(); });
+    QTimer::singleShot(0, this, [this] { refreshPending_ = false; for (auto id : outputIds()) applyTarget(id); emit targetsChanged(); emit statusChanged(); });
 }
 
 void OutputManager::setLiveAuthorizationCheck(std::function<bool()> check) {
     authorizationCheck_ = std::move(check); refreshAuthorization();
 }
 void OutputManager::refreshAuthorization() {
-    for (auto id : outputIds) applyTarget(id);
+    for (auto id : outputIds()) applyTarget(id);
     emit statusChanged();
 }

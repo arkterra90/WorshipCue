@@ -8,6 +8,9 @@
 #include <QSysInfo>
 #include <algorithm>
 using namespace LicenseCrypto;
+namespace {
+constexpr qint64 storageGraceMs = 5 * 60 * 1000;
+}
 LicenseConfiguration LicenseConfiguration::production() {
     return {QUrl(QStringLiteral(WORSHIPCUE_LICENSE_URL)),
             decode(QByteArray(WORSHIPCUE_LICENSE_PUBLIC_KEY))};
@@ -52,9 +55,18 @@ bool LicenseManager::validateLease(const QByteArray &lease, const QByteArray &ke
 }
 bool LicenseManager::liveAllowed() const {
     const auto wall = QDateTime::currentSecsSinceEpoch();
-    return started_ && storageReady_ && !denied_ && configured() && wall + 300 >= highWater_ &&
-           wall + 300 >= clockBase_ + (monotonic_.isValid() ? monotonic_.elapsed() / 1000 : 0) &&
-           validateLease(lease_, config_.publicKey, installationId(), licenseId_, now());
+    if (!started_ || !storageReady_ || !identityPersisted_ || denied_ || !configured() || wall + 300 < highWater_ ||
+        wall + 300 < clockBase_ + (monotonic_.isValid() ? monotonic_.elapsed() / 1000 : 0)) return false;
+    if (storageFailure_.isValid() && storageFailure_.elapsed() >= storageGraceMs) return false;
+    const bool retrying = retryingCacheWrite();
+    return validateLease(retrying ? persistedLease_ : lease_, config_.publicKey, installationId(),
+                         retrying ? persistedLicenseId_ : licenseId_, now());
+}
+
+QString LicenseManager::status() const {
+    if (storageError_.isEmpty()) return status_;
+    return status_ + (liveAllowed() ? QStringLiteral("\nLicense cache temporarily unavailable. Using the saved authorization while retrying. ")
+                                   : QStringLiteral("\nLicense cache could not be saved. Retrying. ")) + storageError_;
 }
 bool LicenseManager::save() {
     const QJsonObject state{{"v", 1},
@@ -66,10 +78,16 @@ bool LicenseManager::save() {
                             {"denied", denied_}};
     QString error;
     if (!store_->write(QJsonDocument(state).toJson(QJsonDocument::Compact), &error)) {
-        storageReady_ = false;
-        status_ = error;
+        if (!storageFailure_.isValid()) storageFailure_.start();
+        storageError_ = error.isEmpty() ? QStringLiteral("Protected storage is unavailable.") : error;
         return false;
     }
+    identityPersisted_ = true;
+    persistedLease_ = lease_;
+    persistedLicenseId_ = licenseId_;
+    persistedExpiry_ = expiry_;
+    storageFailure_.invalidate();
+    storageError_.clear();
     return true;
 }
 void LicenseManager::start() {
@@ -107,6 +125,11 @@ void LicenseManager::start() {
         licenseId_ = object["licenseId"].toString();
         highWater_ = object["highWater"].toVariant().toLongLong();
         denied_ = object["denied"].toBool();
+        identityPersisted_ = true;
+        persistedLease_ = lease_;
+        persistedLicenseId_ = licenseId_;
+        validateLease(persistedLease_, config_.publicKey, installationId(), persistedLicenseId_, now(), &persistedExpiry_);
+        expiry_ = persistedExpiry_;
     } else
         seed_ = random(32);
     if (seed_.size() != 32) {
@@ -116,14 +139,10 @@ void LicenseManager::start() {
     }
     storageReady_ = true;
     highWater_ = std::max(highWater_, clockBase_);
-    if (!save()) {
-        emit changed();
-        return;
-    }
+    save();
     if (!configured())
         status_ = "Editing only — the licensing service is not configured in this build.";
     else if (liveAllowed()) {
-        validateLease(lease_, config_.publicKey, installationId(), licenseId_, now(), &expiry_);
         status_ = "Licensed — offline authorization valid until " +
                   expiresAt().toLocalTime().toString(Qt::ISODate);
     } else
@@ -133,19 +152,22 @@ void LicenseManager::start() {
     emit changed();
     // Startup verification checks revocations, while a valid lease allows work
     // during outages.
-    if (configured() && !licenseId_.isEmpty())
+    if (configured() && identityPersisted_ && !licenseId_.isEmpty())
         QTimer::singleShot(0, this, &LicenseManager::verifyOnline);
 }
 void LicenseManager::tick() {
     if (!storageReady_)
         return;
     highWater_ = std::max(highWater_, now());
-    save();
-    if (!liveAllowed())
+    const bool recovering = storageFailure_.isValid();
+    const bool saved = save();
+    if (!liveAllowed() && !denied_ && configured())
         status_ = "Editing only — live authorization has expired or is invalid. "
                   "Connect to verify your license.";
+    else if (recovering && saved && liveAllowed())
+        status_ = "Licensed — offline authorization valid until " + expiresAt().toLocalTime().toString(Qt::ISODate);
     emit changed();
-    if (configured() && !licenseId_.isEmpty() && now() - lastAttempt_ >= retryAfterSeconds_)
+    if (configured() && identityPersisted_ && !licenseId_.isEmpty() && now() - lastAttempt_ >= retryAfterSeconds_)
         verifyOnline();
 }
 void LicenseManager::activate(const QString &code, const QString &label) {
@@ -174,7 +196,7 @@ void LicenseManager::request(const QString &path, QJsonObject fields) {
         return;
     if (!started_)
         start();
-    if (!storageReady_ || !configured()) {
+    if (!identityPersisted_ || !configured()) {
         status_ = "Activation requires configured HTTPS licensing and protected OS "
                   "credential storage.";
         emit changed();
@@ -246,9 +268,10 @@ void LicenseManager::request(const QString &path, QJsonObject fields) {
                     monotonic_.restart();
                     highWater_ = clockBase_;
                     devices_ = object["devices"].toArray();
-                    if (save())
-                        status_ = "Licensed — offline authorization valid until " +
-                                  expiresAt().toLocalTime().toString(Qt::ISODate);
+                    save();
+                    status_ = liveAllowed() ? "Licensed — offline authorization valid until " +
+                                  expiresAt().toLocalTime().toString(Qt::ISODate)
+                                           : QStringLiteral("Authorization received. Waiting to save it in protected storage.");
                 } else
                     status_ = "The service returned invalid authorization. Existing "
                               "valid offline authorization is retained.";

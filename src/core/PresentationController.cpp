@@ -27,6 +27,7 @@ void PresentationController::takeLive(const QString &title, const QStringList &s
 void PresentationController::takeLive(const PresentationItem &item, int slideIndex) {
     if (!liveAuthorized()) return;
     const PresentationItem snapshot = item;
+    const bool blackoutLatched = state_.blackout;
     serviceSnapshot_ = {snapshot};
     itemIndex_ = 0;
     state_ = {};
@@ -40,8 +41,7 @@ void PresentationController::takeLive(const PresentationItem &item, int slideInd
     state_.midiActions = snapshot.midiActions;
     state_.settings = effectiveSettings(snapshot.settings);
     state_.index = snapshot.slides.isEmpty() ? -1 : qBound(0, slideIndex, int(snapshot.slides.size()) - 1);
-    state_.blackout = false;
-    state_.clear = false;
+    state_.blackout = blackoutLatched;
     state_.cueRevision = ++cueSerial_;
     autoAdvanceManuallyPaused_ = false;
     resetAutoAdvance();
@@ -113,7 +113,6 @@ void PresentationController::activateItem(int itemIndex, int slideIndex) {
     state_.sourceSlideIds = item.sourceSlideIds;
     state_.midiActions = item.midiActions;
     state_.index = qBound(0, slideIndex, int(item.slides.size()) - 1);
-    state_.blackout = false;
     state_.clear = false;
     state_.cueRevision = ++cueSerial_;
     updateUpcoming();
@@ -146,7 +145,6 @@ bool PresentationController::setSlide(int index) {
     if (index < 0 || index >= state_.slides.size()) return false;
     state_.settings = effectiveSettings(state_.settings);
     state_.index = index;
-    state_.blackout = false;
     state_.clear = false;
     state_.cueRevision = ++cueSerial_;
     resetAutoAdvance();
@@ -177,20 +175,19 @@ bool PresentationController::previous() {
     return false;
 }
 
-void PresentationController::toggleBlackout() {
-    if (!liveAuthorized()) return;
+void PresentationController::blackout() {
+    if (!liveAuthorized() || state_.blackout) return;
     state_.settings = effectiveSettings(state_.settings);
-    state_.blackout = !state_.blackout;
-    if (state_.blackout) state_.clear = false;
+    state_.blackout = true;
+    state_.clear = false;
     syncAutoAdvancePause();
     emit stateChanged();
 }
 
 void PresentationController::toggleClear() {
-    if (!liveAuthorized()) return;
+    if (!liveAuthorized() || state_.blackout) return;
     state_.settings = effectiveSettings(state_.settings);
     state_.clear = !state_.clear;
-    if (state_.clear) state_.blackout = false;
     syncAutoAdvancePause();
     emit stateChanged();
 }
@@ -206,7 +203,7 @@ void PresentationController::restoreOutput() {
 }
 
 bool PresentationController::autoAdvancePaused() const {
-    return autoAdvancePending_ && (autoAdvanceManuallyPaused_ || state_.blackout || state_.clear);
+    return autoAdvancePending_ && (autoAdvanceManuallyPaused_ || autoAdvanceSuspended_ || state_.blackout || state_.clear);
 }
 
 int PresentationController::autoAdvanceRemainingMs() const {
@@ -248,8 +245,19 @@ void PresentationController::toggleAutoAdvancePaused() {
     setAutoAdvancePaused(!autoAdvanceManuallyPaused_);
 }
 
+void PresentationController::setAutoAdvanceSuspended(bool suspended) {
+    if (autoAdvanceSuspended_ == suspended) return;
+    autoAdvanceSuspended_ = suspended;
+    syncAutoAdvancePause();
+}
+
 void PresentationController::advanceAutomatically() {
     if (!liveAuthorized()) return;
+    if (autoAdvanceGate_ && !autoAdvanceGate_()) {
+        autoAdvanceRemainingMs_ = 1;
+        setAutoAdvanceSuspended(true);
+        return;
+    }
     if (!autoAdvancePending_ || autoAdvancePaused()) return;
     if (state_.index + 1 < state_.slides.size()) {
         setSlide(state_.index + 1);
@@ -266,7 +274,9 @@ void PresentationController::advanceAutomatically() {
 
 void PresentationController::revokeLiveAuthorization() {
     autoAdvanceTimer_.stop(); autoAdvancePending_ = false;
+    const bool blackoutLatched = state_.blackout;
     serviceSnapshot_.clear(); itemIndex_ = -1; state_ = {};
+    state_.blackout = blackoutLatched;
     state_.cueRevision = ++cueSerial_;
     emit autoAdvanceChanged(); emit stateChanged();
 }

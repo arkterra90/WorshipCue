@@ -83,11 +83,14 @@ public:
     LibraryRepository &operator=(const LibraryRepository &) = delete;
 
     bool open(QString *error, const QString &databasePath = {});
+    // Opens an already initialized library for background usage/lease writes.
+    bool openForUsage(const QString &databasePath, QString *error);
     QString lastError() const { return lastError_; }
     QString databaseDirectory() const;
     QString databasePath() const { return db_.databaseName(); }
     // Changes when another connection commits; useful for refreshing the operator UI.
     qint64 dataVersion() const;
+    QPair<qint64, qint64> contentVersion() const;
     QVector<Song> songs(const QString &search = {}) const;
     Song song(int id) const;
     bool createSong(const QString &title, const QStringList &slides, QString *error,
@@ -140,8 +143,9 @@ public:
     bool purgeCleanup(const QString &batch, const CleanupPlan &reviewed, const CleanupProtection &, QString *error);
     bool recoverCleanup(QString *error);
     bool recordUsage(int songId, const QSet<int> &assets, const QSet<QString> &paths, QString *error);
-    bool replaceCleanupLease(const QString &owner, const CleanupProtection &, QString *error);
-    void clearCleanupLease(const QString &owner);
+    bool recordUsageBatch(const CleanupProtection &usage, QString *error);
+    bool replaceCleanupLease(const QString &owner, const CleanupProtection &, QString *error, bool waitForLock = true);
+    bool clearCleanupLease(const QString &owner, QString *error = nullptr);
     UsageDates usageDates(CleanupKind kind, int id = 0, const QString &path = {}) const;
     bool recordPresentationImport(int songId, QString *error);
     bool recordManagedImport(const QString &path, QString *error);
@@ -188,6 +192,8 @@ private:
     bool validateMidiTarget(const MidiBinding &, QString *error) const;
     bool copyEntryMidiActions(int source, int target, QString *error);
     bool migrateCleanup(QString *error);
+    bool ensureContentVersion(QString *error);
+    bool openConnection(const QString &path, QString *error);
     CleanupProtection cleanupLeases(const CleanupProtection &) const;
     QStringList cleanupPaths(CleanupKind kind, int id) const;
     QString cleanupReferenceReason(const QString &path, const QSet<int> &excludeSongs = {}, const QSet<int> &excludeAssets = {}) const;

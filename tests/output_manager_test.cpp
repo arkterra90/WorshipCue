@@ -7,6 +7,7 @@
 
 #include <QCoreApplication>
 #include <QScreen>
+#include <QScopeGuard>
 #include <QJsonDocument>
 #include <QSettings>
 #include <QSignalSpy>
@@ -66,7 +67,7 @@ private slots:
         controller.takeLive("Unit renderer content", {"Must not be projected"});
         OutputManager denied(&controller);
         QString error;
-        for (auto id : outputIds) {
+        for (auto id : defaultOutputIds) {
             QVERIFY(denied.setTarget(id, "preview", &error));
             QVERIFY(!denied.output(id).isVisible());
             denied.output(id).showPreview();
@@ -75,7 +76,7 @@ private slots:
             QCOMPARE(image.pixelColor(image.width()/2, image.height()/2), QColor(Qt::black));
         }
         denied.restoreTargets();
-        for (auto id : outputIds) QVERIFY(!denied.output(id).isVisible());
+        for (auto id : defaultOutputIds) QVERIFY(!denied.output(id).isVisible());
     }
     void stageTimerSettingsAndVisibilitySurviveRestartWithoutStartingPlayback() {
         PresentationController controller;
@@ -115,7 +116,7 @@ private slots:
         {
             LicensedOutputManager outputs(&controller);
             outputs.restoreTargets();
-            for (auto id : outputIds) {
+            for (auto id : defaultOutputIds) {
                 QVERIFY(outputs.setTarget(id, "preview"));
                 QVERIFY(outputs.output(id).isVisible());
                 QCOMPARE(outputs.status(id), QStringLiteral("Windowed preview"));
@@ -133,22 +134,87 @@ private slots:
         QCOMPARE(restored.target(OutputId::Audience2), QStringLiteral("off"));
         for (auto id : {OutputId::Audience1, OutputId::Stage1, OutputId::Stage2}) QCOMPARE(restored.target(id), QStringLiteral("preview"));
         restored.shutdown();
-        for (auto id : outputIds) QVERIFY(!restored.output(id).isVisible());
+        for (auto id : defaultOutputIds) QVERIFY(!restored.output(id).isVisible());
     }
 
-    void fullscreenConflictsAreCheckedAcrossAllFourRoutes() {
+    void fullscreenConflictsAreCheckedAcrossAdditionalRoutes() {
         PresentationController controller;
         LicensedOutputManager outputs(&controller);
+        const auto audience = outputs.addOutput(DisplayWindow::Kind::Audience);
+        const auto stage = outputs.addOutput(DisplayWindow::Kind::Stage);
         QString display;
         for (const auto &target : outputs.availableTargets()) if (target.id.startsWith("screen:")) { display = target.id; break; }
         if (display.isEmpty()) QSKIP("No display reported by this backend.");
-        QVERIFY(outputs.setTarget(OutputId::Stage2, display));
-        for (auto id : {OutputId::Audience1, OutputId::Audience2, OutputId::Stage1}) {
+        QVERIFY(outputs.setTarget(stage, display));
+        for (auto id : outputs.outputIds()) {
+            if (id == stage) continue;
             QString error;
             QVERIFY(!outputs.setTarget(id, display, &error));
             QVERIFY(!error.isEmpty());
             QCOMPARE(outputs.target(id), QStringLiteral("off"));
         }
+        QVERIFY(outputs.setTarget(stage, "off"));
+        QVERIFY(outputs.setTarget(audience, display));
+        QVERIFY(outputs.output(audience).isFullScreen());
+    }
+
+    void additionalRoutesRestoreWithoutReopeningClosedOutputs() {
+        PresentationController controller;
+        OutputId extraAudience;
+        OutputId extraStage;
+        OutputConfiguration stageFormat;
+        stageFormat.rotation = 90;
+        stageFormat.target = "preview";
+        StageTimerConfiguration timer;
+        timer.name = "Additional stage timer";
+        {
+            LicensedOutputManager outputs(&controller);
+            extraStage = outputs.addOutput(DisplayWindow::Kind::Stage);
+            const auto occupiedStage = outputs.addOutput(DisplayWindow::Kind::Stage);
+            extraAudience = outputs.addOutput(DisplayWindow::Kind::Audience);
+            QCOMPARE(outputName(extraStage), QStringLiteral("Stage Screen 3"));
+            QCOMPARE(outputName(occupiedStage), QStringLiteral("Stage Screen 4"));
+            QCOMPARE(outputName(extraAudience), QStringLiteral("Audience Screen 3"));
+            QVERIFY(outputs.output(extraAudience).sharesAudienceWith(&outputs.audience()));
+            QVERIFY(outputs.setConfiguration(extraStage, stageFormat));
+            QVERIFY(outputs.configureStageTimer(extraStage, timer));
+            QVERIFY(outputs.setTarget(extraAudience, "preview"));
+            outputs.output(extraAudience).close();
+            QVERIFY(outputs.output(extraStage).isVisible());
+        }
+        LicensedOutputManager restored(&controller);
+        restored.restoreTargets();
+        QCOMPARE(restored.outputIds().size(), 7);
+        QCOMPARE(restored.configuration(extraStage).toJson(), stageFormat.toJson());
+        QCOMPARE(restored.output(extraStage).stageTimerConfiguration().toJson(), timer.toJson());
+        QCOMPARE(restored.target(extraAudience), QStringLiteral("off"));
+        QVERIFY(!restored.output(extraAudience).isVisible());
+        restored.shutdown();
+        QVERIFY(!restored.output(extraStage).isVisible());
+    }
+
+    void conflictingSavedRoutesStayHiddenUntilReassigned() {
+        if (QGuiApplication::screens().isEmpty()) QSKIP("No screen reported.");
+        OutputConfiguration configuration;
+        configuration.target = OutputManager::screenId(QGuiApplication::screens().first());
+        PresentationController controller;
+        LicensedOutputManager outputs(&controller);
+        const auto stage = outputs.addOutput(DisplayWindow::Kind::Stage);
+        const auto saved = QJsonDocument(configuration.toJson()).toJson();
+        QSettings settings;
+        settings.setValue("outputs/0/configuration", saved);
+        settings.setValue(QStringLiteral("outputs/%1/configuration").arg(int(stage)), saved);
+        settings.sync();
+
+        outputs.restoreTargets();
+        QCOMPARE(outputs.status(OutputId::Audience1), QStringLiteral("Display assignment conflict"));
+        QCOMPARE(outputs.status(stage), QStringLiteral("Display assignment conflict"));
+        QVERIFY(!outputs.audience().isVisible());
+        QVERIFY(!outputs.output(stage).isVisible());
+        QCOMPARE(outputs.target(stage), configuration.target);
+        QVERIFY(outputs.setTarget(OutputId::Audience1, "off"));
+        QTRY_VERIFY(outputs.output(stage).isFullScreen());
+        QVERIFY(outputs.status(stage).startsWith("Fullscreen"));
     }
 
     void formatsPersistAndInvalidChangesLeaveTheOutputUntouched() {
@@ -265,6 +331,9 @@ private slots:
         PresentationController controller; controller.takeLive("Song", {"Unchanged"});
         const auto revision = controller.state().cueRevision;
         LicensedOutputManager outputs(&controller, nullptr, modes);
+        const QString preference = QStringLiteral("outputs/0/configuration");
+        QVERIFY(outputs.setTarget(OutputId::Audience1, "off"));
+        const auto savedBefore = QSettings().value(preference);
         OutputSettingsDialog dialog(&outputs);
         const auto screen = OutputManager::screenId(QGuiApplication::screens().first());
         auto *display = dialog.findChild<QComboBox *>("outputDisplay0");
@@ -272,24 +341,50 @@ private slots:
         QVERIFY(display); QVERIFY(signal);
         display->setCurrentIndex(display->findData(screen));
         signal->setCurrentIndex(signal->findData("interlaced"));
-        QTimer::singleShot(0, [answer] {
+        QTimer::singleShot(0, [answer, preference, savedBefore, modes] {
             auto *confirm = qobject_cast<QMessageBox *>(QApplication::activeModalWidget());
-            Q_ASSERT(confirm);
-            if (answer == QDialog::Rejected) confirm->reject();
-            else confirm->button(QMessageBox::StandardButton(answer))->click();
+            QVERIFY(confirm);
+            auto dismiss = qScopeGuard([confirm] { confirm->reject(); });
+            QCOMPARE(modes->current, QStringLiteral("interlaced"));
+            QCOMPARE(QSettings().value(preference), savedBefore);
+            if (answer == QDialog::Rejected) return;
+            dismiss.dismiss();
+            confirm->button(QMessageBox::StandardButton(answer))->click();
         });
         dialog.findChild<QPushButton *>("saveOutput0")->click();
         if (answer == QMessageBox::Yes) {
             QCOMPARE(outputs.target(OutputId::Audience1), screen);
             QCOMPARE(modes->current, QStringLiteral("interlaced"));
             QCOMPARE(modes->applied, (QStringList{"interlaced"}));
+            QCOMPARE(QJsonDocument::fromJson(QSettings().value(preference).toByteArray()).object()["signal"].toString(), QStringLiteral("interlaced"));
         } else {
             QCOMPARE(outputs.target(OutputId::Audience1), QStringLiteral("off"));
             QCOMPARE(modes->current, QStringLiteral("desktop"));
             QCOMPARE(modes->applied, (QStringList{"interlaced", "desktop"}));
+            QCOMPARE(QSettings().value(preference), savedBefore);
         }
         QCOMPARE(controller.state().cueRevision, revision);
         outputs.shutdown(); QCOMPARE(modes->current, QStringLiteral("desktop"));
+    }
+
+    void unfinishedNativeModeTrialKeepsLastSavedRouteAcrossRestart() {
+        if (QGuiApplication::screens().isEmpty()) QSKIP("No screen reported.");
+        auto modes = std::make_shared<FakeDisplayModes>();
+        PresentationController controller;
+        {
+            LicensedOutputManager outputs(&controller, nullptr, modes);
+            outputs.restoreTargets();
+            auto trial = outputs.configuration(OutputId::Audience1);
+            trial.target = OutputManager::screenId(QGuiApplication::screens().first());
+            trial.signalMode = "interlaced";
+            QVERIFY(outputs.beginModeTrial(OutputId::Audience1, trial));
+            QCOMPARE(modes->current, QStringLiteral("interlaced"));
+        }
+        QCOMPARE(modes->current, QStringLiteral("desktop"));
+        LicensedOutputManager reopened(&controller, nullptr, modes);
+        reopened.restoreTargets();
+        QCOMPARE(reopened.target(OutputId::Audience1), QStringLiteral("off"));
+        QCOMPARE(modes->current, QStringLiteral("desktop"));
     }
 
     void nativeCapabilitiesExposeOnlyReportedModes() {

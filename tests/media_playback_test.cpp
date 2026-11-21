@@ -88,7 +88,7 @@ private slots:
         QCOMPARE(actual.toImage(), expected.toImage());
         auto *audio = playback.findChild<QAudioOutput *>();
         QVERIFY(audio);
-        controller.toggleBlackout();
+        controller.blackout();
         QVERIFY(audio->isMuted());
         controller.restoreOutput();
         QVERIFY(!audio->isMuted());
@@ -116,7 +116,7 @@ private slots:
         QVERIFY(playback.frame().height() <= 1080);
         QCOMPARE(playback.frame().toImage().pixelColor(10, 10), QColor(Qt::blue));
         const auto key = playback.frame().cacheKey();
-        controller.toggleBlackout();
+        controller.blackout();
         controller.toggleClear();
         controller.restoreOutput();
         QCOMPARE(playback.frame().cacheKey(), key);
@@ -177,17 +177,18 @@ private slots:
         QTRY_VERIFY(playback.position() > 100);
         const auto revision = controller.state().cueRevision;
         QSignalSpy sourceChanges(player, &QMediaPlayer::sourceChanged);
-        controller.toggleBlackout();
+        controller.blackout();
         QVERIFY(audio->isMuted());
         controller.toggleClear();
-        QVERIFY(!audio->isMuted());
+        QVERIFY(audio->isMuted());
         controller.restoreOutput();
+        QVERIFY(!audio->isMuted());
         QCOMPARE(sourceChanges.count(), 0);
         QCOMPARE(controller.state().cueRevision, revision);
         playback.toggleMute();
         QVERIFY(playback.muted());
         QVERIFY(audio->isMuted());
-        controller.toggleBlackout();
+        controller.blackout();
         controller.restoreOutput();
         QVERIFY(audio->isMuted());
         playback.toggleMute();
@@ -256,7 +257,7 @@ private slots:
         const QPixmap captured = audience.grab();
         const QImage logical = captured.toImage().scaled(QSize(320, 180));
         QCOMPARE(logical.pixelColor(160, 90), expected.pixelColor(160, 90));
-        controller.toggleBlackout();
+        controller.blackout();
         QCOMPARE(audience.grab().toImage().pixelColor(100, 60), QColor(Qt::black));
     }
 };

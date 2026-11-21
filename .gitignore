@@ -8,13 +8,16 @@
 node_modules/
 licensing/secrets/
 licensing/wrangler.local.jsonc
+
+# CMake build directories and generated distribution artifacts
+/build/
+/build-local/
+/build-local.previous.*/
 /build-priority9/
-
-# Release workspaces and generated distribution artifacts
 /build-release/
-/dist/
-__pycache__/
-*.pyc
-
 /build-ci/
 /build-tests/
+/dist/
+
+__pycache__/
+*.pyc
